@@ -1,0 +1,40 @@
+[gd_scene load_steps=7 format=3 uid="uid://dqdncxariwrdy"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5wxv7"]
+albedo_color = Color(0, 0, 1, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_5wxv7"]
+material = SubResource("StandardMaterial3D_5wxv7")
+size = Vector3(0.25, 0.25, 0.75)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_y5hcb"]
+albedo_color = Color(0, 1, 0, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_2nftw"]
+material = SubResource("StandardMaterial3D_y5hcb")
+size = Vector3(0.25, 0.5, 0.25)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2nftw"]
+albedo_color = Color(1, 0, 0, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_knrd4"]
+material = SubResource("StandardMaterial3D_2nftw")
+size = Vector3(0.05, 0.05, 3)
+
+[node name="GunModel" type="Node3D"]
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0, 0, 0)
+
+[node name="Barrel" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.123101, -0.25)
+layers = 2
+mesh = SubResource("BoxMesh_5wxv7")
+
+[node name="Grip" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, -0.448101, 0.05)
+layers = 2
+mesh = SubResource("BoxMesh_2nftw")
+
+[node name="Laser" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.36968)
+layers = 2
+mesh = SubResource("BoxMesh_knrd4")

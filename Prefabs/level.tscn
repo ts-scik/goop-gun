@@ -1,0 +1,93 @@
+[gd_scene load_steps=12 format=3 uid="uid://dtfa0wus6t07h"]
+
+[ext_resource type="PackedScene" uid="uid://dpkim8cla8dii" path="res://Prefabs/player.tscn" id="1_xjhai"]
+[ext_resource type="Texture2D" uid="uid://sjnjcsxqllgg" path="res://icon.svg" id="2_v81my"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_xjhai"]
+sky_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
+ground_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
+
+[sub_resource type="Sky" id="Sky_v81my"]
+sky_material = SubResource("ProceduralSkyMaterial_xjhai")
+
+[sub_resource type="Environment" id="Environment_pa8ci"]
+background_mode = 2
+sky = SubResource("Sky_v81my")
+tonemap_mode = 2
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_oi3di"]
+albedo_color = Color(1, 1, 0.478431, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_0b4ue"]
+material = SubResource("StandardMaterial3D_oi3di")
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_f2txt"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_f2txt"]
+albedo_color = Color(0.478431, 0.478431, 0.478431, 1)
+albedo_texture = ExtResource("2_v81my")
+uv1_scale = Vector3(100, 100, 100)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_1ainy"]
+material = SubResource("StandardMaterial3D_f2txt")
+size = Vector2(100, 100)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_n6hdu"]
+size = Vector3(100, 0.22, 100)
+
+[node name="Level" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_pa8ci")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, 0, 0, 0)
+shadow_enabled = true
+
+[node name="Player" parent="." instance=ExtResource("1_xjhai")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3)
+
+[node name="Geometry" type="Node3D" parent="."]
+
+[node name="RefCube" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Geometry/RefCube"]
+mesh = SubResource("BoxMesh_0b4ue")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Geometry/RefCube"]
+shape = SubResource("BoxShape3D_f2txt")
+
+[node name="Ground" type="StaticBody3D" parent="Geometry"]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Geometry/Ground"]
+mesh = SubResource("PlaneMesh_1ainy")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Geometry/Ground"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
+shape = SubResource("BoxShape3D_n6hdu")
+
+[node name="OLght" type="OmniLight3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 2, -5)
+light_color = Color(0.95444, 0.590973, 0.156417, 1)
+light_energy = 5.0
+
+[node name="CSGCombiner3D" type="CSGCombiner3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.5, -5)
+use_collision = true
+
+[node name="CSGBox3D2" type="CSGBox3D" parent="Geometry/CSGCombiner3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 1.25, 0)
+size = Vector3(0.25, 3.5, 5)
+
+[node name="CSGBox3D4" type="CSGBox3D" parent="Geometry/CSGCombiner3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, -2.5)
+size = Vector3(5.2, 3.5, 0.25)
+
+[node name="CSGBox3D3" type="CSGBox3D" parent="Geometry/CSGCombiner3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 1.25, 0)
+size = Vector3(0.25, 3.5, 5)
+
+[node name="CSGBox3D" type="CSGBox3D" parent="Geometry/CSGCombiner3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.125, -0.0500007)
+size = Vector3(5.2, 0.25, 5.1)
