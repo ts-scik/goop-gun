@@ -1,0 +1,130 @@
+[gd_scene load_steps=3 format=3 uid="uid://bdt3orm768b1"]
+
+[ext_resource type="Script" uid="uid://ju1873le1n6p" path="res://Scripts/main_menu.gd" id="1_mf8ns"]
+[ext_resource type="Theme" uid="uid://dbc26jnuib7yq" path="res://Themes/main_theme.tres" id="2_7do1g"]
+
+[node name="MainMenu" type="CanvasLayer"]
+script = ExtResource("1_mf8ns")
+
+[node name="MenuContainer" type="PanelContainer" parent="."]
+custom_minimum_size = Vector2(500, 0)
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -254.0
+offset_top = -79.0
+offset_right = 254.0
+offset_bottom = 79.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="SliderMargins" type="MarginContainer" parent="MenuContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 50
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 50
+
+[node name="SlidersContainer" type="VBoxContainer" parent="MenuContainer/SliderMargins"]
+layout_mode = 2
+
+[node name="Cam_Sense_Con" type="HBoxContainer" parent="MenuContainer/SliderMargins/SlidersContainer"]
+custom_minimum_size = Vector2(500, 50)
+layout_mode = 2
+
+[node name="Cam_Sense_Tooltip" type="Label" parent="MenuContainer/SliderMargins/SlidersContainer/Cam_Sense_Con"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+theme = ExtResource("2_7do1g")
+text = "Camera Sensitivity:"
+vertical_alignment = 1
+
+[node name="Sense_Slider" type="HSlider" parent="MenuContainer/SliderMargins/SlidersContainer/Cam_Sense_Con"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme = ExtResource("2_7do1g")
+max_value = 10.0
+step = 0.1
+value = 5.0
+tick_count = 11
+ticks_on_borders = true
+
+[node name="Slider_Value" type="Label" parent="MenuContainer/SliderMargins/SlidersContainer/Cam_Sense_Con"]
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+theme = ExtResource("2_7do1g")
+text = "5.0"
+horizontal_alignment = 1
+
+[node name="Aim_Sense_Con" type="HBoxContainer" parent="MenuContainer/SliderMargins/SlidersContainer"]
+custom_minimum_size = Vector2(500, 50)
+layout_mode = 2
+
+[node name="Aim_Sense_Tooltip" type="Label" parent="MenuContainer/SliderMargins/SlidersContainer/Aim_Sense_Con"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+theme = ExtResource("2_7do1g")
+text = "Aim Sensitivity:"
+vertical_alignment = 1
+
+[node name="Sense_Slider" type="HSlider" parent="MenuContainer/SliderMargins/SlidersContainer/Aim_Sense_Con"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme = ExtResource("2_7do1g")
+max_value = 10.0
+step = 0.1
+value = 5.0
+tick_count = 11
+ticks_on_borders = true
+
+[node name="Slider_Value" type="Label" parent="MenuContainer/SliderMargins/SlidersContainer/Aim_Sense_Con"]
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+theme = ExtResource("2_7do1g")
+text = "5.0"
+horizontal_alignment = 1
+
+[node name="Volume_Con" type="HBoxContainer" parent="MenuContainer/SliderMargins/SlidersContainer"]
+custom_minimum_size = Vector2(500, 50)
+layout_mode = 2
+
+[node name="Volume_Tooltip" type="Label" parent="MenuContainer/SliderMargins/SlidersContainer/Volume_Con"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+theme = ExtResource("2_7do1g")
+text = "Master Volume:"
+vertical_alignment = 1
+
+[node name="Volume_Slider" type="HSlider" parent="MenuContainer/SliderMargins/SlidersContainer/Volume_Con"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme = ExtResource("2_7do1g")
+value = 25.0
+tick_count = 11
+ticks_on_borders = true
+
+[node name="Slider_Value" type="Label" parent="MenuContainer/SliderMargins/SlidersContainer/Volume_Con"]
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+theme = ExtResource("2_7do1g")
+text = "50"
+horizontal_alignment = 1
+
+[node name="DebugBox" type="CheckBox" parent="."]
+custom_minimum_size = Vector2(20, 20)
+offset_right = 83.0
+offset_bottom = 31.0
+theme = ExtResource("2_7do1g")
+button_pressed = true
+text = "Debug"

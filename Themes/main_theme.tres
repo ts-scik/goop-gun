@@ -1,0 +1,10 @@
+[gd_resource type="Theme" load_steps=3 format=3 uid="uid://dbc26jnuib7yq"]
+
+[ext_resource type="FontFile" uid="uid://dfjocmme22rof" path="res://Themes/VCR_OSD_MONO_1.001.ttf" id="1_8cjo3"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ybks7"]
+bg_color = Color(0.953548, 0.38806, 0.398324, 1)
+
+[resource]
+HSlider/styles/grabber_area = SubResource("StyleBoxFlat_ybks7")
+Label/fonts/font = ExtResource("1_8cjo3")
