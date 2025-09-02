@@ -19,19 +19,16 @@ mesh = SubResource("CapsuleMesh_km5ld")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("CapsuleShape3D_i2t4f")
 
-[node name="HeadPos" type="Marker3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
-
-[node name="CameraController" type="Node3D" parent="."]
+[node name="Camera Controller" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 script = ExtResource("2_i3pqv")
 
-[node name="PlayerCamera" type="Camera3D" parent="CameraController"]
+[node name="PlayerCamera" type="Camera3D" parent="Camera Controller"]
 cull_mask = 1048573
 
-[node name="GunCanvas" type="CanvasLayer" parent="CameraController"]
+[node name="GunCanvas" type="CanvasLayer" parent="Camera Controller"]
 
-[node name="BoundaryRect" type="ReferenceRect" parent="CameraController/GunCanvas"]
+[node name="BoundaryRect" type="ReferenceRect" parent="Camera Controller/GunCanvas"]
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
@@ -43,28 +40,16 @@ offset_right = 452.5
 offset_bottom = 246.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 2
-border_color = Color(0, 1, 0, 1)
 border_width = 5.0
 editor_only = false
 
-[node name="RedDot" type="ColorRect" parent="CameraController/GunCanvas"]
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -10.0
-offset_top = -10.0
-offset_right = -5.0
-offset_bottom = -5.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-color = Color(1, 0, 0, 1)
+[node name="GunContainer" type="Node3D" parent="Camera Controller"]
 
-[node name="GunContainer" type="Node3D" parent="CameraController"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.75)
+[node name="GunModel" parent="Camera Controller/GunContainer" instance=ExtResource("4_2nftw")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0834154, 0)
 
-[node name="GunModel" parent="CameraController/GunContainer" instance=ExtResource("4_2nftw")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.112, 0)
+[node name="HeadPos" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 1.40929, 1.5, -0.77473)
