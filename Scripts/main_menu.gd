@@ -1,44 +1,39 @@
 extends CanvasLayer
 
-# TODO: this is a MESS oh golly
-
-var slider_prestring = "MenuContainer/SliderMargins/SlidersContainer/"
-
-@onready var cam_sense_container = get_node(slider_prestring+"Cam_Sense_Con")
-@onready var cam_sense_slider : HSlider = get_node(slider_prestring+"Cam_Sense_Con/Sense_Slider")
-@onready var cam_sense_value = get_node(slider_prestring+"Cam_Sense_Con/Slider_Value")
-
-@onready var aim_sense_container = get_node(slider_prestring+"Aim_Sense_Con")
-@onready var aim_sense_slider : HSlider = get_node(slider_prestring+"Aim_Sense_Con/Sense_Slider")
-@onready var aim_sense_value = get_node(slider_prestring+"Aim_Sense_Con/Slider_Value")
-
-@onready var volume_container = get_node(slider_prestring+"Volume_Con")
-@onready var vol_slider : HSlider = get_node(slider_prestring+"Volume_Con/Volume_Slider")
-@onready var vol_value = get_node(slider_prestring+"Volume_Con/Slider_Value")
-
+var value_sliders : Array
 @onready var debug_box : CheckBox = get_node("DebugBox")
-
 signal value_update(value, parameter : String)
 
+
 func _ready() -> void:
-	cam_sense_slider.drag_ended.connect(_on_slider_update.bind(cam_sense_slider, "cam_sense"))
-	aim_sense_slider.drag_ended.connect(_on_slider_update.bind(aim_sense_slider, "aim_sense"))
-	vol_slider.drag_ended.connect(_on_slider_update.bind(vol_slider, "vol_master"))
+	# Handle ValueSlider nodes
+	value_sliders = find_children_of_type(self, ValueSlider)
+	for slider in value_sliders: slider.value_update.connect(_on_slider_update)
+	# Handle debug checkbox
 	debug_box.toggled.connect(_on_checkbox_update.bind("debug"))
 
-func _on_slider_update(value_changed: bool, slider : HSlider, parameter : String):
-	if(value_changed == false): return
-	var value = slider.value
-	match(parameter):
-		"cam_sense":
-			cam_sense_value.text = str(value)
-			value_update.emit(value, parameter)
-		"aim_sense":
-			aim_sense_value.text = str(value)
-			value_update.emit(value, parameter)
-		"vol_master":
-			vol_value.text = str(value)
-			value_update.emit(value, parameter)
 
+#TODO: move this elsewhere
+## Find and return all nodes of type [target_type] in children of [parent] as array
+func find_children_of_type(parent, target_type) -> Array:
+	var child_array : Array = []
+	find_children_of_type_helper(parent, target_type, child_array)
+	return child_array
+#TODO: move this elsewhere
+## Recursive helper for find_children_of_type()
+func find_children_of_type_helper(c_child, target_type, arr : Array) -> void:
+	if is_instance_of(c_child, target_type):
+		arr.append(c_child)
+	else:
+		for child in c_child.get_children():
+			find_children_of_type_helper(child, target_type, arr)
+
+
+## Handles value_update signal from ValueSliders
+func _on_slider_update(value, parameter : String):
+	value_update.emit(value,parameter)
+
+
+## Handles value checkboxes toggling
 func _on_checkbox_update(is_toggled : bool, parameter : String):
 	value_update.emit(is_toggled, parameter)
