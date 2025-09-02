@@ -6,19 +6,19 @@ class_name CameraController
 # And with help from the following video:
 # https://www.youtube.com/watch?v=zfIuaRzNti4
 
-# Player variables
+# Child nodes
 var player_controller : Player # Node that the camera will follow
 var player_camera : Camera3D # Player camera
-# Gun camera nodes
 var gun_container : Node3D # Gun's container
 # Mouse input variables
 var mouse_input : Vector2 # Stores mouse input each frame
 var input_rotation : Vector3 # Stores mouse_input converted to rotation
 var camera_sensitivity : float = 0.005 # Mouse camera sensitivity
+var mouse_target : Vector2 = Vector2.ZERO
 # Gun deadzone variables
-var mouse_position : Vector2 = Vector2.ZERO
 var aim_sensitivity : float = 0.005 # Mouse aim sensitivity
-var mouse_deadzone : Vector3 = Vector3(0.15, 0.75, 0.4) # mouse deadzone by percentage of screen (x, yTop, yBottom)
+var mouse_position : Vector2 = Vector2.ZERO
+var mouse_deadzone : Vector3 = Vector3(0.15, 0.65, 0.35) # mouse deadzone by percentage of screen (x, yTop, yBottom)
 var screen_size : Vector2 # size of screen (in pixels)
 var gun_deadzone : Vector3 # gun's deadzone size (in pixels)
 var gun_hold_distance : float = 0.75 # how far gun is held out from player
@@ -33,7 +33,6 @@ func _ready() -> void:
 	player_controller = get_parent() # TODO: bad!
 	# Turn off automatic physics interpolation for the Camera3D
 	set_physics_interpolation_mode(Node.PHYSICS_INTERPOLATION_MODE_OFF)
-	$PlayerCamera.set_physics_interpolation_mode(Node.PHYSICS_INTERPOLATION_MODE_OFF) # TODO -- why??
 	# Capture mouse
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	# Disable transform inheritance from parent
@@ -78,7 +77,7 @@ func viewport_update():
 
 
 ## Handles camera rotation / gun positioning
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	# If the window has been resized, do some viewport updates
 	if(screen_size != Vector2(get_viewport().size)): viewport_update()
 	
@@ -112,33 +111,18 @@ func _process(_delta: float) -> void:
 	mouse_input = Vector2.ZERO
 
 
-## Shoots : TODO - put this elsewhere
-const BULLET_DECAL = preload("res://Prefabs/bullet_decal.tscn")
+## Shoots
+var kick_amount = Vector2(0.1,0.5) # x/y screen kick amount
 func shoot():
-	var raycast : RayCast3D = get_node("GunContainer/GunRaycast")
-	raycast.force_raycast_update()
-	if raycast.is_colliding():
-		if raycast.get_collider() is RigidBody3D:
-			var rb : RigidBody3D = raycast.get_collider()
-			var hit_pos_offset = raycast.get_collision_point() - rb.global_position
-			rb.apply_force(-global_basis.z*300, hit_pos_offset)
-		if raycast.get_collider() is StaticBody3D or raycast.get_collider() is CSGShape3D:
-			_bullet_decal(raycast.get_collision_point(), raycast.get_collision_normal())
-
-
-## Applies bullet decal : TODO - put this elsewhere
-func _bullet_decal(pos:Vector3, normal:Vector3) -> void:
-	var decal : Node3D = BULLET_DECAL.instantiate()
-	get_tree().current_scene.add_child(decal)
-	decal.position = pos
-	
-	if abs(normal) != abs(Vector3.UP):
-		decal.look_at(decal.position+normal, Vector3.UP)
-		decal.transform = decal.transform.rotated_local(Vector3.LEFT, TAU/4)
-	decal.rotate(normal, randf_range(0, TAU))
-	
-	await get_tree().create_timer(1.5).timeout
-	decal.queue_free()
+	# handle raycast
+	var raycast = get_node("GunContainer/GunRaycast")
+	raycast.shoot()
+	# handle kick
+	kick_amount.x *= ((randi() & 2) - 1)
+	mouse_position -= (kick_amount * screen_size/10)
+	# TODO: handle animation
+	# handle sound
+	get_node("GunContainer/GunSound").play()
 
 ## Updates the gun's position+rotation (for if gun exists in local space)
 func update_gun_local_space():
