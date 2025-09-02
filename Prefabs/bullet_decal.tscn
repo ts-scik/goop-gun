@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3 uid="uid://561yn1l2p3ok"]
+
+[ext_resource type="Texture2D" uid="uid://sjnjcsxqllgg" path="res://icon.svg" id="1_23ue4"]
+
+[node name="Decal" type="Decal"]
+size = Vector3(0.25, 0.01, 0.25)
+texture_albedo = ExtResource("1_23ue4")
+upper_fade = 4.35503e-05
+lower_fade = 1e-05

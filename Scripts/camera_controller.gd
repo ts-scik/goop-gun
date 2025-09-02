@@ -18,10 +18,9 @@ var camera_sensitivity : float = 0.005 # Mouse camera sensitivity
 # Gun deadzone variables
 var mouse_position : Vector2 = Vector2.ZERO
 var aim_sensitivity : float = 0.005 # Mouse aim sensitivity
-var mouse_deadzone : Vector2 = Vector2(0.25, 0.25) # mouse deadzone by percentage of screen
-var square_mouse_deadzone : bool = true # whether mouse deadzone should be square (y component only)
+var mouse_deadzone : Vector3 = Vector3(0.15, 0.75, 0.4) # mouse deadzone by percentage of screen (x, yTop, yBottom)
 var screen_size : Vector2 # size of screen (in pixels)
-var gun_deadzone : Vector2 # gun's deadzone size (in pixels)
+var gun_deadzone : Vector3 # gun's deadzone size (in pixels)
 var gun_hold_distance : float = 0.75 # how far gun is held out from player
 # Debug stuff
 var red_dot : ColorRect # debug red-dot for aim
@@ -34,7 +33,7 @@ func _ready() -> void:
 	player_controller = get_parent() # TODO: bad!
 	# Turn off automatic physics interpolation for the Camera3D
 	set_physics_interpolation_mode(Node.PHYSICS_INTERPOLATION_MODE_OFF)
-	$PlayerCamera.set_physics_interpolation_mode(Node.PHYSICS_INTERPOLATION_MODE_OFF)
+	$PlayerCamera.set_physics_interpolation_mode(Node.PHYSICS_INTERPOLATION_MODE_OFF) # TODO -- why??
 	# Capture mouse
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	# Disable transform inheritance from parent
@@ -58,6 +57,8 @@ func _input(event: InputEvent) -> void:
 	# If mouse is uncaptured, and we just clicked -> capture the mouse
 	elif Input.mouse_mode != Input.MOUSE_MODE_CAPTURED and event is InputEventMouseButton:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	elif Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and event.is_action_pressed("shoot"):
+		shoot()
 
 
 ## Centers the gun camera, and updates the gun deadzone to match
@@ -68,12 +69,10 @@ func viewport_update():
 	# Save our screensize, and set the gun viewport to match
 	screen_size = get_viewport().size
 	# Update the gun deadzone
-	gun_deadzone = Vector2(screen_size.x/2 * mouse_deadzone.x, screen_size.y/2 * mouse_deadzone.y)
-	if(square_mouse_deadzone):
-		gun_deadzone.x = gun_deadzone.y
+	gun_deadzone = Vector3(screen_size.x/2 * mouse_deadzone.x, screen_size.y/2 * mouse_deadzone.y, screen_size.y/2 * mouse_deadzone.z)
 	# Update our deadzone debug rectangle
-	boundary_rect.size = gun_deadzone * 2
-	boundary_rect.position = (screen_size / 2) - (boundary_rect.size / 2)
+	boundary_rect.size = Vector2(gun_deadzone.x*2, gun_deadzone.y + gun_deadzone.z)
+	boundary_rect.position = (screen_size / 2) - Vector2(gun_deadzone.x, gun_deadzone.y)
 	# Reset our cursor position
 	mouse_position = screen_size/2
 
@@ -90,12 +89,13 @@ func _process(_delta: float) -> void:
 	var mouse_newpos = mouse_position - mouse_input * aim_sensitivity * (screen_size.y) * 20
 	var midpoint = screen_size/2
 	mouse_position.x = clampf(mouse_newpos.x, midpoint.x - gun_deadzone.x, midpoint.x + gun_deadzone.x)
-	mouse_position.y = clampf(mouse_newpos.y, midpoint.y - gun_deadzone.y, midpoint.y + gun_deadzone.y)
+	mouse_position.y = clampf(mouse_newpos.y, midpoint.y - gun_deadzone.y, midpoint.y + gun_deadzone.z)
 
 	# If the gun is trying to move beyond its deadzone, rotate the camera
-	if(mouse_position != mouse_newpos):
-		input_rotation.x = clampf(input_rotation.x + mouse_input.y, deg_to_rad(-90), deg_to_rad(85))
+	if(mouse_position.x != mouse_newpos.x):
 		input_rotation.y += mouse_input.x
+	elif(mouse_position.y != mouse_newpos.y):
+		input_rotation.x = clampf(input_rotation.x + mouse_input.y, deg_to_rad(-90), deg_to_rad(85))
 	
 	# Update the player_controller rotation
 	player_controller.camera_controller_anchor.transform.basis = Basis.from_euler(Vector3(input_rotation.x, 0.0, 0.0)) # rotate camera controller (up/down)
@@ -107,12 +107,38 @@ func _process(_delta: float) -> void:
 	
 	# Debug
 	red_dot.position = mouse_position - (red_dot.size/2) # move our debug red-dot
-	if Input.is_action_just_pressed("debug"): # handle debug input stuff
-		pass
 	
 	# Zero out our mouse input for next frame
 	mouse_input = Vector2.ZERO
 
+
+## Shoots : TODO - put this elsewhere
+const BULLET_DECAL = preload("res://Prefabs/bullet_decal.tscn")
+func shoot():
+	var raycast : RayCast3D = get_node("GunContainer/GunRaycast")
+	raycast.force_raycast_update()
+	if raycast.is_colliding():
+		if raycast.get_collider() is RigidBody3D:
+			var rb : RigidBody3D = raycast.get_collider()
+			var hit_pos_offset = raycast.get_collision_point() - rb.global_position
+			rb.apply_force(-global_basis.z*300, hit_pos_offset)
+		if raycast.get_collider() is StaticBody3D or raycast.get_collider() is CSGShape3D:
+			_bullet_decal(raycast.get_collision_point(), raycast.get_collision_normal())
+
+
+## Applies bullet decal : TODO - put this elsewhere
+func _bullet_decal(pos:Vector3, normal:Vector3) -> void:
+	var decal : Node3D = BULLET_DECAL.instantiate()
+	get_tree().current_scene.add_child(decal)
+	decal.position = pos
+	
+	if abs(normal) != abs(Vector3.UP):
+		decal.look_at(decal.position+normal, Vector3.UP)
+		decal.transform = decal.transform.rotated_local(Vector3.LEFT, TAU/4)
+	decal.rotate(normal, randf_range(0, TAU))
+	
+	await get_tree().create_timer(1.5).timeout
+	decal.queue_free()
 
 ## Updates the gun's position+rotation (for if gun exists in local space)
 func update_gun_local_space():

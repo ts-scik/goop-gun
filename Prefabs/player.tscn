@@ -68,3 +68,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.75)
 
 [node name="GunModel" parent="CameraController/GunContainer" instance=ExtResource("4_2nftw")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.112, 0)
+
+[node name="GunRaycast" type="RayCast3D" parent="CameraController/GunContainer"]
+enabled = false
+target_position = Vector3(0, 0, -200)
