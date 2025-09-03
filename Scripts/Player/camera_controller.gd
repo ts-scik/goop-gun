@@ -27,18 +27,19 @@ var red_dot : ColorRect # debug red-dot for aim
 var boundary_rect : ReferenceRect # debug rectangle for gun deadzone
 var debug_mode : bool = true
 
-## Get our cameras set up
+
+## Get our camera + gun set up
 func _ready() -> void:
 	if not is_multiplayer_authority(): return
 # START CAMERA MNGMT
-	# Find the target nodes
-	player_controller = get_parent() # TODO: bad!
 	# Turn off automatic physics interpolation for the Camera3D
 	set_physics_interpolation_mode(Node.PHYSICS_INTERPOLATION_MODE_OFF)
-	# Capture mouse
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	# Disable transform inheritance from parent
 	top_level = true
+	# Find the target nodes
+	player_controller = get_parent() # TODO: bad!
+	# Capture mouse
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 # END CAMERA MNGMT
 # START GUN MGMT
 	gun_container = get_node("GunController")
@@ -62,6 +63,20 @@ func _input(event: InputEvent) -> void:
 		shoot()
 
 
+## Handles camera rotation / gun positioning
+func _process(_delta: float) -> void:
+	if not is_multiplayer_authority(): return
+	# If the window has been resized, do some viewport updates
+	if(screen_size != Vector2(get_viewport().size)): viewport_update()
+	mouse_input_management()
+
+
+## On the physics tick, snap our transform to the player head (helps with multiplayer sync)
+func _physics_process(_delta: float) -> void:
+	if not is_multiplayer_authority(): return
+	global_transform = player_controller.camera_controller_anchor.global_transform
+
+
 ## Centers the gun camera, and updates the gun deadzone to match
 func viewport_update():
 	# Zero out the mouse variables
@@ -78,18 +93,10 @@ func viewport_update():
 	mouse_position = screen_size/2
 
 
-## Handles camera rotation / gun positioning
-func _process(_delta: float) -> void:
-	if not is_multiplayer_authority(): return
-	# If the window has been resized, do some viewport updates
-	if(screen_size != Vector2(get_viewport().size)): viewport_update()
-	mouse_management()
-
-
 ## Move the mouse, move the camera, rotate the player to match, etc
-func mouse_management():
+func mouse_input_management():
 	# Update mouse position
-	var mouse_newpos = mouse_position - mouse_input * aim_sensitivity * (screen_size.y) * 20
+	var mouse_newpos = mouse_position - (mouse_input * aim_sensitivity * (screen_size.y) * 20)
 	var midpoint = screen_size/2
 	mouse_position.x = clampf(mouse_newpos.x, midpoint.x - gun_deadzone.x, midpoint.x + gun_deadzone.x)
 	mouse_position.y = clampf(mouse_newpos.y, midpoint.y - gun_deadzone.y, midpoint.y + gun_deadzone.z)
@@ -121,9 +128,10 @@ var kick_amount = Vector2(0.1,0.5) # x/y screen kick amount
 func shoot():
 	# handle kick
 	kick_amount.x *= ((randi() & 2) - 1)
-	mouse_position -= (kick_amount * screen_size/10)
+	mouse_input += (kick_amount * screen_size/1000)
 	# get container to take over
-	gun_container.shoot()
+	#gun_container.shoot()
+	gun_container.shoot.rpc()
 
 
 ## Updates the gun's position+rotation (for if gun exists in local space)
@@ -137,20 +145,6 @@ func update_gun_local_space():
 	var gun_container_interp = to_local(gun_container.get_global_transform_interpolated().origin) # get interpolated gun_container position in local space
 	var fw_dir = gun_container_interp - player_camera_interp # find vector from player camera to gun_container (interpolated)
 	gun_container.basis = Basis.looking_at(fw_dir, Vector3.UP, false)
-
-
-## Updates the gun's position+rotation (for if gun exists in global space)
-func update_gun_global_space():
-	# Update whether gun is global/local
-	gun_container.top_level = true
-	# Update the gun's position
-	gun_container.global_position = (player_camera.project_position(mouse_position,gun_hold_distance))
-	# Update the gun's rotation (relative to camera)
-	var player_camera_interp = player_camera.get_global_transform_interpolated().origin # get interpolated player_camera position in local space
-	var gun_container_interp = gun_container.get_global_transform_interpolated().origin # get interpolated gun_container position in local space
-	var fw_dir = gun_container_interp - player_camera_interp # find vector from player camera to gun_container (interpolated)
-	var up_dir = self.basis.y
-	gun_container.basis = Basis.looking_at(fw_dir, up_dir, false)
 
 
 ## Toggles debug

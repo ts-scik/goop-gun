@@ -10,18 +10,22 @@ const GRAVITY = 9.8
 @onready var player_camera_ctrlr = get_node("CameraController")
 @onready var pause_menu : CanvasLayer = get_node("PauseMenu")
 var paused = false
+var player_name = "DefaultName"
 
 
+## Set multiplayer auth
 func _enter_tree() -> void:
 	set_multiplayer_authority(name.to_int())
 
 
+## Connect signals
 func _ready() -> void:
 	if not is_multiplayer_authority(): return
 	pause_menu.value_update.connect(_on_menu_value_update)
 
 
-func _process(delta: float) -> void:
+## Handle pausing
+func _process(_delta: float) -> void:
 	if not is_multiplayer_authority(): return
 	if Input.is_action_just_pressed("pause"):
 			if(paused == false):
@@ -33,6 +37,7 @@ func _process(delta: float) -> void:
 			_on_menu_key(paused)
 
 
+## Handle player movement
 func _physics_process(delta: float) -> void:
 	if not is_multiplayer_authority(): return
 	
@@ -40,9 +45,7 @@ func _physics_process(delta: float) -> void:
 		velocity.y -= GRAVITY * delta
 	
 	if Input.is_action_just_pressed("jump") and is_on_floor():
-		print(is_multiplayer_authority())
 		velocity .y += JUMP_VELOCITY
-		
 	
 	# Handle movement inputs
 	var input_dir = Input.get_vector("left", "right", "forward", "back")
@@ -54,7 +57,7 @@ func _physics_process(delta: float) -> void:
 		velocity.x = move_toward(velocity.x, 0, SPEED)
 		velocity.z = move_toward(velocity.z, 0, SPEED)
 	
-	# Handle animation
+	# Handle movement animation
 	gun_container.handle_movement_anim(direction)
 	
 	# Actually do our movement

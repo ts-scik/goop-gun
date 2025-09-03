@@ -52,7 +52,7 @@ shadow_enabled = true
 [node name="Geometry" type="Node3D" parent="."]
 
 [node name="RefCube" type="StaticBody3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.59061, 1.5, -2.43515)
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Geometry/RefCube"]
 mesh = SubResource("BoxMesh_0b4ue")
@@ -95,7 +95,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.125, -0.0500007)
 size = Vector3(5.2, 0.25, 5.1)
 
 [node name="Cube" parent="." instance=ExtResource("3_v81my")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0848253, 2.88097, -0.008569)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.67544, 2.88097, -2.44372)
 
 [node name="MultiplayerUI" parent="." node_paths=PackedStringArray("debug_spawner") instance=ExtResource("6_suriq")]
 debug_spawner = NodePath("../MpPlayerSpawner")

@@ -7,12 +7,16 @@ const BULLET_DECAL = preload("res://Prefabs/bullet_decal.tscn")
 func shoot():
 	force_raycast_update()
 	if is_colliding():
-		if get_collider() is RigidBody3D:
+		if get_collider() is PlayerController:
+			print("omg!! ", NetworkHandler.player_name," just shot ", NetworkHandler.players[int(get_collider().name)], "!!", " auth : ", get_multiplayer_authority())
+		elif get_collider() is RigidBody3D:
 			var rb : RigidBody3D = get_collider()
 			var hit_pos_offset = get_collision_point() - rb.global_position
 			rb.apply_force(-global_basis.z*300, hit_pos_offset)
-		if get_collider() is StaticBody3D or get_collider() is CSGShape3D:
+			print("apply_force", " auth : ", get_multiplayer_authority())
+		elif get_collider() is StaticBody3D or get_collider() is CSGShape3D:
 			_bullet_decal(get_collision_point(), get_collision_normal())
+			print("applied_decal at", get_collision_point()," auth : ", get_multiplayer_authority())
 
 
 ## Applies bullet decal

@@ -8,11 +8,13 @@ class_name GunController
 
 
 ## Shoots
+@rpc("authority","call_local","unreliable")
 func shoot():
 	# handle raycast
 	ray.shoot()
 	# handle sound
-	gun_sound.play()
+	if(multiplayer.is_server()):
+		gun_sound.play()
 	# handle animation
 	anim_player.stop()
 	anim_player.play("shoot")
