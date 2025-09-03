@@ -78,6 +78,7 @@ func _connected_ok():
 # Callback from SceneTree, only for clients (not server).
 func _server_disconnected():
 	game_error.emit("Server disconnected")
+	game_ended.emit()
 	end_game()
 
 
@@ -110,7 +111,6 @@ func get_player_name():
 
 
 func end_game():
-	game_ended.emit()
 	for id in players:
 		var path = NodePath("/root/Level/"+str(id))
 		print(path)
