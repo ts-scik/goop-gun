@@ -42,7 +42,8 @@ func start_server(new_player_name : String = "DefaultName") -> void:
 func start_client(ip : String = DEFAULT_IP_ADDRESS, new_player_name : String = "DefaultName") -> void:
 	player_name = new_player_name
 	peer = ENetMultiplayerPeer.new()
-	peer.create_client(DEFAULT_IP_ADDRESS, DEFAULT_PORT)
+	peer.create_client(ip, DEFAULT_PORT)
+	print(ip)
 	multiplayer.set_multiplayer_peer(peer)
 	players[multiplayer.get_unique_id()] = new_player_name
 
@@ -110,4 +111,10 @@ func get_player_name():
 
 func end_game():
 	game_ended.emit()
+	for id in players:
+		var path = NodePath("/root/Level/"+str(id))
+		print(path)
+		if(has_node(path)):
+			get_node(path).queue_free()
 	players.clear()
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE

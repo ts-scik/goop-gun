@@ -13,8 +13,7 @@ func shoot():
 	# handle raycast
 	ray.shoot()
 	# handle sound
-	if(multiplayer.is_server()):
-		gun_sound.play()
+	gun_sound.play()
 	# handle animation
 	anim_player.stop()
 	anim_player.play("shoot")

@@ -37,6 +37,7 @@ offset_bottom = 69.0
 theme = ExtResource("2_p37wi")
 
 [node name="IPLabel" type="Label" parent="Connect"]
+layout_mode = 0
 offset_left = 14.0
 offset_top = 74.0
 offset_right = 65.0
@@ -44,6 +45,7 @@ offset_bottom = 97.0
 text = "IP:"
 
 [node name="IPAddress" type="LineEdit" parent="Connect"]
+layout_mode = 0
 offset_left = 17.0
 offset_top = 102.0
 offset_right = 173.0
