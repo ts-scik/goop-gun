@@ -7,7 +7,7 @@ func _ready():
 	NetworkHandler.connection_failed.connect(_on_connection_failed)
 	NetworkHandler.connection_succeeded.connect(_on_connection_success)
 	NetworkHandler.game_error.connect(_on_game_error)
-	NetworkHandler.game_ended.emit(_on_game_ended)
+	NetworkHandler.game_ended.connect(_on_game_ended)
 	$Connect/IPAddress.text = NetworkHandler.DEFAULT_IP_ADDRESS
 	if OS.has_environment("USERNAME"):
 		$Connect/Name.text = OS.get_environment("USERNAME")
@@ -67,5 +67,4 @@ func _on_game_error(errtxt):
 	#$Connect.show()
 
 func _on_game_ended():
-	print("hi")
 	$Connect.show()

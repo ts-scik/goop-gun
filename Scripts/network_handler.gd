@@ -78,7 +78,6 @@ func _connected_ok():
 # Callback from SceneTree, only for clients (not server).
 func _server_disconnected():
 	game_error.emit("Server disconnected")
-	game_ended.emit()
 	end_game()
 
 
@@ -118,3 +117,4 @@ func end_game():
 			get_node(path).queue_free()
 	players.clear()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	game_ended.emit()
