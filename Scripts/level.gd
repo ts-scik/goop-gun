@@ -2,14 +2,14 @@ extends Node3D
 
 @onready var player : PlayerController = get_node("Player")
 @onready var player_camera : CameraController = get_node("Player/CameraController")
-@onready var menu : CanvasLayer = get_node("MainMenu")
+@onready var menu : CanvasLayer = get_node("PauseMenu")
 
 
 ## Connect relevant signals
 func _ready() -> void:
 	player.menu.connect(_on_menu_key)
 	menu.value_update.connect(_on_menu_value_update)
-	
+
 
 ## Handle showing/hiding the menu
 func _on_menu_key(is_paused: bool) -> void:

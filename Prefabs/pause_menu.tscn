@@ -1,10 +1,10 @@
 [gd_scene load_steps=4 format=3 uid="uid://bdt3orm768b1"]
 
-[ext_resource type="Script" uid="uid://ju1873le1n6p" path="res://Scripts/main_menu.gd" id="1_mf8ns"]
+[ext_resource type="Script" uid="uid://ju1873le1n6p" path="res://Scripts/pause_menu.gd" id="1_mf8ns"]
 [ext_resource type="Theme" uid="uid://dbc26jnuib7yq" path="res://Themes/main_theme.tres" id="2_7do1g"]
 [ext_resource type="PackedScene" uid="uid://bmwelugvb25bb" path="res://Prefabs/value_slider.tscn" id="2_dgyu8"]
 
-[node name="MainMenu" type="CanvasLayer"]
+[node name="PauseMenu" type="CanvasLayer"]
 script = ExtResource("1_mf8ns")
 
 [node name="MenuContainer" type="PanelContainer" parent="."]
@@ -34,17 +34,17 @@ layout_mode = 2
 [node name="Cam_Sense_Slider" parent="MenuContainer/SliderMargins/SlidersContainer" instance=ExtResource("2_dgyu8")]
 layout_mode = 2
 parameter = "cam_sense"
-tip_text = "Camera Sensitivity:"
+tip_text = "Camera Sensitivity"
 
 [node name="Aim_Sense_Slider" parent="MenuContainer/SliderMargins/SlidersContainer" instance=ExtResource("2_dgyu8")]
 layout_mode = 2
 parameter = "aim_sense"
-tip_text = "Aim Sensitivity:"
+tip_text = "Aim Sensitivity"
 
 [node name="Master_Vol_Slider" parent="MenuContainer/SliderMargins/SlidersContainer" instance=ExtResource("2_dgyu8")]
 layout_mode = 2
 parameter = "master_vol"
-tip_text = "Master Volume:"
+tip_text = "Master Volume (TODO)"
 slider_range = Vector2(0, 100)
 slider_default = 50.0
 

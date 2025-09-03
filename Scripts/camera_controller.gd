@@ -40,7 +40,7 @@ func _ready() -> void:
 	top_level = true
 # END CAMERA MNGMT
 # START GUN MGMT
-	gun_container = get_node("GunContainer")
+	gun_container = get_node("GunController")
 	boundary_rect = get_node("GunCanvas/BoundaryRect")
 	red_dot = get_node("GunCanvas/RedDot")
 	player_camera = get_node("PlayerCamera")
@@ -54,9 +54,7 @@ func _input(event: InputEvent) -> void:
 	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and event is InputEventMouseMotion:
 		mouse_input.x += -event.screen_relative.x * camera_sensitivity
 		mouse_input.y += -event.screen_relative.y * camera_sensitivity
-	# If mouse is uncaptured, and we just clicked -> capture the mouse
-	elif Input.mouse_mode != Input.MOUSE_MODE_CAPTURED and event.is_action_pressed("pause"):
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	# If mouse is captured, and we clicked -> shoot
 	elif Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and event.is_action_pressed("shoot"):
 		shoot()
 
@@ -81,7 +79,11 @@ func viewport_update():
 func _process(_delta: float) -> void:
 	# If the window has been resized, do some viewport updates
 	if(screen_size != Vector2(get_viewport().size)): viewport_update()
-	
+	mouse_management()
+
+
+## Move the mouse, move the camera, rotate the player to match, etc
+func mouse_management():
 	# Update mouse position
 	var mouse_newpos = mouse_position - mouse_input * aim_sensitivity * (screen_size.y) * 20
 	var midpoint = screen_size/2
@@ -103,29 +105,22 @@ func _process(_delta: float) -> void:
 	update_gun_local_space()
 	
 	# Debug
-	if(debug_mode == true):
-		red_dot.position = mouse_position - (red_dot.size/2) # move our debug red-dot
+	# Move our debug red-dot
+	if(debug_mode == true): red_dot.position = mouse_position - (red_dot.size/2)
 	
 	# Zero out our mouse input for next frame
 	mouse_input = Vector2.ZERO
-
+	
 
 ## Shoots
 var kick_amount = Vector2(0.1,0.5) # x/y screen kick amount
 func shoot():
-	# handle raycast
-	var raycast = get_node("GunContainer/GunRaycast")
-	raycast.shoot()
 	# handle kick
 	kick_amount.x *= ((randi() & 2) - 1)
 	mouse_position -= (kick_amount * screen_size/10)
-	# handle sound
-	get_node("GunContainer/GunSound").play()
-	# handle animation
-	#TODO: maybe move this elsewhere
-	var anim : AnimationPlayer = get_node("GunContainer/GunAnimator")
-	anim.stop()
-	anim.play("shoot")
+	# get container to take over
+	gun_container.shoot()
+
 
 ## Updates the gun's position+rotation (for if gun exists in local space)
 func update_gun_local_space():
@@ -154,6 +149,7 @@ func update_gun_global_space():
 	gun_container.basis = Basis.looking_at(fw_dir, up_dir, false)
 
 
+## Toggles debug
 func toggle_debug(is_debug : bool):
 	debug_mode = is_debug
 	if(debug_mode):

@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://by5yaq3ckogg2" path="res://Scripts/level.gd" id="1_xv0kx"]
 [ext_resource type="Texture2D" uid="uid://sjnjcsxqllgg" path="res://icon.svg" id="2_v81my"]
 [ext_resource type="PackedScene" uid="uid://b1w8lysvtvysk" path="res://Prefabs/cube.tscn" id="3_v81my"]
-[ext_resource type="PackedScene" uid="uid://bdt3orm768b1" path="res://Prefabs/main_menu.tscn" id="5_xv0kx"]
+[ext_resource type="PackedScene" uid="uid://bdt3orm768b1" path="res://Prefabs/pause_menu.tscn" id="5_xv0kx"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_xjhai"]
 sky_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
@@ -99,5 +99,5 @@ size = Vector3(5.2, 0.25, 5.1)
 [node name="Cube" parent="." instance=ExtResource("3_v81my")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0848253, 2.88097, -0.008569)
 
-[node name="MainMenu" parent="." instance=ExtResource("5_xv0kx")]
+[node name="PauseMenu" parent="." instance=ExtResource("5_xv0kx")]
 visible = false
