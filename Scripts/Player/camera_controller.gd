@@ -13,7 +13,8 @@ var gun_container : Node3D # Gun's container
 # Mouse input variables
 var mouse_input : Vector2 # Stores mouse input each frame
 var input_rotation : Vector3 # Stores mouse_input converted to rotation
-var camera_sensitivity : float = 0.005 # Mouse camera sensitivity
+var camera_sensitivity : float = 0.5 # Mouse camera sensitivity
+var mouse_sensitivity : float = 0.005 # Mouse overall sensitivitiy
 var mouse_target : Vector2 = Vector2.ZERO
 # Gun deadzone variables
 var aim_sensitivity : float = 0.005 # Mouse aim sensitivity
@@ -56,8 +57,8 @@ func _input(event: InputEvent) -> void:
 	if not is_multiplayer_authority(): return
 	# If the mouse is captured -> handle mouse movement
 	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and event is InputEventMouseMotion:
-		mouse_input.x += -event.screen_relative.x * camera_sensitivity
-		mouse_input.y += -event.screen_relative.y * camera_sensitivity
+		mouse_input.x += -event.screen_relative.x * mouse_sensitivity
+		mouse_input.y += -event.screen_relative.y * mouse_sensitivity
 	# If mouse is captured, and we clicked -> shoot
 	elif Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and event.is_action_pressed("shoot"):
 		shoot()
@@ -103,9 +104,9 @@ func mouse_input_management():
 
 	# If the gun is trying to move beyond its deadzone, rotate the camera
 	if(mouse_position.x != mouse_newpos.x):
-		input_rotation.y += mouse_input.x
+		input_rotation.y += mouse_input.x * camera_sensitivity
 	elif(mouse_position.y != mouse_newpos.y):
-		input_rotation.x = clampf(input_rotation.x + mouse_input.y, deg_to_rad(-90), deg_to_rad(85))
+		input_rotation.x = clampf(input_rotation.x + (mouse_input.y * camera_sensitivity), deg_to_rad(-90), deg_to_rad(85))
 	
 	# Update the player_controller rotation
 	player_controller.camera_controller_anchor.transform.basis = Basis.from_euler(Vector3(input_rotation.x, 0.0, 0.0)) # rotate camera controller (up/down)

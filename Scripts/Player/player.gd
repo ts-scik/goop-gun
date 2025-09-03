@@ -75,8 +75,10 @@ func _on_menu_key(is_paused: bool) -> void:
 ## Handle main menu value updates
 func _on_menu_value_update(value, parameter : String) -> void:
 	match(parameter):
+		"mouse_sense":
+			player_camera_ctrlr.mouse_sensitivity = value / 1000
 		"cam_sense":
-			player_camera_ctrlr.camera_sensitivity = value / 1000
+			player_camera_ctrlr.camera_sensitivity = value / 10
 		"aim_sense":
 			player_camera_ctrlr.aim_sensitivity = value / 1000
 		"debug":

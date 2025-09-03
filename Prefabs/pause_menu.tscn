@@ -34,6 +34,11 @@ theme_override_constants/margin_bottom = 50
 [node name="SlidersContainer" type="VBoxContainer" parent="MenuContainer/VBoxContainer/SliderMargins"]
 layout_mode = 2
 
+[node name="Mouse_Sense_Slider2" parent="MenuContainer/VBoxContainer/SliderMargins/SlidersContainer" instance=ExtResource("2_dgyu8")]
+layout_mode = 2
+parameter = "mouse_sense"
+tip_text = "Mouse Sensitivity"
+
 [node name="Cam_Sense_Slider" parent="MenuContainer/VBoxContainer/SliderMargins/SlidersContainer" instance=ExtResource("2_dgyu8")]
 layout_mode = 2
 parameter = "cam_sense"
