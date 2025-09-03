@@ -1,10 +1,11 @@
-[gd_scene load_steps=15 format=3 uid="uid://dtfa0wus6t07h"]
+[gd_scene load_steps=16 format=3 uid="uid://dtfa0wus6t07h"]
 
 [ext_resource type="PackedScene" uid="uid://dpkim8cla8dii" path="res://Prefabs/player.tscn" id="1_xjhai"]
 [ext_resource type="Script" uid="uid://by5yaq3ckogg2" path="res://Scripts/level.gd" id="1_xv0kx"]
 [ext_resource type="Texture2D" uid="uid://sjnjcsxqllgg" path="res://icon.svg" id="2_v81my"]
 [ext_resource type="PackedScene" uid="uid://b1w8lysvtvysk" path="res://Prefabs/cube.tscn" id="3_v81my"]
-[ext_resource type="PackedScene" uid="uid://bdt3orm768b1" path="res://Prefabs/pause_menu.tscn" id="5_xv0kx"]
+[ext_resource type="PackedScene" uid="uid://c70yb0bub5udh" path="res://Prefabs/multiplayer_UI.tscn" id="6_suriq"]
+[ext_resource type="Script" uid="uid://brdsj24eiirsi" path="res://Prefabs/mp_player_spawner.gd" id="7_8dyi2"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_xjhai"]
 sky_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
@@ -47,9 +48,6 @@ environment = SubResource("Environment_pa8ci")
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, 0, 0, 0)
 shadow_enabled = true
-
-[node name="Player" parent="." instance=ExtResource("1_xjhai")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3)
 
 [node name="Geometry" type="Node3D" parent="."]
 
@@ -99,5 +97,11 @@ size = Vector3(5.2, 0.25, 5.1)
 [node name="Cube" parent="." instance=ExtResource("3_v81my")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0848253, 2.88097, -0.008569)
 
-[node name="PauseMenu" parent="." instance=ExtResource("5_xv0kx")]
-visible = false
+[node name="MultiplayerUI" parent="." node_paths=PackedStringArray("debug_spawner") instance=ExtResource("6_suriq")]
+debug_spawner = NodePath("../MpPlayerSpawner")
+
+[node name="MpPlayerSpawner" type="MultiplayerSpawner" parent="."]
+_spawnable_scenes = PackedStringArray("uid://dpkim8cla8dii")
+spawn_path = NodePath("..")
+script = ExtResource("7_8dyi2")
+network_player = ExtResource("1_xjhai")

@@ -53,5 +53,4 @@ custom_minimum_size = Vector2(20, 20)
 offset_right = 83.0
 offset_bottom = 31.0
 theme = ExtResource("2_7do1g")
-button_pressed = true
 text = "Debug"

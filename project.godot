@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 scik="*res://addons/scik_utils.gd"
+NetworkHandler="*res://Scripts/network_handler.gd"
 
 [debug_draw_3d]
 

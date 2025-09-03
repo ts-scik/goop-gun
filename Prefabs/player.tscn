@@ -1,11 +1,20 @@
-[gd_scene load_steps=20 format=3 uid="uid://dpkim8cla8dii"]
+[gd_scene load_steps=22 format=3 uid="uid://dpkim8cla8dii"]
 
-[ext_resource type="Script" uid="uid://bxc5wvblob2y7" path="res://Scripts/player.gd" id="1_onrkg"]
-[ext_resource type="Script" uid="uid://tp34olvhc8jf" path="res://Scripts/camera_controller.gd" id="2_i3pqv"]
-[ext_resource type="Script" uid="uid://clf1pp0ppnwps" path="res://Scripts/gun_controller.gd" id="3_hck1p"]
+[ext_resource type="Script" uid="uid://bxc5wvblob2y7" path="res://Scripts/Player/player.gd" id="1_onrkg"]
+[ext_resource type="Script" uid="uid://tp34olvhc8jf" path="res://Scripts/Player/camera_controller.gd" id="2_i3pqv"]
+[ext_resource type="Script" uid="uid://clf1pp0ppnwps" path="res://Scripts/Player/gun_controller.gd" id="3_hck1p"]
 [ext_resource type="PackedScene" uid="uid://bhs0dqr47vg8p" path="res://Models/kenney_blaster-kit_2.1/blaster-b.glb" id="4_2nftw"]
-[ext_resource type="Script" uid="uid://b8b2ltlkdgkp2" path="res://Scripts/gun_raycast.gd" id="4_knrd4"]
+[ext_resource type="Script" uid="uid://b8b2ltlkdgkp2" path="res://Scripts/Player/gun_raycast.gd" id="4_knrd4"]
 [ext_resource type="AudioStream" uid="uid://ro6npthlf24i" path="res://Sounds/gunshot_cg1.wav" id="5_knrd4"]
+[ext_resource type="PackedScene" uid="uid://bdt3orm768b1" path="res://Prefabs/pause_menu.tscn" id="7_juxdh"]
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_hck1p"]
+properties/0/path = NodePath(".:position")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath(".:rotation")
+properties/1/spawn = true
+properties/1/replication_mode = 1
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_km5ld"]
 
@@ -158,6 +167,9 @@ _data = {
 [node name="Player" type="CharacterBody3D"]
 script = ExtResource("1_onrkg")
 
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_hck1p")
+
 [node name="PlayerModel" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 mesh = SubResource("CapsuleMesh_km5ld")
@@ -177,6 +189,7 @@ script = ExtResource("2_i3pqv")
 cull_mask = 1048573
 
 [node name="GunCanvas" type="CanvasLayer" parent="CameraController"]
+visible = false
 
 [node name="BoundaryRect" type="ReferenceRect" parent="CameraController/GunCanvas"]
 anchors_preset = 8
@@ -235,3 +248,6 @@ parameters/conditions/walking = false
 libraries = {
 &"": SubResource("AnimationLibrary_4qbli")
 }
+
+[node name="PauseMenu" parent="." instance=ExtResource("7_juxdh")]
+visible = false

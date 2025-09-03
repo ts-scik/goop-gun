@@ -29,6 +29,7 @@ var debug_mode : bool = true
 
 ## Get our cameras set up
 func _ready() -> void:
+	if not is_multiplayer_authority(): return
 # START CAMERA MNGMT
 	# Find the target nodes
 	player_controller = get_parent() # TODO: bad!
@@ -44,12 +45,14 @@ func _ready() -> void:
 	boundary_rect = get_node("GunCanvas/BoundaryRect")
 	red_dot = get_node("GunCanvas/RedDot")
 	player_camera = get_node("PlayerCamera")
+	player_camera.current = true
 	viewport_update()
 # END GUN MGMT
 
 
 ## Handles input [event]s for mouse
 func _input(event: InputEvent) -> void:
+	if not is_multiplayer_authority(): return
 	# If the mouse is captured -> handle mouse movement
 	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and event is InputEventMouseMotion:
 		mouse_input.x += -event.screen_relative.x * camera_sensitivity
@@ -77,6 +80,7 @@ func viewport_update():
 
 ## Handles camera rotation / gun positioning
 func _process(_delta: float) -> void:
+	if not is_multiplayer_authority(): return
 	# If the window has been resized, do some viewport updates
 	if(screen_size != Vector2(get_viewport().size)): viewport_update()
 	mouse_management()
