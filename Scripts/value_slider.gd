@@ -9,10 +9,11 @@ class_name ValueSlider
 @export var tip_text : String = "Tooltip:"
 @export var slider_range : Vector2 = Vector2(0.0, 10.0) # min, value, max
 @export var slider_default : float = 5.0
-
+@export var slider_step : float = 0.1
 var is_dragging : bool = false
 
 signal value_update(value, parameter : String)
+
 
 func _ready() -> void:
 	slider.drag_ended.connect(_on_slider_drag_end)
@@ -32,6 +33,7 @@ func update_config() -> void:
 	slider.min_value = slider_range.x
 	slider.max_value = slider_range.y
 	slider.value = slider_default
+	slider.step = slider_step
 	value.text = str(slider.value)
 
 

@@ -24,5 +24,10 @@ func _on_quit_button_pressed() -> void:
 ## Handles debug checkbox
 func _on_gun_box_debug_toggled(toggled_on: bool) -> void:
 	value_update.emit(toggled_on, "debug_box")
-func _on_gun_reticle_debug_toggled(toggled_on: bool) -> void:
+func _on_gun_dot_debug_toggled(toggled_on: bool) -> void:
 	value_update.emit(toggled_on, "debug_dot")
+
+
+## Handles ADS toggle
+func _on_aim_toggle_button_toggled(toggled_on: bool) -> void:
+	value_update.emit(toggled_on, "aim_toggle")

@@ -1,12 +1,38 @@
-[gd_resource type="Theme" load_steps=3 format=3 uid="uid://dbc26jnuib7yq"]
+[gd_resource type="Theme" load_steps=5 format=3 uid="uid://dbc26jnuib7yq"]
 
 [ext_resource type="FontFile" uid="uid://dfjocmme22rof" path="res://Themes/VCR_OSD_MONO_1.001.ttf" id="1_8cjo3"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8cjo3"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.1, 0.1, 0.1, 0.6)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+corner_detail = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_o2ta1"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.952941, 0.388235, 0.4, 0.6)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+corner_detail = 5
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ybks7"]
 bg_color = Color(0.953548, 0.38806, 0.398324, 1)
 
 [resource]
 Button/fonts/font = ExtResource("1_8cjo3")
+Button/styles/normal = SubResource("StyleBoxFlat_8cjo3")
+Button/styles/pressed = SubResource("StyleBoxFlat_o2ta1")
 CheckBox/fonts/font = ExtResource("1_8cjo3")
 HSlider/styles/grabber_area = SubResource("StyleBoxFlat_ybks7")
 Label/fonts/font = ExtResource("1_8cjo3")

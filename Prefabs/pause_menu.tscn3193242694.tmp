@@ -1,0 +1,157 @@
+[gd_scene load_steps=5 format=3 uid="uid://bdt3orm768b1"]
+
+[ext_resource type="Script" uid="uid://ju1873le1n6p" path="res://Scripts/pause_menu.gd" id="1_mf8ns"]
+[ext_resource type="Theme" uid="uid://dbc26jnuib7yq" path="res://Themes/main_theme.tres" id="2_7do1g"]
+[ext_resource type="PackedScene" uid="uid://bmwelugvb25bb" path="res://Prefabs/value_slider.tscn" id="2_dgyu8"]
+[ext_resource type="PackedScene" uid="uid://cqsa45gcqdm8" path="res://Prefabs/fps_button.tscn" id="4_bc36d"]
+
+[node name="PauseMenu" type="CanvasLayer"]
+script = ExtResource("1_mf8ns")
+
+[node name="MenuContainer" type="PanelContainer" parent="."]
+custom_minimum_size = Vector2(500, 0)
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -304.0
+offset_top = -189.0
+offset_right = 304.0
+offset_bottom = 189.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_7do1g")
+
+[node name="MenuVBox" type="VBoxContainer" parent="MenuContainer"]
+layout_mode = 2
+theme = ExtResource("2_7do1g")
+
+[node name="SliderMargins" type="MarginContainer" parent="MenuContainer/MenuVBox"]
+layout_mode = 2
+theme = ExtResource("2_7do1g")
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 50
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 50
+
+[node name="SlidersContainer" type="VBoxContainer" parent="MenuContainer/MenuVBox/SliderMargins"]
+layout_mode = 2
+theme = ExtResource("2_7do1g")
+
+[node name="Mouse_Sense_Slider2" parent="MenuContainer/MenuVBox/SliderMargins/SlidersContainer" instance=ExtResource("2_dgyu8")]
+layout_mode = 2
+theme = ExtResource("2_7do1g")
+parameter = "mouse_sense"
+tip_text = "Mouse Sensitivity"
+
+[node name="Cam_Sense_Slider" parent="MenuContainer/MenuVBox/SliderMargins/SlidersContainer" instance=ExtResource("2_dgyu8")]
+layout_mode = 2
+theme = ExtResource("2_7do1g")
+parameter = "cam_sense"
+tip_text = "Camera Sensitivity"
+
+[node name="Aim_Sense_Slider" parent="MenuContainer/MenuVBox/SliderMargins/SlidersContainer" instance=ExtResource("2_dgyu8")]
+layout_mode = 2
+theme = ExtResource("2_7do1g")
+parameter = "aim_sense"
+tip_text = "Aim Sensitivity"
+
+[node name="Master_Vol_Slider" parent="MenuContainer/MenuVBox/SliderMargins/SlidersContainer" instance=ExtResource("2_dgyu8")]
+layout_mode = 2
+theme = ExtResource("2_7do1g")
+parameter = "master_vol"
+tip_text = "Master Volume"
+slider_range = Vector2(0, 100)
+slider_default = 50.0
+
+[node name="ButtonMargins" type="MarginContainer" parent="MenuContainer/MenuVBox"]
+layout_mode = 2
+theme = ExtResource("2_7do1g")
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 50
+theme_override_constants/margin_bottom = 50
+
+[node name="ButtonsContainer" type="VBoxContainer" parent="MenuContainer/MenuVBox/ButtonMargins"]
+layout_mode = 2
+theme = ExtResource("2_7do1g")
+
+[node name="FPSButtons" type="HBoxContainer" parent="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer"]
+layout_mode = 2
+theme = ExtResource("2_7do1g")
+
+[node name="FPS Label" type="Label" parent="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/FPSButtons"]
+layout_mode = 2
+text = "FPS LIMIT:"
+
+[node name="30FPS_Button" parent="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/FPSButtons" instance=ExtResource("4_bc36d")]
+layout_mode = 2
+text = "30"
+framerate = 30
+
+[node name="60FPS_Button" parent="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/FPSButtons" instance=ExtResource("4_bc36d")]
+layout_mode = 2
+text = "60"
+framerate = 60
+
+[node name="90FPS_Button" parent="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/FPSButtons" instance=ExtResource("4_bc36d")]
+layout_mode = 2
+text = "90"
+framerate = 90
+
+[node name="120FPS_Button" parent="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/FPSButtons" instance=ExtResource("4_bc36d")]
+layout_mode = 2
+text = "120"
+framerate = 120
+
+[node name="144FPS_Button" parent="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/FPSButtons" instance=ExtResource("4_bc36d")]
+layout_mode = 2
+text = "144"
+framerate = 144
+
+[node name="165FPS_Button" parent="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/FPSButtons" instance=ExtResource("4_bc36d")]
+layout_mode = 2
+text = "165"
+framerate = 165
+
+[node name="240FPS_Button" parent="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/FPSButtons" instance=ExtResource("4_bc36d")]
+layout_mode = 2
+text = "240"
+framerate = 240
+
+[node name="0FPS_Button" parent="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/FPSButtons" instance=ExtResource("4_bc36d")]
+layout_mode = 2
+text = "UNCAPPED"
+
+[node name="PanelContainer" type="PanelContainer" parent="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer"]
+layout_mode = 2
+theme = ExtResource("2_7do1g")
+
+[node name="GunBoxDebug" type="CheckBox" parent="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/PanelContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme = ExtResource("2_7do1g")
+text = "Gun Box Debug"
+
+[node name="GunReticleDebug" type="CheckBox" parent="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/PanelContainer"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_horizontal = 8
+theme = ExtResource("2_7do1g")
+text = "Gun Dot Debug"
+
+[node name="AimToggleBox" type="CheckBox" parent="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/PanelContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme = ExtResource("2_7do1g")
+text = "Toggle Aim"
+
+[node name="QuitButton" type="Button" parent="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer"]
+layout_mode = 2
+text = "Quit Game"
+
+[connection signal="toggled" from="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/PanelContainer/GunBoxDebug" to="." method="_on_gun_box_debug_toggled"]
+[connection signal="toggled" from="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/PanelContainer/GunReticleDebug" to="." method="_on_gun_reticle_debug_toggled"]
+[connection signal="toggled" from="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/PanelContainer/AimToggleBox" to="." method="_on_aim_toggle_box_toggled"]
+[connection signal="pressed" from="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/QuitButton" to="." method="_on_quit_button_pressed"]

@@ -28,6 +28,7 @@ var ads_time : float = 0.5 # ADS time (in seconds)
 var ads_timer : float = 0.0 # timer for ADS lerp
 var aim_held : bool = false # for ADS input
 var is_aiming : bool = false # for ADS completed
+var aim_toggle : bool = false
 var kick_amount = Vector2(0.1,0.5) # x/y screen kick amount
 # Debug stuff
 var red_dot : ColorRect # debug red-dot for aim
@@ -70,9 +71,16 @@ func _input(event: InputEvent) -> void:
 	elif Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and aim_held and event.is_action_pressed("shoot"):
 		shoot()
 	
+	# If aim button is pressed down this frame,
 	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and event.is_action_pressed("aim"):
-		aim_held = true
-	elif Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and event.is_action_released("aim"):
+		# If aim is a hold, enable aiming
+		if(!aim_toggle):
+			aim_held = true
+		# If aim is a toggle, toggle aiming
+		else:
+			aim_held = !aim_held
+	# If aim button was released this frame, and we're using hold-to-aim,
+	elif Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and !aim_toggle and event.is_action_released("aim"):
 		aim_held = false
 		is_aiming = false
 
@@ -84,10 +92,6 @@ func _process(delta: float) -> void:
 	
 	# If the window has been resized, do some viewport updates
 	if(screen_size != Vector2(get_viewport().size)): viewport_update()
-	
-	
-		
-	
 
 	# Choose a camera update function depending on whether we're fully aimed or not
 	if(is_aiming):
@@ -95,7 +99,7 @@ func _process(delta: float) -> void:
 	else:
 		unaimed_input_management()
 	
-	# Handle ADS inputs
+	# Handle ADS inputs -- THIS NEEDS TO BE AFTER MOUSE INPUT HANDLING
 	if(aim_held and !is_aiming):
 		start_aim(delta)
 	elif(!aim_held):
@@ -124,6 +128,7 @@ func viewport_update():
 	mouse_position = screen_size/2
 
 
+## Animates gun into aiming position
 func start_aim(delta) -> void:
 	# update the aim timer
 	ads_timer += delta
@@ -139,6 +144,7 @@ func start_aim(delta) -> void:
 	gun_controller.rotation = lerp(gun_controller.rotation, target_rot, ads_timer/ads_time)
 
 
+## Animates gun when not aimed
 var holstered_pos = Vector3(0, 1.0, -0.3)
 var holstered_rot = Vector3(deg_to_rad(-45.0), 0.0, 0.0)
 func end_aim(delta) -> void:
@@ -159,6 +165,7 @@ func end_aim(delta) -> void:
 	gun_controller.global_rotation = lerp(gun_controller.global_rotation, target_rot, (1-ads_timer/ads_time))
 
 
+## Manages mouse effect on camera when unaimed
 func unaimed_input_management():
 	# Reset mouse position to screen center
 	mouse_position = screen_size/2

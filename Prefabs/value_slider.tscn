@@ -30,6 +30,7 @@ ticks_on_borders = true
 [node name="Value" type="Label" parent="."]
 custom_minimum_size = Vector2(50, 0)
 layout_mode = 2
+size_flags_horizontal = 0
 theme = ExtResource("1_hklip")
 text = "5.0"
 horizontal_alignment = 1

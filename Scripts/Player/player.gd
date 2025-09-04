@@ -10,6 +10,7 @@ const GRAVITY = 9.8
 @onready var player_camera_ctrlr = get_node("CameraController")
 @onready var pause_menu : CanvasLayer = get_node("PauseMenu")
 @onready var HUD : CanvasLayer = get_node("HUD")
+var volume_curve : Curve
 var paused = false
 var player_name = "DefaultName"
 
@@ -28,6 +29,16 @@ func _ready() -> void:
 	pause_menu.value_update.connect(_on_menu_value_update)
 	HUD.show()
 	HUD.update_health(health)
+	
+	# set up volume curve - TODO: this shouldn't be the player's job
+	var max_vol = 6.0
+	var min_vol = -40.0
+	volume_curve = Curve.new()
+	volume_curve.max_value = max_vol
+	volume_curve.min_value = min_vol
+	volume_curve.add_point(Vector2(0,min_vol))
+	volume_curve.add_point(Vector2(0.5,0))
+	volume_curve.add_point(Vector2(1.0,max_vol))
 
 
 ## Handle pausing
@@ -102,7 +113,9 @@ func _on_menu_value_update(value, parameter : String) -> void:
 				AudioServer.set_bus_mute(AudioServer.get_bus_index("Master"), true)
 			else:
 				AudioServer.set_bus_mute(AudioServer.get_bus_index("Master"), false)
-				AudioServer.set_bus_volume_db(AudioServer.get_bus_index("Master"),((value/10)-5.0))
+				var new_vol = volume_curve.sample_baked(value/100)
+				print(new_vol)
+				AudioServer.set_bus_volume_db(AudioServer.get_bus_index("Master"),(new_vol))
 		"mouse_sense":
 			player_camera_ctrlr.mouse_sensitivity = value / 1000
 		"cam_sense":
@@ -113,3 +126,7 @@ func _on_menu_value_update(value, parameter : String) -> void:
 			player_camera_ctrlr.toggle_debug(value, "box")
 		"debug_dot":
 			player_camera_ctrlr.toggle_debug(value, "dot")
+		"aim_toggle":
+			player_camera_ctrlr.aim_toggle = value
+		"fps_cap":
+			Engine.max_fps = int(value)

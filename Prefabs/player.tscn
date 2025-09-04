@@ -1,4 +1,4 @@
-[gd_scene load_steps=30 format=3 uid="uid://dpkim8cla8dii"]
+[gd_scene load_steps=31 format=3 uid="uid://dpkim8cla8dii"]
 
 [ext_resource type="Script" uid="uid://bxc5wvblob2y7" path="res://Scripts/Player/player.gd" id="1_onrkg"]
 [ext_resource type="Script" uid="uid://tp34olvhc8jf" path="res://Scripts/Player/camera_controller.gd" id="2_i3pqv"]
@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" uid="uid://bdt3orm768b1" path="res://Prefabs/pause_menu.tscn" id="7_juxdh"]
 [ext_resource type="PackedScene" uid="uid://doyu5fve8ug4l" path="res://Prefabs/hud.tscn" id="8_4qbli"]
 [ext_resource type="Script" uid="uid://d2gqj6xsm33uy" path="res://Scripts/hud.gd" id="9_08u7w"]
+[ext_resource type="Theme" uid="uid://dbc26jnuib7yq" path="res://Themes/main_theme.tres" id="10_kgmex"]
 
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_hck1p"]
 properties/0/path = NodePath(".:position")
@@ -304,7 +305,6 @@ libraries = {
 visible = false
 
 [node name="HUD" parent="." instance=ExtResource("8_4qbli")]
-visible = false
 script = ExtResource("9_08u7w")
 
 [node name="Base" type="Control" parent="HUD"]
@@ -317,13 +317,34 @@ grow_vertical = 2
 mouse_filter = 2
 
 [node name="Health" type="ProgressBar" parent="HUD/Base"]
+custom_minimum_size = Vector2(224, 27)
 layout_mode = 1
-offset_right = 224.0
-offset_bottom = 27.0
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 25.0
+offset_top = -52.0
+offset_right = 249.0
+offset_bottom = -25.0
+grow_vertical = 0
 theme_override_styles/background = SubResource("StyleBoxFlat_08u7w")
 theme_override_styles/fill = SubResource("StyleBoxFlat_kgmex")
 max_value = 3.0
 value = 3.0
 show_percentage = false
+
+[node name="HealthLabel" type="Label" parent="HUD/Base/Health"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -43.5
+offset_right = 62.0
+offset_bottom = -20.5
+grow_vertical = 2
+theme = ExtResource("10_kgmex")
+theme_override_font_sizes/font_size = 20
+text = "HEALTH"
+vertical_alignment = 1
 
 [editable path="CameraController/GunController/GunModel"]
