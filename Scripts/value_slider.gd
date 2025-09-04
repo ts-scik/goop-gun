@@ -10,11 +10,20 @@ class_name ValueSlider
 @export var slider_range : Vector2 = Vector2(0.0, 10.0) # min, value, max
 @export var slider_default : float = 5.0
 
+var is_dragging : bool = false
+
 signal value_update(value, parameter : String)
 
 func _ready() -> void:
-	slider.drag_ended.connect(_on_slider_update)
+	slider.drag_ended.connect(_on_slider_drag_end)
+	slider.drag_started.connect(_on_slider_drag_start)
 	update_config()
+
+
+## Update value if we're dragging
+func _process(_delta: float) -> void:
+	if (is_dragging):
+		value.text = str(slider.value)
 
 
 ## Set up configured variables
@@ -26,8 +35,14 @@ func update_config() -> void:
 	value.text = str(slider.value)
 
 
-## Manage slider updates
-func _on_slider_update(value_changed: bool):
+## Flag that we've started a drag
+func _on_slider_drag_start():
+	is_dragging = true
+
+
+## Manage slider updates after drag ends
+func _on_slider_drag_end(value_changed: bool):
+	is_dragging = false
 	# Early return if no change
 	if(value_changed == false): return
 	# Update text

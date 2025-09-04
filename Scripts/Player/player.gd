@@ -9,8 +9,11 @@ const GRAVITY = 9.8
 @onready var gun_container = get_node("CameraController/GunController")
 @onready var player_camera_ctrlr = get_node("CameraController")
 @onready var pause_menu : CanvasLayer = get_node("PauseMenu")
+@onready var HUD : CanvasLayer = get_node("HUD")
 var paused = false
 var player_name = "DefaultName"
+
+var health = 3
 
 
 ## Set multiplayer auth
@@ -22,6 +25,8 @@ func _enter_tree() -> void:
 func _ready() -> void:
 	if not is_multiplayer_authority(): return
 	pause_menu.value_update.connect(_on_menu_value_update)
+	HUD.show()
+	HUD.update_health(health)
 
 
 ## Handle pausing
@@ -64,6 +69,22 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 
+@rpc("any_peer")
+func receive_damage(dmg : int = 1):
+	print("ack!!")
+	health -= dmg
+	HUD.update_health(health)
+	if health <= 0:
+		die()
+
+
+func die():
+	health = 3
+	position = Vector3.ZERO
+	print("oh my god I died")
+	HUD.update_health(health)
+
+
 ## Handle showing/hiding the menu
 func _on_menu_key(is_paused: bool) -> void:
 	if(is_paused):
@@ -75,11 +96,19 @@ func _on_menu_key(is_paused: bool) -> void:
 ## Handle main menu value updates
 func _on_menu_value_update(value, parameter : String) -> void:
 	match(parameter):
+		"master_vol":
+			if(value == 0.0):
+				AudioServer.set_bus_mute(AudioServer.get_bus_index("Master"), true)
+			else:
+				AudioServer.set_bus_mute(AudioServer.get_bus_index("Master"), false)
+				AudioServer.set_bus_volume_db(AudioServer.get_bus_index("Master"),((value/10)-5.0))
 		"mouse_sense":
 			player_camera_ctrlr.mouse_sensitivity = value / 1000
 		"cam_sense":
 			player_camera_ctrlr.camera_sensitivity = value / 10
 		"aim_sense":
 			player_camera_ctrlr.aim_sensitivity = value / 1000
-		"debug":
-			player_camera_ctrlr.toggle_debug(value)
+		"debug_box":
+			player_camera_ctrlr.toggle_debug(value, "box")
+		"debug_dot":
+			player_camera_ctrlr.toggle_debug(value, "dot")

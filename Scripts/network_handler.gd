@@ -3,7 +3,7 @@ extends Node
 const DEFAULT_IP_ADDRESS : String = "localhost"
 const DEFAULT_PORT : int = 47757
 
-const MAX_PEERS = 8
+const MAX_PEERS = 16
 var peer : ENetMultiplayerPeer = null
 
 # Name for my player.

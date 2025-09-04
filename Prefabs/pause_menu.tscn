@@ -52,7 +52,7 @@ tip_text = "Aim Sensitivity"
 [node name="Master_Vol_Slider" parent="MenuContainer/VBoxContainer/SliderMargins/SlidersContainer" instance=ExtResource("2_dgyu8")]
 layout_mode = 2
 parameter = "master_vol"
-tip_text = "Master Volume (TODO)"
+tip_text = "Master Volume"
 slider_range = Vector2(0, 100)
 slider_default = 50.0
 
@@ -65,16 +65,28 @@ theme_override_constants/margin_bottom = 50
 
 [node name="ButtonsContainer" type="VBoxContainer" parent="MenuContainer/VBoxContainer/ButtonMargins"]
 layout_mode = 2
+theme = ExtResource("2_7do1g")
 
-[node name="DebugBox" type="CheckBox" parent="MenuContainer/VBoxContainer/ButtonMargins/ButtonsContainer"]
+[node name="PanelContainer" type="PanelContainer" parent="MenuContainer/VBoxContainer/ButtonMargins/ButtonsContainer"]
+layout_mode = 2
+
+[node name="GunBoxDebug" type="CheckBox" parent="MenuContainer/VBoxContainer/ButtonMargins/ButtonsContainer/PanelContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme = ExtResource("2_7do1g")
+text = "Gun Box Debug"
+
+[node name="GunReticleDebug" type="CheckBox" parent="MenuContainer/VBoxContainer/ButtonMargins/ButtonsContainer/PanelContainer"]
 custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
+size_flags_horizontal = 8
 theme = ExtResource("2_7do1g")
-text = "Gun Debug Display"
+text = "Gun Reticle Debug"
 
 [node name="QuitButton" type="Button" parent="MenuContainer/VBoxContainer/ButtonMargins/ButtonsContainer"]
 layout_mode = 2
 text = "Quit Game"
 
-[connection signal="toggled" from="MenuContainer/VBoxContainer/ButtonMargins/ButtonsContainer/DebugBox" to="." method="_on_debug_box_toggled"]
+[connection signal="toggled" from="MenuContainer/VBoxContainer/ButtonMargins/ButtonsContainer/PanelContainer/GunBoxDebug" to="." method="_on_gun_box_debug_toggled"]
+[connection signal="toggled" from="MenuContainer/VBoxContainer/ButtonMargins/ButtonsContainer/PanelContainer/GunReticleDebug" to="." method="_on_gun_reticle_debug_toggled"]
 [connection signal="pressed" from="MenuContainer/VBoxContainer/ButtonMargins/ButtonsContainer/QuitButton" to="." method="_on_quit_button_pressed"]

@@ -7,8 +7,9 @@ const BULLET_DECAL = preload("res://Prefabs/bullet_decal.tscn")
 func shoot():
 	force_raycast_update()
 	if is_colliding():
-		if get_collider() is PlayerController:
-			print("omg!! ", NetworkHandler.player_name," just shot ", NetworkHandler.players[int(get_collider().name)], "!!", " auth : ", get_multiplayer_authority())
+		if get_collider() is PlayerController and is_multiplayer_authority():
+			var hit_player : PlayerController = get_collider()
+			hit_player.receive_damage.rpc_id(hit_player.get_multiplayer_authority(), 1)
 		elif get_collider() is RigidBody3D:
 			var rb : RigidBody3D = get_collider()
 			var hit_pos_offset = get_collision_point() - rb.global_position

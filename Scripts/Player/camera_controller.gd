@@ -9,7 +9,7 @@ class_name CameraController
 # Child nodes
 var player_controller : PlayerController # Node that the camera will follow
 var player_camera : Camera3D # Player camera
-var gun_container : Node3D # Gun's container
+var gun_controller : Node3D # Gun's container
 # Mouse input variables
 var mouse_input : Vector2 # Stores mouse input each frame
 var input_rotation : Vector3 # Stores mouse_input converted to rotation
@@ -22,11 +22,18 @@ var mouse_position : Vector2 = Vector2.ZERO
 var mouse_deadzone : Vector3 = Vector3(0.15, 0.65, 0.35) # mouse deadzone by percentage of screen (x, yTop, yBottom)
 var screen_size : Vector2 # size of screen (in pixels)
 var gun_deadzone : Vector3 # gun's deadzone size (in pixels)
-var gun_hold_distance : float = 0.5 # how far gun is held out from player
+var gun_hold_distance : float = 0.75 # how far gun is held out from player
+# Gun aiming variables
+var ads_time : float = 0.5 # ADS time (in seconds)
+var ads_timer : float = 0.0 # timer for ADS lerp
+var aim_held : bool = false # for ADS input
+var is_aiming : bool = false # for ADS completed
+var kick_amount = Vector2(0.1,0.5) # x/y screen kick amount
 # Debug stuff
 var red_dot : ColorRect # debug red-dot for aim
 var boundary_rect : ReferenceRect # debug rectangle for gun deadzone
-var debug_mode : bool = true
+var debug_dot : bool = false
+var debug_box : bool = false
 
 
 ## Get our camera + gun set up
@@ -43,7 +50,7 @@ func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 # END CAMERA MNGMT
 # START GUN MGMT
-	gun_container = get_node("GunController")
+	gun_controller = get_node("GunController")
 	boundary_rect = get_node("GunCanvas/BoundaryRect")
 	red_dot = get_node("GunCanvas/RedDot")
 	player_camera = get_node("PlayerCamera")
@@ -60,16 +67,35 @@ func _input(event: InputEvent) -> void:
 		mouse_input.x += -event.screen_relative.x * mouse_sensitivity
 		mouse_input.y += -event.screen_relative.y * mouse_sensitivity
 	# If mouse is captured, and we clicked -> shoot
-	elif Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and event.is_action_pressed("shoot"):
+	elif Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and aim_held and event.is_action_pressed("shoot"):
 		shoot()
+	
+	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and event.is_action_pressed("aim"):
+		aim_held = true
+	elif Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and event.is_action_released("aim"):
+		aim_held = false
+		is_aiming = false
 
 
 ## Handles camera rotation / gun positioning
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	# Early return if not multiplayer authority
 	if not is_multiplayer_authority(): return
+	
 	# If the window has been resized, do some viewport updates
 	if(screen_size != Vector2(get_viewport().size)): viewport_update()
-	mouse_input_management()
+	
+	# Handle ADS inputs
+	if(aim_held and !is_aiming):
+		start_aim(delta)
+	elif(!aim_held):
+		end_aim(delta)
+	
+	# Choose a camera update function depending on whether we're fully aimed or not
+	if(is_aiming):
+		aimed_input_management()
+	else:
+		unaimed_input_management()
 
 
 ## On the physics tick, snap our transform to the player head (helps with multiplayer sync)
@@ -94,8 +120,65 @@ func viewport_update():
 	mouse_position = screen_size/2
 
 
+func start_aim(delta) -> void:
+	# update the aim timer
+	ads_timer += delta
+	# if we're there, update the aim variable
+	if(ads_timer/ads_time >= 1.0):
+		ads_timer = ads_time
+		is_aiming = true
+	# get target pos/rot
+	var target_pos = Vector3(0,0,-gun_hold_distance)
+	var target_rot = Vector3.ZERO
+	# lerp towards aim position
+	gun_controller.position = lerp(gun_controller.position, target_pos, ads_timer/ads_time)
+	gun_controller.rotation = lerp(gun_controller.rotation, target_rot, ads_timer/ads_time)
+
+
+var holstered_pos = Vector3(0, 1.0, -0.3)
+var holstered_rot = Vector3(deg_to_rad(-45.0), 0.0, 0.0)
+func end_aim(delta) -> void:
+	# update is_aiming to be safe
+	if(is_aiming): is_aiming = false
+	# update the aim timer
+	ads_timer -= delta
+	if(ads_timer < 0.0): ads_timer = 0.0
+	# get target pos/rot
+	var target_pos = to_local(
+		player_controller.global_position + (player_controller.transform.basis.y * holstered_pos.y) + (player_controller.transform.basis.z * holstered_pos.z)
+	)
+	var target_rot = player_controller.global_rotation + holstered_rot
+	# lerp towards not-aimed position
+	# lerp towards aim position
+	gun_controller.position = lerp(gun_controller.position, target_pos, (1-ads_timer/ads_time))
+	gun_controller.global_rotation = lerp(gun_controller.global_rotation, target_rot, (1-ads_timer/ads_time))
+
+
+func unaimed_input_management():
+	# Reset mouse position to screen center
+	mouse_position = screen_size/2
+	
+	# Update mouse position
+	input_rotation.y += mouse_input.x * camera_sensitivity
+	input_rotation.x = clampf(input_rotation.x + (mouse_input.y * camera_sensitivity), deg_to_rad(-90), deg_to_rad(85))
+	
+	# Update the player_controller rotation
+	player_controller.camera_controller_anchor.transform.basis = Basis.from_euler(Vector3(input_rotation.x, 0.0, 0.0)) # rotate camera controller (up/down)
+	player_controller.global_transform.basis = Basis.from_euler(Vector3(0.0, input_rotation.y, 0.0)) # rotate player (left/right) # rotate camera controller (up/down)
+	global_transform = player_controller.camera_controller_anchor.get_global_transform_interpolated() # move transform to player head anchor
+	
+	# Debug
+	# Move our debug red-dot
+	if(debug_box or debug_dot):
+		red_dot.position = mouse_position - (red_dot.size/2)
+		red_dot.color = Color.BLUE
+	
+	# Zero out our mouse input for next frame
+	mouse_input = Vector2.ZERO
+
+
 ## Move the mouse, move the camera, rotate the player to match, etc
-func mouse_input_management():
+func aimed_input_management():
 	# Update mouse position
 	var mouse_newpos = mouse_position - (mouse_input * aim_sensitivity * (screen_size.y) * 20)
 	var midpoint = screen_size/2
@@ -118,40 +201,52 @@ func mouse_input_management():
 	
 	# Debug
 	# Move our debug red-dot
-	if(debug_mode == true): red_dot.position = mouse_position - (red_dot.size/2)
+	if(debug_box or debug_dot):
+		red_dot.position = mouse_position - (red_dot.size/2)
+		red_dot.color = Color.RED
 	
 	# Zero out our mouse input for next frame
 	mouse_input = Vector2.ZERO
 	
 
 ## Shoots
-var kick_amount = Vector2(0.1,0.5) # x/y screen kick amount
 func shoot():
 	# handle kick
 	kick_amount.x *= ((randi() & 2) - 1)
-	mouse_input += (kick_amount * screen_size/1000)
+	if(is_aiming):
+		mouse_input += (kick_amount * screen_size/1000)
 	# get container to take over
-	#gun_container.shoot()
-	gun_container.shoot.rpc()
+	#gun_controller.shoot()
+	gun_controller.shoot.rpc()
 
 
 ## Updates the gun's position+rotation (for if gun exists in local space)
 func update_gun_local_space():
 	# Update whether gun is global/local
-	gun_container.top_level = false
+	gun_controller.top_level = false
 	# Update the gun's position
-	gun_container.position = to_local(player_camera.project_position(mouse_position,gun_hold_distance))
+	gun_controller.position = to_local(player_camera.project_position(mouse_position,gun_hold_distance))
 	# Update the gun's rotation (relative to camera)
 	var player_camera_interp = to_local(player_camera.get_global_transform_interpolated().origin) # get interpolated player_camera position in local space
-	var gun_container_interp = to_local(gun_container.get_global_transform_interpolated().origin) # get interpolated gun_container position in local space
-	var fw_dir = gun_container_interp - player_camera_interp # find vector from player camera to gun_container (interpolated)
-	gun_container.basis = Basis.looking_at(fw_dir, Vector3.UP, false)
+	var gun_controller_interp = to_local(gun_controller.get_global_transform_interpolated().origin) # get interpolated gun_controller position in local space
+	var fw_dir = gun_controller_interp - player_camera_interp # find vector from player camera to gun_controller (interpolated)
+	gun_controller.basis = Basis.looking_at(fw_dir, Vector3.UP, false)
 
 
 ## Toggles debug
-func toggle_debug(is_debug : bool):
-	debug_mode = is_debug
-	if(debug_mode):
+func toggle_debug(is_debug : bool, parameter : String):
+	match(parameter):
+		"box": debug_box = is_debug
+		"dot": debug_dot = is_debug
+	if(debug_box or debug_dot):
 		get_node("GunCanvas").show()
 	else:
 		get_node("GunCanvas").hide()
+	if(debug_box):
+		get_node("GunCanvas/BoundaryRect").show()
+	else:
+		get_node("GunCanvas/BoundaryRect").hide()
+	if(debug_dot):
+		get_node("GunCanvas/RedDot").show()
+	else:
+		get_node("GunCanvas/RedDot").hide()

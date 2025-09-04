@@ -6,5 +6,7 @@
 bg_color = Color(0.953548, 0.38806, 0.398324, 1)
 
 [resource]
+Button/fonts/font = ExtResource("1_8cjo3")
+CheckBox/fonts/font = ExtResource("1_8cjo3")
 HSlider/styles/grabber_area = SubResource("StyleBoxFlat_ybks7")
 Label/fonts/font = ExtResource("1_8cjo3")
