@@ -85,21 +85,25 @@ func _process(delta: float) -> void:
 	# If the window has been resized, do some viewport updates
 	if(screen_size != Vector2(get_viewport().size)): viewport_update()
 	
-	# Handle ADS inputs
-	if(aim_held and !is_aiming):
-		start_aim(delta)
-	elif(!aim_held):
-		end_aim(delta)
 	
+		
+	
+
 	# Choose a camera update function depending on whether we're fully aimed or not
 	if(is_aiming):
 		aimed_input_management()
 	else:
 		unaimed_input_management()
+	
+	# Handle ADS inputs
+	if(aim_held and !is_aiming):
+		start_aim(delta)
+	elif(!aim_held):
+		end_aim(delta)
 
 
 ## On the physics tick, snap our transform to the player head (helps with multiplayer sync)
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	if not is_multiplayer_authority(): return
 	global_transform = player_controller.camera_controller_anchor.global_transform
 
@@ -144,8 +148,9 @@ func end_aim(delta) -> void:
 	ads_timer -= delta
 	if(ads_timer < 0.0): ads_timer = 0.0
 	# get target pos/rot
+	var player_interp = player_controller.get_global_transform_interpolated()
 	var target_pos = to_local(
-		player_controller.global_position + (player_controller.transform.basis.y * holstered_pos.y) + (player_controller.transform.basis.z * holstered_pos.z)
+		player_interp.origin + (player_interp.basis.y * holstered_pos.y) + (player_interp.basis.z * holstered_pos.z)
 	)
 	var target_rot = player_controller.global_rotation + holstered_rot
 	# lerp towards not-aimed position

@@ -1,0 +1,426 @@
+[gd_scene load_steps=7 format=3 uid="uid://0d4aof4spj0p"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_73npy"]
+albedo_color = Color(0.389287, 0.389287, 0.389287, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pplnx"]
+albedo_color = Color(0.935987, 0.48587, 0.620173, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_lptgy"]
+albedo_color = Color(0.935987, 0.48587, 0.620173, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_chass"]
+albedo_color = Color(0.935987, 0.48587, 0.620173, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3ilbk"]
+albedo_color = Color(0.809415, 0.568153, 0.944805, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tl8rh"]
+albedo_color = Color(0.636919, 0.308286, 0.326381, 1)
+
+[node name="WarehouseCSG" type="CSGCombiner3D"]
+use_collision = true
+
+[node name="firstwarehouse" type="CSGCombiner3D" parent="."]
+
+[node name="CSGBox3D" type="CSGBox3D" parent="firstwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.5, 0.05, -2.5)
+size = Vector3(15, 0.1, 5)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D2" type="CSGBox3D" parent="firstwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.5, 1.75, -0.05)
+size = Vector3(15, 3.3, 0.1)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D3" type="CSGBox3D" parent="firstwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, 1.75, -4.95)
+size = Vector3(5, 3.3, 0.1)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D4" type="CSGBox3D" parent="firstwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.05, 1.75, -2.5)
+size = Vector3(0.1, 3.3, 4.8)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D7" type="CSGBox3D" parent="firstwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, 0.05, -7.5)
+size = Vector3(10, 0.1, 5)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D9" type="CSGBox3D" parent="firstwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.05, 1.325, -2.275)
+operation = 2
+size = Vector3(0.1, 2.45, 1.65)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D5" type="CSGBox3D" parent="firstwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.7, 1, -3.675)
+size = Vector3(1.9, 1.6, 4.15)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D6" type="CSGBox3D" parent="firstwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.05, 1.75, -7.45)
+size = Vector3(0.1, 3.3, 5.1)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D11" type="CSGBox3D" parent="firstwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21.95, 1.75, -5)
+size = Vector3(0.1, 3.3, 9.8)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D12" type="CSGBox3D" parent="firstwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.525, 3.45, -5)
+size = Vector3(5.05, 0.1, 10)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D13" type="CSGBox3D" parent="firstwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.15, 1.275, -7.55)
+operation = 2
+size = Vector3(1, 2.35, 2)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D15" type="CSGBox3D" parent="firstwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.95, 3.525, -7)
+operation = 2
+size = Vector3(2.5, 0.55, 2.5)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D16" type="CSGBox3D" parent="firstwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.05, 6, -5)
+size = Vector3(0.1, 5, 10)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D17" type="CSGBox3D" parent="firstwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21.95, 6, -5.075)
+size = Vector3(0.1, 5, 10.15)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D18" type="CSGBox3D" parent="firstwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.5, 6, -0.0500002)
+size = Vector3(14.8, 5, 0.1)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D19" type="CSGBox3D" parent="firstwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.9, 4.725, -2.15)
+operation = 2
+size = Vector3(0.9, 2.45, 1.9)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D20" type="CSGBox3D" parent="firstwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 3.4, -5)
+size = Vector3(4, 0.2, 10)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D21" type="CSGBox3D" parent="firstwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 4, -0.174999)
+size = Vector3(4, 1, 0.35)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D22" type="CSGBox3D" parent="firstwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.175, 4, -5.175)
+size = Vector3(0.35, 1, 9.65)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D25" type="CSGBox3D" parent="firstwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.275, 8.425, -5.075)
+size = Vector3(17.45, 0.25, 10.15)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D26" type="CSGBox3D" parent="firstwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.175, 1.65, -0.175)
+size = Vector3(0.35, 3.3, 0.35)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D27" type="CSGBox3D" parent="firstwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.175, 1.65, -9.825)
+size = Vector3(0.35, 3.3, 0.35)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D28" type="CSGBox3D" parent="firstwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.175, 1.65, -5)
+size = Vector3(0.35, 3.3, 2)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D29" type="CSGBox3D" parent="firstwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.05, 1.8, -10.05)
+size = Vector3(6.1, 3.4, 0.1)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGCombiner3D" type="CSGCombiner3D" parent="firstwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, 3.45, -5)
+
+[node name="CSGBox3D8" type="CSGBox3D" parent="firstwarehouse/CSGCombiner3D"]
+size = Vector3(10, 0.1, 10)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D14" type="CSGBox3D" parent="firstwarehouse/CSGCombiner3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.399998, -0.2, 1.55)
+operation = 2
+size = Vector3(5.2, 3.3, 4.4)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D15" type="CSGBox3D" parent="firstwarehouse/CSGCombiner3D"]
+transform = Transform3D(1, 0, 0, 0, 0.819152, -0.573576, 0, 0.573576, 0.819152, -1.7, 0.125, -0.574999)
+operation = 2
+size = Vector3(1.9, 0.45, 1.35)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="Ramp" type="CSGCombiner3D" parent="firstwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.55, 0.95, -2.55)
+
+[node name="CSGBox3D8" type="CSGBox3D" parent="firstwarehouse/Ramp"]
+size = Vector3(2.45, 1.7, 1.85)
+material = SubResource("StandardMaterial3D_pplnx")
+
+[node name="CSGBox3D10" type="CSGBox3D" parent="firstwarehouse/Ramp"]
+transform = Transform3D(0.819462, 0.573133, 0, -0.573133, 0.819462, 0, 0, 0, 1, 0.382, 0.7, 0)
+operation = 2
+size = Vector3(3.25, 1.55, 1.9)
+material = SubResource("StandardMaterial3D_lptgy")
+
+[node name="Ramp2" type="CSGCombiner3D" parent="firstwarehouse"]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -18.7, 2.65, -4.5)
+
+[node name="CSGBox3D8" type="CSGBox3D" parent="firstwarehouse/Ramp2"]
+size = Vector3(2.45, 1.7, 1.85)
+material = SubResource("StandardMaterial3D_pplnx")
+
+[node name="CSGBox3D10" type="CSGBox3D" parent="firstwarehouse/Ramp2"]
+transform = Transform3D(0.819462, 0.573133, 0, -0.573133, 0.819462, 0, 0, 0, 1, 0.25546, 0.657015, 0)
+operation = 2
+size = Vector3(3.55, 1.55, 1.9)
+material = SubResource("StandardMaterial3D_chass")
+
+[node name="secondwarehouse" type="CSGCombiner3D" parent="."]
+
+[node name="CSGBox3D10" type="CSGBox3D" parent="secondwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.05, 1.8, -10.025)
+size = Vector3(9.9, 3.4, 0.25)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D8" type="CSGBox3D" parent="secondwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 0.05, -21)
+size = Vector3(30, 0.1, 22)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D9" type="CSGBox3D" parent="secondwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 8.425, -20.95)
+size = Vector3(29.8, 0.25, 21.9)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D14" type="CSGBox3D" parent="secondwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.05, 1.275, -10.15)
+operation = 2
+size = Vector3(2.3, 2.35, 1.1)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D24" type="CSGBox3D" parent="secondwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 4.325, -31.95)
+size = Vector3(30, 8.45, 0.1)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D30" type="CSGBox3D" parent="secondwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21.95, 4.325, -21.025)
+size = Vector3(0.1, 8.45, 21.75)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D31" type="CSGBox3D" parent="secondwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.95, 4.325, -20.95)
+size = Vector3(0.1, 8.45, 21.9)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D32" type="CSGBox3D" parent="secondwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.275, 2.3, -10.05)
+size = Vector3(11.25, 4.4, 0.1)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="walls" type="CSGCombiner3D" parent="secondwarehouse"]
+
+[node name="CSGBox3D33" type="CSGBox3D" parent="secondwarehouse/walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.35, 1.35, -14.15)
+size = Vector3(2, 2.5, 0.5)
+material = SubResource("StandardMaterial3D_3ilbk")
+
+[node name="CSGBox3D60" type="CSGBox3D" parent="secondwarehouse/walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.65, 1.35, -17.05)
+size = Vector3(1.2, 2.5, 0.5)
+material = SubResource("StandardMaterial3D_3ilbk")
+
+[node name="CSGBox3D34" type="CSGBox3D" parent="secondwarehouse/walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.5, 1.35, -17.2)
+size = Vector3(2, 2.5, 0.5)
+material = SubResource("StandardMaterial3D_3ilbk")
+
+[node name="CSGBox3D35" type="CSGBox3D" parent="secondwarehouse/walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.8, 1.35, -20.55)
+size = Vector3(2, 2.5, 0.5)
+material = SubResource("StandardMaterial3D_3ilbk")
+
+[node name="CSGBox3D36" type="CSGBox3D" parent="secondwarehouse/walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.4, 1.35, -24.5)
+size = Vector3(2, 2.5, 0.5)
+material = SubResource("StandardMaterial3D_3ilbk")
+
+[node name="CSGBox3D37" type="CSGBox3D" parent="secondwarehouse/walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.4, 1.35, -27.75)
+size = Vector3(2, 2.5, 0.5)
+material = SubResource("StandardMaterial3D_3ilbk")
+
+[node name="CSGBox3D38" type="CSGBox3D" parent="secondwarehouse/walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.4, 1.35, -23.55)
+size = Vector3(2, 2.5, 0.5)
+material = SubResource("StandardMaterial3D_3ilbk")
+
+[node name="CSGBox3D39" type="CSGBox3D" parent="secondwarehouse/walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.25, 1.35, -14.15)
+size = Vector3(2, 2.5, 0.5)
+material = SubResource("StandardMaterial3D_3ilbk")
+
+[node name="CSGBox3D40" type="CSGBox3D" parent="secondwarehouse/walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.9, 1.35, -18.1)
+size = Vector3(2, 2.5, 0.5)
+material = SubResource("StandardMaterial3D_3ilbk")
+
+[node name="CSGBox3D41" type="CSGBox3D" parent="secondwarehouse/walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.35, 1.35, -28.1)
+size = Vector3(2, 2.5, 0.5)
+material = SubResource("StandardMaterial3D_3ilbk")
+
+[node name="CSGBox3D42" type="CSGBox3D" parent="secondwarehouse/walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.9, 1.35, -14.15)
+size = Vector3(2, 2.5, 0.5)
+material = SubResource("StandardMaterial3D_3ilbk")
+
+[node name="CSGBox3D43" type="CSGBox3D" parent="secondwarehouse/walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.05, 1.35, -19.05)
+size = Vector3(2, 2.5, 0.5)
+material = SubResource("StandardMaterial3D_3ilbk")
+
+[node name="CSGBox3D44" type="CSGBox3D" parent="secondwarehouse/walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.25, 1.35, -24.3)
+size = Vector3(2, 2.5, 0.5)
+material = SubResource("StandardMaterial3D_3ilbk")
+
+[node name="CSGBox3D45" type="CSGBox3D" parent="secondwarehouse/walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.1, 1.35, -27.05)
+size = Vector3(2, 2.5, 0.5)
+material = SubResource("StandardMaterial3D_3ilbk")
+
+[node name="CSGBox3D46" type="CSGBox3D" parent="secondwarehouse/walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.05, 1.35, -14.15)
+size = Vector3(2, 2.5, 0.5)
+material = SubResource("StandardMaterial3D_3ilbk")
+
+[node name="CSGBox3D47" type="CSGBox3D" parent="secondwarehouse/walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.05, 1.35, -22.75)
+size = Vector3(2, 2.5, 0.5)
+material = SubResource("StandardMaterial3D_3ilbk")
+
+[node name="CSGBox3D48" type="CSGBox3D" parent="secondwarehouse/walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.9, 1.35, -29.45)
+size = Vector3(2, 2.5, 0.5)
+material = SubResource("StandardMaterial3D_3ilbk")
+
+[node name="CSGBox3D49" type="CSGBox3D" parent="secondwarehouse/walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.5, 1.35, -20.9)
+size = Vector3(0.5, 2.5, 2)
+material = SubResource("StandardMaterial3D_3ilbk")
+
+[node name="CSGBox3D50" type="CSGBox3D" parent="secondwarehouse/walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.55, 1.35, -28.8)
+size = Vector3(0.5, 2.5, 2)
+material = SubResource("StandardMaterial3D_3ilbk")
+
+[node name="CSGBox3D51" type="CSGBox3D" parent="secondwarehouse/walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.35, 1.35, -20.95)
+size = Vector3(0.5, 2.5, 2)
+material = SubResource("StandardMaterial3D_3ilbk")
+
+[node name="CSGBox3D52" type="CSGBox3D" parent="secondwarehouse/walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.35, 1.35, -29.6)
+size = Vector3(0.5, 2.5, 2)
+material = SubResource("StandardMaterial3D_3ilbk")
+
+[node name="CSGBox3D53" type="CSGBox3D" parent="secondwarehouse/walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.5, 1.35, -24.35)
+size = Vector3(0.5, 2.5, 2)
+material = SubResource("StandardMaterial3D_3ilbk")
+
+[node name="CSGBox3D54" type="CSGBox3D" parent="secondwarehouse/walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.1, 1.35, -22.4)
+size = Vector3(0.5, 2.5, 2)
+material = SubResource("StandardMaterial3D_3ilbk")
+
+[node name="CSGBox3D55" type="CSGBox3D" parent="secondwarehouse/walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.6, 1.35, -13)
+size = Vector3(0.5, 2.5, 2)
+material = SubResource("StandardMaterial3D_3ilbk")
+
+[node name="CSGBox3D56" type="CSGBox3D" parent="secondwarehouse/walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.5, 1.35, -13.4)
+size = Vector3(0.5, 2.5, 2)
+material = SubResource("StandardMaterial3D_3ilbk")
+
+[node name="CSGBox3D57" type="CSGBox3D" parent="secondwarehouse/walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2, 1.35, -18.85)
+size = Vector3(0.5, 2.5, 3.5)
+material = SubResource("StandardMaterial3D_3ilbk")
+
+[node name="CSGBox3D58" type="CSGBox3D" parent="secondwarehouse/walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.8, 1.35, -17.8)
+size = Vector3(0.5, 2.5, 2)
+material = SubResource("StandardMaterial3D_3ilbk")
+
+[node name="CSGBox3D59" type="CSGBox3D" parent="secondwarehouse/walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.7, 1.35, -23.1)
+size = Vector3(0.5, 2.5, 2)
+material = SubResource("StandardMaterial3D_3ilbk")
+
+[node name="CSGBox3D61" type="CSGBox3D" parent="secondwarehouse/walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 1.35, -24)
+size = Vector3(0.5, 2.5, 2)
+material = SubResource("StandardMaterial3D_3ilbk")
+
+[node name="CSGBox3D62" type="CSGBox3D" parent="secondwarehouse/walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.75, 1.35, -17.1)
+size = Vector3(0.5, 2.5, 1.5)
+material = SubResource("StandardMaterial3D_3ilbk")
+
+[node name="catwalk" type="CSGCombiner3D" parent="secondwarehouse"]
+
+[node name="CSGBox3D" type="CSGBox3D" parent="secondwarehouse/catwalk"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.15, 3.4, -12.65)
+size = Vector3(3, 0.2, 5)
+material = SubResource("StandardMaterial3D_tl8rh")
+
+[node name="CSGBox3D2" type="CSGBox3D" parent="secondwarehouse/catwalk"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 3.4, -16.9)
+size = Vector3(13.3, 0.2, 3.5)
+material = SubResource("StandardMaterial3D_tl8rh")
+
+[node name="CSGBox3D3" type="CSGBox3D" parent="secondwarehouse/catwalk"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.675, 3.4, -12.575)
+size = Vector3(2.65, 0.2, 5.15)
+material = SubResource("StandardMaterial3D_tl8rh")
+
+[node name="CSGBox3D4" type="CSGBox3D" parent="secondwarehouse/catwalk"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.55, 3.4, -21.45)
+size = Vector3(7.5, 0.2, 5.6)
+material = SubResource("StandardMaterial3D_tl8rh")
+
+[node name="CSGBox3D5" type="CSGBox3D" parent="secondwarehouse/catwalk"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.025, 3.4, -25.275)
+size = Vector3(7.65, 0.2, 13.25)
+material = SubResource("StandardMaterial3D_tl8rh")
+
+[node name="CSGBox3D" type="CSGBox3D" parent="secondwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21.75, 1.625, -29.475)
+operation = 2
+size = Vector3(1.2, 3.05, 2.55)
+material = SubResource("StandardMaterial3D_73npy")
+
+[node name="CSGBox3D2" type="CSGBox3D" parent="secondwarehouse"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.275, 6.525, -10.05)
+size = Vector3(11.25, 4.05, 0.1)
+material = SubResource("StandardMaterial3D_73npy")

@@ -13,7 +13,8 @@ const GRAVITY = 9.8
 var paused = false
 var player_name = "DefaultName"
 
-var health = 3
+var health : int = 3
+var score : int = 0
 
 
 ## Set multiplayer auth
@@ -70,18 +71,18 @@ func _physics_process(delta: float) -> void:
 
 
 @rpc("any_peer")
-func receive_damage(dmg : int = 1):
-	print("ack!!")
+func receive_damage(dmg : int = 1, shooter : String = ""):
+	print("ack!! i was shot by ", NetworkHandler.players[int(shooter)] + "\t" + shooter)
 	health -= dmg
 	HUD.update_health(health)
 	if health <= 0:
-		die()
+		die(shooter)
 
 
-func die():
+func die(shooter : String = ""):
 	health = 3
 	position = Vector3.ZERO
-	print("oh my god I died")
+	print("oh my god I died at the hands of ", NetworkHandler.players[int(shooter)] + "\t" + shooter)
 	HUD.update_health(health)
 
 

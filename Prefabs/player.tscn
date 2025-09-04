@@ -1,4 +1,4 @@
-[gd_scene load_steps=28 format=3 uid="uid://dpkim8cla8dii"]
+[gd_scene load_steps=30 format=3 uid="uid://dpkim8cla8dii"]
 
 [ext_resource type="Script" uid="uid://bxc5wvblob2y7" path="res://Scripts/Player/player.gd" id="1_onrkg"]
 [ext_resource type="Script" uid="uid://tp34olvhc8jf" path="res://Scripts/Player/camera_controller.gd" id="2_i3pqv"]
@@ -43,6 +43,16 @@ properties/1/replication_mode = 1
 properties/2/path = NodePath(".:global_rotation")
 properties/2/spawn = true
 properties/2/replication_mode = 1
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_08u7w"]
+albedo_color = Color(1, 0, 0, 1)
+emission_enabled = true
+emission = Color(1, 0.5023, 0.43551, 1)
+emission_energy_multiplier = 0.1
+
+[sub_resource type="BoxMesh" id="BoxMesh_kgmex"]
+material = SubResource("StandardMaterial3D_08u7w")
+size = Vector3(0.01, 0.01, 0.1)
 
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_knrd4"]
 animation = &"idle"
@@ -201,6 +211,8 @@ script = ExtResource("1_onrkg")
 [node name="PlayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
 replication_config = SubResource("SceneReplicationConfig_hck1p")
 
+[node name="FootstepSound" type="AudioStreamPlayer3D" parent="."]
+
 [node name="PlayerModel" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 mesh = SubResource("CapsuleMesh_km5ld")
@@ -258,11 +270,15 @@ mouse_filter = 2
 color = Color(1, 0, 0, 1)
 
 [node name="GunController" type="Node3D" parent="CameraController"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, -0.75)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.75)
 script = ExtResource("3_hck1p")
 
 [node name="GunModel" parent="CameraController/GunController" instance=ExtResource("4_2nftw")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.112, 0)
+
+[node name="sight" type="MeshInstance3D" parent="CameraController/GunController/GunModel"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.112, 0.025)
+mesh = SubResource("BoxMesh_kgmex")
 
 [node name="GunRaycast" type="RayCast3D" parent="CameraController/GunController"]
 enabled = false
@@ -309,3 +325,5 @@ theme_override_styles/fill = SubResource("StyleBoxFlat_kgmex")
 max_value = 3.0
 value = 3.0
 show_percentage = false
+
+[editable path="CameraController/GunController/GunModel"]
