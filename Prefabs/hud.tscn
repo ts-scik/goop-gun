@@ -1,3 +1,92 @@
-[gd_scene format=3 uid="uid://doyu5fve8ug4l"]
+[gd_scene load_steps=5 format=3 uid="uid://cpco4jqlt1swy"]
+
+[ext_resource type="Script" uid="uid://d2gqj6xsm33uy" path="res://Scripts/hud.gd" id="1_g0xie"]
+[ext_resource type="Theme" uid="uid://dbc26jnuib7yq" path="res://Themes/main_theme.tres" id="2_5kp3n"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_08u7w"]
+bg_color = Color(0.937255, 0.545098, 0.580392, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kgmex"]
+bg_color = Color(0.533333, 0.937255, 0.580392, 1)
 
 [node name="HUD" type="CanvasLayer"]
+script = ExtResource("1_g0xie")
+
+[node name="Base" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("2_5kp3n")
+
+[node name="Health" type="ProgressBar" parent="Base"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 25.0
+offset_top = -52.0
+offset_right = 249.0
+offset_bottom = -25.0
+grow_vertical = 0
+mouse_filter = 2
+theme = ExtResource("2_5kp3n")
+theme_override_styles/background = SubResource("StyleBoxFlat_08u7w")
+theme_override_styles/fill = SubResource("StyleBoxFlat_kgmex")
+max_value = 3.0
+step = 1.0
+value = 3.0
+show_percentage = false
+
+[node name="HealthLabel" type="Label" parent="Base/Health"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -43.5
+offset_right = 71.0
+offset_bottom = -20.5
+grow_vertical = 2
+theme = ExtResource("2_5kp3n")
+theme_override_font_sizes/font_size = 20
+text = "HEALTH"
+
+[node name="ScoreContainer" type="PanelContainer" parent="Base"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -150.0
+offset_right = 250.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Players" type="MarginContainer" parent="Base/ScoreContainer"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 35
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 35
+
+[node name="ScoreList" type="ItemList" parent="Base/ScoreContainer/Players"]
+layout_mode = 2
+mouse_filter = 2
+theme = ExtResource("2_5kp3n")
+allow_search = false
+item_count = 4
+max_columns = 2
+same_column_width = true
+fixed_column_width = 225
+item_0/text = "name1"
+item_1/text = "score1"
+item_2/text = "name2"
+item_3/text = "score2"

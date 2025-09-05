@@ -107,7 +107,7 @@ func _process(delta: float) -> void:
 
 
 ## On the physics tick, snap our transform to the player head (helps with multiplayer sync)
-func _physics_process(delta: float) -> void:
+func _physics_process(_delta: float) -> void:
 	if not is_multiplayer_authority(): return
 	global_transform = player_controller.camera_controller_anchor.global_transform
 

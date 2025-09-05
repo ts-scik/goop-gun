@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=5 format=3 uid="uid://dbc26jnuib7yq"]
+[gd_resource type="Theme" load_steps=6 format=3 uid="uid://dbc26jnuib7yq"]
 
 [ext_resource type="FontFile" uid="uid://dfjocmme22rof" path="res://Themes/VCR_OSD_MONO_1.001.ttf" id="1_8cjo3"]
 
@@ -29,10 +29,16 @@ corner_detail = 5
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ybks7"]
 bg_color = Color(0.953548, 0.38806, 0.398324, 1)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jg5j1"]
+bg_color = Color(1, 1, 1, 0)
+
 [resource]
 Button/fonts/font = ExtResource("1_8cjo3")
 Button/styles/normal = SubResource("StyleBoxFlat_8cjo3")
 Button/styles/pressed = SubResource("StyleBoxFlat_o2ta1")
 CheckBox/fonts/font = ExtResource("1_8cjo3")
 HSlider/styles/grabber_area = SubResource("StyleBoxFlat_ybks7")
+ItemList/colors/font_color = Color(1, 1, 1, 1)
+ItemList/fonts/font = ExtResource("1_8cjo3")
+ItemList/styles/panel = SubResource("StyleBoxFlat_jg5j1")
 Label/fonts/font = ExtResource("1_8cjo3")

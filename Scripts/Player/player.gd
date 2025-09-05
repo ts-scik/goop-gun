@@ -10,7 +10,7 @@ const GRAVITY = 9.8
 @onready var player_camera_ctrlr = get_node("CameraController")
 @onready var pause_menu : CanvasLayer = get_node("PauseMenu")
 @onready var HUD : CanvasLayer = get_node("HUD")
-var volume_curve : Curve
+
 var paused = false
 var player_name = "DefaultName"
 
@@ -27,21 +27,12 @@ func _enter_tree() -> void:
 func _ready() -> void:
 	if not is_multiplayer_authority(): return
 	pause_menu.value_update.connect(_on_menu_value_update)
+	
 	HUD.show()
 	HUD.update_health(health)
-	
-	# set up volume curve - TODO: this shouldn't be the player's job
-	var max_vol = 6.0
-	var min_vol = -40.0
-	volume_curve = Curve.new()
-	volume_curve.max_value = max_vol
-	volume_curve.min_value = min_vol
-	volume_curve.add_point(Vector2(0,min_vol))
-	volume_curve.add_point(Vector2(0.5,0))
-	volume_curve.add_point(Vector2(1.0,max_vol))
 
 
-## Handle pausing
+## Handle pausing / scoreboard
 func _process(_delta: float) -> void:
 	if not is_multiplayer_authority(): return
 	if Input.is_action_just_pressed("pause"):
@@ -52,6 +43,11 @@ func _process(_delta: float) -> void:
 				Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 				paused = false
 			_on_menu_key(paused)
+	if Input.is_action_just_pressed("scoreboard"):
+		HUD.update_scores()
+		HUD.scoreboard.show()
+	elif Input.is_action_just_released("scoreboard"):
+		HUD.scoreboard.hide()
 
 
 ## Handle player movement
@@ -83,18 +79,28 @@ func _physics_process(delta: float) -> void:
 
 @rpc("any_peer")
 func receive_damage(dmg : int = 1, shooter : String = ""):
-	print("ack!! i was shot by ", NetworkHandler.players[int(shooter)] + "\t" + shooter)
+	print("ack!! i, ", multiplayer.get_unique_id(),", was shot by ", NetworkHandler.players[int(shooter)] + "\t" + shooter)
 	health -= dmg
 	HUD.update_health(health)
 	if health <= 0:
-		die(shooter)
+		die.rpc(shooter)
 
 
+@rpc("any_peer","call_local")
 func die(shooter : String = ""):
-	health = 3
-	position = Vector3.ZERO
-	print("oh my god I died at the hands of ", NetworkHandler.players[int(shooter)] + "\t" + shooter)
-	HUD.update_health(health)
+	if(is_multiplayer_authority()):
+		health = 3
+		if(!has_node("/root/World")):
+			position = Vector3.ZERO
+		else:
+			var positions : Array = get_node("/root/World").spawn_positions
+			var selection = randi_range(0, positions.size()-1)
+			position = positions[selection]
+		HUD.update_health(health)
+	print("i am dead! killed by the evil ",shooter)
+	GameManager.player_scores[int(shooter)]+=1
+	#print("oh my god I died at the hands of ", NetworkHandler.players[int(shooter)] + "\t" + shooter)
+
 
 
 ## Handle showing/hiding the menu
@@ -113,7 +119,7 @@ func _on_menu_value_update(value, parameter : String) -> void:
 				AudioServer.set_bus_mute(AudioServer.get_bus_index("Master"), true)
 			else:
 				AudioServer.set_bus_mute(AudioServer.get_bus_index("Master"), false)
-				var new_vol = volume_curve.sample_baked(value/100)
+				var new_vol = GameManager.volume_curve.sample_baked(value/100)
 				print(new_vol)
 				AudioServer.set_bus_volume_db(AudioServer.get_bus_index("Master"),(new_vol))
 		"mouse_sense":

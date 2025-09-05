@@ -85,5 +85,73 @@ text = "PORT: 47757"
 
 [node name="ErrorDialog" type="AcceptDialog" parent="."]
 
+[node name="Lobby" type="Panel" parent="."]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -125.0
+offset_top = -250.0
+offset_right = 125.0
+offset_bottom = 250.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="Start" type="Button" parent="Lobby"]
+visible = false
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -51.0
+offset_right = 51.0
+offset_bottom = 23.0
+grow_horizontal = 2
+theme = ExtResource("2_p37wi")
+text = "Start Game"
+
+[node name="LeaveLobby" type="Button" parent="Lobby"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -56.0
+offset_top = -23.0
+offset_right = 56.0
+grow_horizontal = 2
+grow_vertical = 0
+theme = ExtResource("2_p37wi")
+text = "Leave Lobby"
+
+[node name="Players" type="MarginContainer" parent="Lobby"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 35
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 35
+
+[node name="List" type="ItemList" parent="Lobby/Players"]
+layout_mode = 2
+mouse_filter = 2
+theme = ExtResource("2_p37wi")
+allow_search = false
+item_count = 2
+item_0/text = "test"
+item_1/text = "test2"
+
 [connection signal="pressed" from="Connect/Server" to="." method="_on_server_pressed"]
 [connection signal="pressed" from="Connect/Client" to="." method="_on_client_pressed"]
+[connection signal="pressed" from="Lobby/Start" to="." method="_on_start_pressed"]
+[connection signal="pressed" from="Lobby/LeaveLobby" to="." method="_on_leave_lobby_pressed"]

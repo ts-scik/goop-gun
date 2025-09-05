@@ -18,6 +18,7 @@ func _on_slider_update(value, parameter : String):
 
 ## Handles quit button
 func _on_quit_button_pressed() -> void:
+	#NetworkHandler.leave_game()
 	get_tree().quit()
 
 
