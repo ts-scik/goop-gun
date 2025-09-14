@@ -1,5 +1,6 @@
 extends CanvasLayer
 
+
 func _ready():
 	# Called every time the node is added to the scene.
 	NetworkManager.connection_failed.connect(_on_connection_failed)

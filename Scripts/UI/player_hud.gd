@@ -10,6 +10,7 @@ func update_health(value : int):
 
 
 func update_scores():
+	#TODO: this currently only updates when players open the scoreboard, not in real time
 	var player_ids = GameManager.player_scores.keys()
 	player_ids.sort()
 	$Base/ScoreContainer/Players/ScoreList.clear()
