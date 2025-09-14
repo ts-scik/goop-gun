@@ -77,6 +77,7 @@ parameter = "master_vol"
 tip_text = "Master Volume"
 slider_range = Vector2(0, 100)
 slider_default = 50.0
+immediate_update = true
 
 [node name="ButtonMargins" type="MarginContainer" parent="MenuContainer/MenuVBox"]
 layout_mode = 2
@@ -143,28 +144,38 @@ framerate = 240
 layout_mode = 2
 text = "UNCAPPED"
 
-[node name="MarginContainer" type="MarginContainer" parent="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer"]
+[node name="ToggleMargins" type="MarginContainer" parent="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer"]
 layout_mode = 2
 theme_override_constants/margin_top = 0
 theme_override_constants/margin_bottom = 20
 
-[node name="AimToggleButton" type="Button" parent="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/MarginContainer"]
+[node name="TogglesHBox" type="HBoxContainer" parent="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/ToggleMargins"]
+layout_mode = 2
+theme_override_constants/separation = 30
+
+[node name="AimToggleButton" type="Button" parent="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/ToggleMargins/TogglesHBox"]
 layout_mode = 2
 size_flags_horizontal = 0
 toggle_mode = true
 text = "ADS Toggle"
 
-[node name="GunBoxDebug" type="Button" parent="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/MarginContainer"]
+[node name="CrouchToggleButton" type="Button" parent="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/ToggleMargins/TogglesHBox"]
 layout_mode = 2
 size_flags_horizontal = 4
 toggle_mode = true
-text = "Gun Box Debug"
+text = "Crouch Toggle"
 
-[node name="GunDotDebug" type="Button" parent="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/MarginContainer"]
+[node name="GunBoxDebug" type="Button" parent="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/ToggleMargins/TogglesHBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+toggle_mode = true
+text = "Box Debug"
+
+[node name="GunDotDebug" type="Button" parent="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/ToggleMargins/TogglesHBox"]
 layout_mode = 2
 size_flags_horizontal = 8
 toggle_mode = true
-text = "Gun Dot Debug"
+text = "Dot Debug"
 
 [node name="QuitButton" type="Button" parent="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer"]
 layout_mode = 2
@@ -173,7 +184,8 @@ theme = ExtResource("2_7do1g")
 theme_override_font_sizes/font_size = 25
 text = "QUIT GAME"
 
-[connection signal="toggled" from="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/MarginContainer/AimToggleButton" to="." method="_on_aim_toggle_button_toggled"]
-[connection signal="toggled" from="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/MarginContainer/GunBoxDebug" to="." method="_on_gun_box_debug_toggled"]
-[connection signal="toggled" from="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/MarginContainer/GunDotDebug" to="." method="_on_gun_dot_debug_toggled"]
+[connection signal="toggled" from="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/ToggleMargins/TogglesHBox/AimToggleButton" to="." method="_on_aim_toggle_button_toggled"]
+[connection signal="toggled" from="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/ToggleMargins/TogglesHBox/CrouchToggleButton" to="." method="_on_crouch_toggle_button_toggled"]
+[connection signal="toggled" from="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/ToggleMargins/TogglesHBox/GunBoxDebug" to="." method="_on_gun_box_debug_toggled"]
+[connection signal="toggled" from="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/ToggleMargins/TogglesHBox/GunDotDebug" to="." method="_on_gun_dot_debug_toggled"]
 [connection signal="pressed" from="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/QuitButton" to="." method="_on_quit_button_pressed"]

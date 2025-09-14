@@ -5,6 +5,7 @@ var value_sliders : Array
 signal value_update(value, parameter : String)
 
 
+## Find our ValueSlider nodes, and connect their signals
 func _ready() -> void:
 	# Handle ValueSlider nodes
 	value_sliders = scik.find_children_of_type(self, ValueSlider)
@@ -32,3 +33,8 @@ func _on_gun_dot_debug_toggled(toggled_on: bool) -> void:
 ## Handles ADS toggle
 func _on_aim_toggle_button_toggled(toggled_on: bool) -> void:
 	value_update.emit(toggled_on, "aim_toggle")
+
+
+## Handles crouch toggle
+func _on_crouch_toggle_button_toggled(toggled_on: bool) -> void:
+	value_update.emit(toggled_on,"crouch_toggle")

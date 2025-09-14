@@ -18,8 +18,8 @@ config/icon="res://icon.svg"
 [autoload]
 
 scik="*res://addons/scik_utils.gd"
-NetworkManager="*res://Scripts/network_manager.gd"
-GameManager="*res://Scripts/game_manager.gd"
+NetworkManager="*res://Scripts/Globals/network_manager.gd"
+GameManager="*res://Scripts/Globals/game_manager.gd"
 
 [debug_draw_3d]
 

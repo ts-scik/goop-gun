@@ -1,6 +1,6 @@
 [gd_scene load_steps=5 format=3 uid="uid://cpco4jqlt1swy"]
 
-[ext_resource type="Script" uid="uid://d2gqj6xsm33uy" path="res://Scripts/hud.gd" id="1_g0xie"]
+[ext_resource type="Script" uid="uid://d2gqj6xsm33uy" path="res://Scripts/UI/player_hud.gd" id="1_g0xie"]
 [ext_resource type="Theme" uid="uid://dbc26jnuib7yq" path="res://Themes/main_theme.tres" id="2_5kp3n"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_08u7w"]

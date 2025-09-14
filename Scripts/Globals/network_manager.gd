@@ -38,16 +38,19 @@ func _ready() -> void:
 
 ## Starts server
 func start_server(new_player_name : String = "DefaultName") -> void:
+	# Create our server
 	my_player_name = new_player_name
 	peer = ENetMultiplayerPeer.new()
 	peer.create_server(DEFAULT_PORT)
 	multiplayer.set_multiplayer_peer(peer)
+	# Register ourselves
 	log_update.emit("Started server!")
 	_register_player.rpc_id(multiplayer.get_unique_id(),new_player_name) # register self
 
 
 ## Starts a client
 func start_client(ip : String = DEFAULT_IP_ADDRESS, new_player_name : String = "DefaultName") -> void:
+	# Create our client
 	my_player_name = new_player_name
 	peer = ENetMultiplayerPeer.new()
 	peer.create_client(ip, DEFAULT_PORT)

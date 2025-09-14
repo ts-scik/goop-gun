@@ -7,7 +7,7 @@
 [ext_resource type="Script" uid="uid://b8b2ltlkdgkp2" path="res://Scripts/Player/gun_raycast.gd" id="4_knrd4"]
 [ext_resource type="AudioStream" uid="uid://ro6npthlf24i" path="res://Sounds/gunshot_cg1.wav" id="5_knrd4"]
 [ext_resource type="PackedScene" uid="uid://bdt3orm768b1" path="res://Prefabs/UI/pause_menu.tscn" id="7_4qbli"]
-[ext_resource type="PackedScene" uid="uid://cpco4jqlt1swy" path="res://Prefabs/UI/hud.tscn" id="8_08u7w"]
+[ext_resource type="PackedScene" uid="uid://cpco4jqlt1swy" path="res://Prefabs/UI/player_hud.tscn" id="8_08u7w"]
 
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_hck1p"]
 properties/0/path = NodePath(".:position")
