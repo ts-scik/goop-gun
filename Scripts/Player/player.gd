@@ -79,7 +79,7 @@ func _physics_process(delta: float) -> void:
 
 @rpc("any_peer")
 func receive_damage(dmg : int = 1, shooter : String = ""):
-	print("ack!! i, ", multiplayer.get_unique_id(),", was shot by ", NetworkHandler.players[int(shooter)] + "\t" + shooter)
+	#print("ack!! i, ", multiplayer.get_unique_id(),", was shot by ", NetworkManager.players_dict[int(shooter)] + "\t" + shooter)
 	health -= dmg
 	HUD.update_health(health)
 	if health <= 0:
@@ -90,17 +90,16 @@ func receive_damage(dmg : int = 1, shooter : String = ""):
 func die(shooter : String = ""):
 	if(is_multiplayer_authority()):
 		health = 3
-		if(!has_node("/root/World")):
+		if(!has_node("/root/MainScene/World")):
 			position = Vector3.ZERO
 		else:
-			var positions : Array = get_node("/root/World").spawn_positions
+			var positions : Array = get_node("/root/MainScene/World").spawn_positions
 			var selection = randi_range(0, positions.size()-1)
 			position = positions[selection]
 		HUD.update_health(health)
 	print("i am dead! killed by the evil ",shooter)
 	GameManager.player_scores[int(shooter)]+=1
-	#print("oh my god I died at the hands of ", NetworkHandler.players[int(shooter)] + "\t" + shooter)
-
+	#print("oh my god I died at the hands of ", NetworkManager.players_dict[int(shooter)] + "\t" + shooter)
 
 
 ## Handle showing/hiding the menu

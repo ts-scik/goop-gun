@@ -11,14 +11,14 @@ config_version=5
 [application]
 
 config/name="goop-gun"
-run/main_scene="res://Prefabs/world.tscn"
+run/main_scene="uid://dk1pnqsqbyrb2"
 config/features=PackedStringArray("4.4", "GL Compatibility")
 config/icon="res://icon.svg"
 
 [autoload]
 
 scik="*res://addons/scik_utils.gd"
-NetworkHandler="*res://Scripts/network_handler.gd"
+NetworkManager="*res://Scripts/network_manager.gd"
 GameManager="*res://Scripts/game_manager.gd"
 
 [debug_draw_3d]

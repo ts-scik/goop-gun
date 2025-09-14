@@ -1,3 +1,4 @@
+#class_name GameManager
 extends Node
 
 var is_playing = false

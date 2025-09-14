@@ -1,30 +1,32 @@
 extends CanvasLayer
 
-@export var debug_spawner : MultiplayerSpawner
-
 func _ready():
 	# Called every time the node is added to the scene.
-	NetworkHandler.connection_failed.connect(_on_connection_failed)
-	NetworkHandler.connection_succeeded.connect(_on_connection_success)
-	NetworkHandler.game_error.connect(_on_game_error)
-	NetworkHandler.game_ended.connect(_on_game_ended)
-	NetworkHandler.player_list_changed.connect(_refresh_lobby)
-	$Connect/IPAddress.text = NetworkHandler.DEFAULT_IP_ADDRESS
+	NetworkManager.connection_failed.connect(_on_connection_failed)
+	NetworkManager.connection_succeeded.connect(_on_connection_success)
+	NetworkManager.game_error.connect(_on_game_error)
+	NetworkManager.game_ended.connect(_on_game_ended)
+	NetworkManager.player_list_changed.connect(_refresh_lobby)
+	NetworkManager.log_update.connect(_refresh_chatlog)
+	NetworkManager.server_lost.connect(_on_server_lost)
+	$Connect/IPAddress.text = NetworkManager.DEFAULT_IP_ADDRESS
 	if OS.has_environment("USERNAME"):
 		$Connect/Name.text = OS.get_environment("USERNAME")
 
 
 ## Handles hosting a lobby
 func _on_server_pressed() -> void:
+	# Verify username is valid
 	if $Connect/Name.text == "":
 		$Connect/ErrorLabel.text = "Invalid name!"
 		return
-
+	# Hide the Connect box
 	$Connect.hide()
 	$Connect/ErrorLabel.text = ""
-
+	# Start the Server
 	var player_name = $Connect/Name.text
-	NetworkHandler.start_server(player_name)
+	NetworkManager.start_server(player_name) 
+	# Show and refresh the lobby
 	$Lobby/Start.show()
 	$Lobby.show()
 	_refresh_lobby()
@@ -32,10 +34,11 @@ func _on_server_pressed() -> void:
 
 ## Handles joining a lobby
 func _on_client_pressed() -> void:
+	# Verify username is valid
 	if $Connect/Name.text == "":
 		$Connect/ErrorLabel.text = "Invalid name!"
 		return
-
+	# Verify the IP is valid
 	var ip = $Connect/IPAddress.text
 	if not ip.is_valid_ip_address():
 		ip = IP.resolve_hostname(ip, IP.TYPE_IPV4)
@@ -43,22 +46,20 @@ func _on_client_pressed() -> void:
 	if not ip.is_valid_ip_address():
 		$Connect/ErrorLabel.text = "Invalid IP address!"
 		return
-
+	# Hide the Connect box
 	$Connect/ErrorLabel.text = ""
 	$Connect/Server.disabled = true
 	$Connect/Client.disabled = true
-	
+	# Start the Client
 	var player_name = $Connect/Name.text
-	NetworkHandler.start_client(ip, player_name)
-	
+	NetworkManager.start_client(ip, player_name)
+	# Set "Connecting" state
 	$Connect/ErrorLabel.set_text("Connecting...")
 
 
 ## Handles successful lobby connection
 func _on_connection_success():
 	$Connect.hide()
-	if(!GameManager.is_playing):
-		$Lobby.show()
 
 
 ## Handles lobby connection failure
@@ -68,12 +69,18 @@ func _on_connection_failed():
 	$Connect/ErrorLabel.set_text("Connection failed!")
 
 
+## Handles game errors
 func _on_game_error(errtxt):
 	$ErrorDialog.dialog_text = errtxt
 	$ErrorDialog.popup_centered()
 	$Connect/Server.disabled = false
 	$Connect/Client.disabled = false
-	#$Connect.show()
+
+
+## Handles losing connection to server
+func _on_server_lost():
+	$Lobby.hide()
+	$Connect.show()
 
 
 ## Handles end-of-game
@@ -86,18 +93,15 @@ func _on_game_ended():
 
 ## Signal for server to signal to clients that the lobby should be hidden
 @rpc("authority","call_local")
-func _hide_lobby(passed_scores):
+func _hide_lobby():
 	$Lobby.hide()
-	GameManager.is_playing = true
-	GameManager.player_scores = passed_scores
 
 
 ## Refreshes player list
 func _refresh_lobby():
-	if(multiplayer.is_server() and GameManager.is_playing):
-		_hide_lobby.rpc(GameManager.player_scores)
-	
-	var player_names = NetworkHandler.get_player_list()
+	if(!GameManager.is_playing):
+		$Lobby.show()
+	var player_names = NetworkManager.get_player_list()
 	player_names.sort()
 	$Lobby/Players/List.clear()
 	for p in player_names:
@@ -106,21 +110,24 @@ func _refresh_lobby():
 
 ## Handle starting the game
 func _on_start_pressed():
-	$Lobby/Start.hide()
-	_hide_lobby.rpc(GameManager.player_scores)
 	assert(multiplayer.is_server())
-	GameManager.is_playing = true
-	for player in NetworkHandler.players:
-		debug_spawner.spawn_player(player)
+	$Lobby/Start.hide()
+	_hide_lobby.rpc()
+	NetworkManager.start_game()
 
 
 ## Handle the "leave lobby" button
 func _on_leave_lobby_pressed() -> void:
-	multiplayer.set_multiplayer_peer(null)
-	NetworkHandler.players.clear()
+	NetworkManager.peer.close()
+	NetworkManager.players_dict.clear()
 	$Lobby/Start.hide()
 	$Lobby.hide()
 	$Connect.show()
 	$Connect/Server.disabled = false
 	$Connect/Client.disabled = false
 	$Connect/ErrorLabel.set_text("")
+
+
+## Handles incoming log messages from server
+func _refresh_chatlog(text : String) -> void:
+	$Lobby/ChatLog.add_text(text+"\n")

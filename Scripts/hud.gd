@@ -11,5 +11,5 @@ func update_scores():
 	player_ids.sort()
 	$Base/ScoreContainer/Players/ScoreList.clear()
 	for p in player_ids:
-		$Base/ScoreContainer/Players/ScoreList.add_item(NetworkHandler.players[p])
+		$Base/ScoreContainer/Players/ScoreList.add_item(NetworkManager.players_dict[p])
 		$Base/ScoreContainer/Players/ScoreList.add_item(str(GameManager.player_scores[p]))
