@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://c70yb0bub5udh"]
 
-[ext_resource type="Script" uid="uid://e5bg7cimoj2y" path="res://Scripts/multiplayer_ui.gd" id="1_32t2l"]
+[ext_resource type="Script" uid="uid://e5bg7cimoj2y" path="res://Scripts/UI/multiplayer_ui.gd" id="1_32t2l"]
 [ext_resource type="Theme" uid="uid://dbc26jnuib7yq" path="res://Themes/main_theme.tres" id="2_p37wi"]
 
 [node name="MultiplayerUI" type="CanvasLayer"]

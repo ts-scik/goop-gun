@@ -6,8 +6,8 @@
 [ext_resource type="PackedScene" uid="uid://bhs0dqr47vg8p" path="res://Models/kenney_blaster-kit_2.1/blaster-b.glb" id="4_2nftw"]
 [ext_resource type="Script" uid="uid://b8b2ltlkdgkp2" path="res://Scripts/Player/gun_raycast.gd" id="4_knrd4"]
 [ext_resource type="AudioStream" uid="uid://ro6npthlf24i" path="res://Sounds/gunshot_cg1.wav" id="5_knrd4"]
-[ext_resource type="PackedScene" uid="uid://bdt3orm768b1" path="res://Prefabs/pause_menu.tscn" id="7_juxdh"]
-[ext_resource type="PackedScene" uid="uid://cpco4jqlt1swy" path="res://Prefabs/hud.tscn" id="8_4qbli"]
+[ext_resource type="PackedScene" uid="uid://bdt3orm768b1" path="res://Prefabs/UI/pause_menu.tscn" id="7_4qbli"]
+[ext_resource type="PackedScene" uid="uid://cpco4jqlt1swy" path="res://Prefabs/UI/hud.tscn" id="8_08u7w"]
 
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_hck1p"]
 properties/0/path = NodePath(".:position")
@@ -293,10 +293,9 @@ libraries = {
 &"": SubResource("AnimationLibrary_4qbli")
 }
 
-[node name="PauseMenu" parent="." instance=ExtResource("7_juxdh")]
+[node name="PauseMenu" parent="." instance=ExtResource("7_4qbli")]
 visible = false
 
-[node name="HUD" parent="." instance=ExtResource("8_4qbli")]
-visible = false
+[node name="HUD" parent="." instance=ExtResource("8_08u7w")]
 
 [editable path="CameraController/GunController/GunModel"]

@@ -1,9 +1,9 @@
 [gd_scene load_steps=5 format=3 uid="uid://bdt3orm768b1"]
 
-[ext_resource type="Script" uid="uid://ju1873le1n6p" path="res://Scripts/pause_menu.gd" id="1_mf8ns"]
+[ext_resource type="Script" uid="uid://ju1873le1n6p" path="res://Scripts/UI/pause_menu.gd" id="1_mf8ns"]
 [ext_resource type="Theme" uid="uid://dbc26jnuib7yq" path="res://Themes/main_theme.tres" id="2_7do1g"]
-[ext_resource type="PackedScene" uid="uid://bmwelugvb25bb" path="res://Prefabs/value_slider.tscn" id="2_dgyu8"]
-[ext_resource type="PackedScene" uid="uid://cqsa45gcqdm8" path="res://Prefabs/fps_button.tscn" id="4_bc36d"]
+[ext_resource type="PackedScene" uid="uid://bmwelugvb25bb" path="res://Prefabs/UI/value_slider.tscn" id="2_dgyu8"]
+[ext_resource type="PackedScene" uid="uid://cqsa45gcqdm8" path="res://Prefabs/UI/fps_button.tscn" id="4_bc36d"]
 
 [node name="PauseMenu" type="CanvasLayer"]
 script = ExtResource("1_mf8ns")

@@ -2,8 +2,8 @@
 
 [ext_resource type="Script" uid="uid://by5yaq3ckogg2" path="res://Scripts/world.gd" id="1_pceh6"]
 [ext_resource type="Texture2D" uid="uid://sjnjcsxqllgg" path="res://icon.svg" id="2_pplnx"]
-[ext_resource type="PackedScene" uid="uid://0d4aof4spj0p" path="res://Prefabs/warehouse_csg.tscn" id="4_pplnx"]
-[ext_resource type="PackedScene" uid="uid://b1w8lysvtvysk" path="res://Prefabs/physics_barrel.tscn" id="6_pceh6"]
+[ext_resource type="PackedScene" uid="uid://0d4aof4spj0p" path="res://Prefabs/Level/warehouse_csg.tscn" id="4_pplnx"]
+[ext_resource type="PackedScene" uid="uid://b1w8lysvtvysk" path="res://Prefabs/Level/physics_barrel.tscn" id="6_pceh6"]
 [ext_resource type="PackedScene" uid="uid://dpkim8cla8dii" path="res://Prefabs/player.tscn" id="6_rqu7v"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_xjhai"]
@@ -55,7 +55,7 @@ light_energy = 0.05
 shadow_enabled = true
 
 [node name="Barrel" parent="." instance=ExtResource("6_pceh6")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.75, 0.65, -21)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.3, 0.6, -21.05)
 
 [node name="Geometry" type="Node3D" parent="."]
 
