@@ -77,9 +77,9 @@ func _player_disconnected(id) -> void:
 	if GameManager.is_playing:
 		# If so, delete the disconnected player's player object.
 		if multiplayer.is_server():
-			game_error.emit("Player " + players_dict[id] + " disconnected")
-			var path = NodePath("/root/World/"+str(id))
-			print(path)
+			game_error.emit("Player " + players_dict[id]["name"] + " disconnected")
+			var path = NodePath("/root/MainScene/World/"+str(id))
+			#print(path)
 			if(has_node(path)):
 				get_node(path).queue_free()
 	# Unregister the lost player.
@@ -120,13 +120,13 @@ func _register_player(new_player_name) -> void:
 	var id = multiplayer.get_remote_sender_id()
 	var offset = 0
 	var fixed_player_name = new_player_name
-	while players_dict.values().has(fixed_player_name):
+	var curr_names = get_player_list()
+	while curr_names.has(fixed_player_name):
 		offset += 1
 		fixed_player_name = new_player_name + "(" + str(offset) + ")"
-	players_dict[id] = fixed_player_name
-	GameManager.player_scores[id] = 0
+	players_dict[id] = {"name": fixed_player_name, "score": 0, "color": Color.WHITE}
 	player_list_changed.emit()
-	_sync_players.rpc(players_dict, GameManager.player_scores, GameManager.is_playing)
+	_sync_players.rpc(players_dict, GameManager.is_playing)
 	
 	if(GameManager.is_playing):
 		var world = get_tree().get_root().get_node("MainScene/World")
@@ -138,17 +138,16 @@ func _register_player(new_player_name) -> void:
 func _unregister_player(id):
 	assert(multiplayer.is_server())
 	players_dict.erase(id)
-	GameManager.player_scores.erase(id)
 	player_list_changed.emit()
-	_sync_players.rpc(players_dict, GameManager.player_scores, GameManager.is_playing)
+	_sync_players.rpc(players_dict, GameManager.is_playing)
 
 
 ## Syncs the players list + scores on clients
 @rpc("authority","call_remote","reliable",LOBBY_CHANNEL)
-func _sync_players(new_players_dict, new_player_scores, new_is_playing) -> void:
+func _sync_players(new_players_dict, new_is_playing) -> void:
+	print(new_players_dict)
 	players_dict = new_players_dict
-	my_player_name = players_dict[multiplayer.get_unique_id()]
-	GameManager.player_scores = new_player_scores
+	my_player_name = players_dict[multiplayer.get_unique_id()]["name"]
 	GameManager.is_playing = new_is_playing
 	player_list_changed.emit()
 	log_update.emit("Received synchronized playerdata!")
@@ -156,7 +155,10 @@ func _sync_players(new_players_dict, new_player_scores, new_is_playing) -> void:
 
 ## Returns all player names
 func get_player_list():
-	return players_dict.values()
+	var players_list : Array = []
+	for id in players_dict:
+		players_list.append(players_dict[id]["name"])
+	return players_list
 
 
 ## Returns player name on this machine
@@ -189,6 +191,5 @@ func end_game() -> void:
 	if(has_node(path)):
 		get_node(path).queue_free()
 	players_dict.clear()
-	GameManager.player_scores.clear()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	game_ended.emit()

@@ -88,7 +88,7 @@ func _physics_process(delta: float) -> void:
 ## Take damage when hit
 @rpc("any_peer") # Any peer can tell us we've been shot
 func receive_damage(dmg : int = 1, shooter : String = ""):
-	print("ack!! i, ", multiplayer.get_unique_id(),", was shot by ", NetworkManager.players_dict[int(shooter)] + "\t" + shooter)
+	print("ack!! i, ", multiplayer.get_unique_id(),", was shot by ", NetworkManager.players_dict[int(shooter)]["name"] + "\t" + shooter)
 	health -= dmg
 	HUD.update_health(health)
 	if health <= 0:
@@ -111,7 +111,7 @@ func die(shooter : String = ""):
 			position = positions[selection]
 		HUD.update_health(health)
 	print("i am dead! killed by the evil ",shooter)
-	GameManager.player_scores[int(shooter)]+=1
+	NetworkManager.players_dict[int(shooter)]["score"]+=1
 
 
 

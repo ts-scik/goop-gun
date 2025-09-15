@@ -7,8 +7,6 @@ var volume_curve : Curve = Curve.new()
 var max_vol = 6.0
 var min_vol = -40.0
 
-var player_scores = {}
-
 func _ready() -> void:
 	volume_curve.max_value = max_vol
 	volume_curve.min_value = min_vol

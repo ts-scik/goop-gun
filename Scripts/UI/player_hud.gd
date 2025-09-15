@@ -11,9 +11,9 @@ func update_health(value : int):
 
 func update_scores():
 	#TODO: this currently only updates when players open the scoreboard, not in real time
-	var player_ids = GameManager.player_scores.keys()
+	var player_ids = NetworkManager.players_dict.keys()
 	player_ids.sort()
 	$Base/ScoreContainer/Players/ScoreList.clear()
 	for p in player_ids:
-		$Base/ScoreContainer/Players/ScoreList.add_item(NetworkManager.players_dict[p])
-		$Base/ScoreContainer/Players/ScoreList.add_item(str(GameManager.player_scores[p]))
+		$Base/ScoreContainer/Players/ScoreList.add_item(NetworkManager.players_dict[p]["name"])
+		$Base/ScoreContainer/Players/ScoreList.add_item(str(NetworkManager.players_dict[p]["score"]))
