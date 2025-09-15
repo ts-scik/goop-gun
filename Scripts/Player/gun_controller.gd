@@ -1,5 +1,6 @@
-extends Node3D
 class_name GunController
+extends Node3D
+## Manages a player's gun animations/sounds/shooting
 
 @onready var anim_tree : AnimationTree = get_node("GunAnimationTree")
 @onready var anim_player : AnimationPlayer = get_node("GunAnimator")
@@ -20,6 +21,7 @@ func shoot():
 
 
 ## Handles animations
+#TODO: i hate this
 func handle_movement_anim(direction : Vector3):
 	if(direction.x != 0 or direction.z != 0):
 		anim_tree.set("parameters/conditions/stopped", false)

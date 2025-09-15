@@ -1,3 +1,4 @@
+class_name GunRaycast
 extends RayCast3D
 
 const BULLET_DECAL = preload("res://Prefabs/bullet_decal.tscn")

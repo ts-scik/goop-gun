@@ -1,5 +1,7 @@
-extends CharacterBody3D
 class_name PlayerController
+extends CharacterBody3D
+## Manages all player input + movement (except for the camera)
+
 
 # Movement constants
 const JUMP_VELOCITY = 4.5
@@ -17,7 +19,7 @@ const GRAVITY = 9.8
 var paused = false
 var health : int = 3
 var score : int = 0
-
+# Variables for foosteps
 var footstep_timer : float = 0.0
 var footstep_time_length : float = 0.5
 
@@ -95,7 +97,7 @@ func _physics_process(delta: float) -> void:
 
 
 ## Randomly selects and then plays a footstep sound
-@rpc("authority","call_local","unreliable")
+@rpc("authority","call_local","unreliable") # It's okay if a footstep sound is dropped
 func play_footstep_sound() -> void:
 	if($FootstepSound.playing): return
 	var selection :int = randi_range(0,8)
@@ -114,7 +116,7 @@ func receive_damage(dmg : int = 1, shooter : String = ""):
 
 
 ## Die if out of health
-# TODO: we should tell the server we've died, and ask if to handle the respawning
+# TODO: we should tell the server we've died, and ask it to handle the respawning
 # TODO: add some kind of death animation / respawn time
 # TODO: add better respawn logic
 @rpc("any_peer","call_local","reliable")
@@ -131,6 +133,7 @@ func die(shooter : String = ""):
 		HUD.update_health(health)
 	print("i am dead! killed by the evil ",shooter)
 	NetworkManager.players_dict[int(shooter)]["score"]+=1
+	HUD.update_scores()
 
 
 
@@ -146,8 +149,6 @@ func _on_menu_key() -> void:
 
 
 ## Handle main menu value updates
-# TODO: adjust this so we can update the score display whenever the points are updated
-# TODO: some of this should be the game manager's problem
 func _on_menu_value_update(value, parameter : String) -> void:
 	match(parameter):
 		"master_vol":

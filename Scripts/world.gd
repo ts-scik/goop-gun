@@ -1,8 +1,9 @@
 extends Node3D
 
-@export var player_scene : PackedScene
-@export var player_spawner : MultiplayerSpawner
-var spawn_positions : Array[Vector3]
+@export var player_scene : PackedScene # player scene
+@export var player_spawner : MultiplayerSpawner # player MultiplayerSpawner node
+
+var spawn_positions : Array[Vector3] # Stores global_position variables of spawn locations
 
 
 func _ready()-> void:
