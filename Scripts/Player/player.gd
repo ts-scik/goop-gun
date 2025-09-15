@@ -18,6 +18,9 @@ var paused = false
 var health : int = 3
 var score : int = 0
 
+var footstep_timer : float = 0.0
+var footstep_time_length : float = 0.5
+
 
 ## Set multiplayer auth
 func _enter_tree() -> void:
@@ -72,9 +75,15 @@ func _physics_process(delta: float) -> void:
 	if direction:
 		velocity.x = direction.x * SPEED
 		velocity.z = direction.z * SPEED
+		if(footstep_timer<=0 and is_on_floor()):
+			footstep_timer = footstep_time_length
+			play_footstep_sound.rpc()
 	else:
 		velocity.x = move_toward(velocity.x, 0, SPEED)
 		velocity.z = move_toward(velocity.z, 0, SPEED)
+	
+	if(footstep_timer > 0):
+		footstep_timer -= delta
 	
 	# Handle movement animation based on movement direction
 	# TODO: update so that this is the camera's responsibility (?)
@@ -85,8 +94,17 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 
+## Randomly selects and then plays a footstep sound
+@rpc("authority","call_local","unreliable")
+func play_footstep_sound() -> void:
+	if($FootstepSound.playing): return
+	var selection :int = randi_range(0,8)
+	$FootstepSound.stream = load("res://Sounds/footsteps/boots/"+str(selection)+".ogg")
+	$FootstepSound.play()
+
+
 ## Take damage when hit
-@rpc("any_peer") # Any peer can tell us we've been shot
+@rpc("any_peer","reliable") # Any peer can tell us we've been shot
 func receive_damage(dmg : int = 1, shooter : String = ""):
 	print("ack!! i, ", multiplayer.get_unique_id(),", was shot by ", NetworkManager.players_dict[int(shooter)]["name"] + "\t" + shooter)
 	health -= dmg
@@ -99,8 +117,9 @@ func receive_damage(dmg : int = 1, shooter : String = ""):
 # TODO: we should tell the server we've died, and ask if to handle the respawning
 # TODO: add some kind of death animation / respawn time
 # TODO: add better respawn logic
-@rpc("any_peer","call_local")
+@rpc("any_peer","call_local","reliable")
 func die(shooter : String = ""):
+	reset_physics_interpolation()
 	if(is_multiplayer_authority()):
 		health = 3
 		if(!has_node("/root/MainScene/World")):

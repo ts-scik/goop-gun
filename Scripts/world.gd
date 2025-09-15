@@ -13,11 +13,12 @@ func _ready()-> void:
 
 
 func spawn_player(authority_pid : int) -> void:
-	player_spawner.spawn(authority_pid)
+	var player : PlayerController = player_spawner.spawn(authority_pid)
+	player.global_position = spawn_positions[randi_range(0,spawn_positions.size()-1)]
 
 
+## Custom spawn function override for PlayerSpawner
 func _ms_player(authority_pid : int) -> PlayerController:
-	var player = player_scene.instantiate()
+	var player : PlayerController= player_scene.instantiate()
 	player.name = str(authority_pid)
-	
 	return player

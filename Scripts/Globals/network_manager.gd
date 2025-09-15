@@ -69,7 +69,7 @@ func _player_connected(id) -> void:
 # Callback from SceneTree.
 ## Handles {peer_disconnected} signal from client with id [id]
 func _player_disconnected(id) -> void:
-	log_update.emit("peer "+str(id)+" disconnected!")
+	log_update.emit("peer "+players_dict[id]["name"]+" disconnected!")
 	
 	# Early return if not multiplayer authority
 	if !is_multiplayer_authority(): return
@@ -151,6 +151,12 @@ func _sync_players(new_players_dict, new_is_playing) -> void:
 	GameManager.is_playing = new_is_playing
 	player_list_changed.emit()
 	log_update.emit("Received synchronized playerdata!")
+
+
+@rpc("any_peer","call_remote","reliable",LOBBY_CHANNEL)
+func _request_player_sync(sent_player_data : Dictionary) -> void:
+	players_dict[multiplayer.get_remote_sender_id()] = sent_player_data
+	player_list_changed.emit()
 
 
 ## Returns all player names

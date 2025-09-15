@@ -1,11 +1,12 @@
-[gd_scene load_steps=27 format=3 uid="uid://dpkim8cla8dii"]
+[gd_scene load_steps=28 format=3 uid="uid://dpkim8cla8dii"]
 
 [ext_resource type="Script" uid="uid://bxc5wvblob2y7" path="res://Scripts/Player/player.gd" id="1_onrkg"]
+[ext_resource type="AudioStream" uid="uid://d08nk0hl5wac7" path="res://Sounds/footsteps/boots/0.ogg" id="2_08u7w"]
 [ext_resource type="Script" uid="uid://tp34olvhc8jf" path="res://Scripts/Player/camera_controller.gd" id="2_i3pqv"]
 [ext_resource type="Script" uid="uid://clf1pp0ppnwps" path="res://Scripts/Player/gun_controller.gd" id="3_hck1p"]
 [ext_resource type="PackedScene" uid="uid://bhs0dqr47vg8p" path="res://Models/kenney_blaster-kit_2.1/blaster-b.glb" id="4_2nftw"]
 [ext_resource type="Script" uid="uid://b8b2ltlkdgkp2" path="res://Scripts/Player/gun_raycast.gd" id="4_knrd4"]
-[ext_resource type="AudioStream" uid="uid://ro6npthlf24i" path="res://Sounds/gunshot_cg1.wav" id="5_knrd4"]
+[ext_resource type="AudioStream" uid="uid://ro6npthlf24i" path="res://Sounds/gunshots/gunshot_cg1.wav" id="5_knrd4"]
 [ext_resource type="PackedScene" uid="uid://bdt3orm768b1" path="res://Prefabs/UI/pause_menu.tscn" id="7_4qbli"]
 [ext_resource type="PackedScene" uid="uid://cpco4jqlt1swy" path="res://Prefabs/UI/player_hud.tscn" id="8_08u7w"]
 
@@ -205,6 +206,7 @@ script = ExtResource("1_onrkg")
 replication_config = SubResource("SceneReplicationConfig_hck1p")
 
 [node name="FootstepSound" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("2_08u7w")
 
 [node name="PlayerModel" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)

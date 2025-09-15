@@ -44,11 +44,10 @@ var debug_box : bool = false # Flag for if we want to show the boundary_rect
 
 ## Get our camera + gun set up
 func _ready() -> void:
-	# Early return if not multiplayer authority - clients own their cameras
-	if not is_multiplayer_authority(): return
-
 	# Turn off automatic physics interpolation for the Camera3D
 	set_physics_interpolation_mode(Node.PHYSICS_INTERPOLATION_MODE_OFF)
+	# Early return if not multiplayer authority - clients own their cameras
+	if not is_multiplayer_authority(): return
 	# Disable transform inheritance from parent
 	top_level = true
 	# Find the target nodes
