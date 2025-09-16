@@ -1,8 +1,9 @@
-[gd_scene load_steps=28 format=3 uid="uid://dpkim8cla8dii"]
+[gd_scene load_steps=29 format=3 uid="uid://dpkim8cla8dii"]
 
 [ext_resource type="Script" uid="uid://bxc5wvblob2y7" path="res://Scripts/Player/player.gd" id="1_onrkg"]
 [ext_resource type="AudioStream" uid="uid://d08nk0hl5wac7" path="res://Sounds/footsteps/boots/0.ogg" id="2_08u7w"]
 [ext_resource type="Script" uid="uid://tp34olvhc8jf" path="res://Scripts/Player/camera_controller.gd" id="2_i3pqv"]
+[ext_resource type="Script" uid="uid://nby83qybea01" path="res://Scripts/synchronizer_filter.gd" id="2_kgmex"]
 [ext_resource type="Script" uid="uid://clf1pp0ppnwps" path="res://Scripts/Player/gun_controller.gd" id="3_hck1p"]
 [ext_resource type="PackedScene" uid="uid://bhs0dqr47vg8p" path="res://Models/kenney_blaster-kit_2.1/blaster-b.glb" id="4_2nftw"]
 [ext_resource type="Script" uid="uid://b8b2ltlkdgkp2" path="res://Scripts/Player/gun_raycast.gd" id="4_knrd4"]
@@ -204,6 +205,7 @@ script = ExtResource("1_onrkg")
 
 [node name="PlayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
 replication_config = SubResource("SceneReplicationConfig_hck1p")
+script = ExtResource("2_kgmex")
 
 [node name="FootstepSound" type="AudioStreamPlayer3D" parent="."]
 stream = ExtResource("2_08u7w")
@@ -225,6 +227,7 @@ script = ExtResource("2_i3pqv")
 
 [node name="CameraControllerSynchronizer" type="MultiplayerSynchronizer" parent="CameraController"]
 replication_config = SubResource("SceneReplicationConfig_juxdh")
+script = ExtResource("2_kgmex")
 
 [node name="PlayerCamera" type="Camera3D" parent="CameraController"]
 cull_mask = 1048573

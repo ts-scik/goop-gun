@@ -132,9 +132,3 @@ func _on_leave_lobby_pressed() -> void:
 ## Handles incoming log messages from server
 func _refresh_chatlog(text : String) -> void:
 	$Lobby/ChatLog.add_text(text+"\n")
-
-
-func _on_button_pressed() -> void:
-	NetworkManager.players_dict[multiplayer.get_unique_id()]["color"]=Color.BLUE
-	NetworkManager._request_player_sync.rpc(NetworkManager.players_dict[multiplayer.get_unique_id()])
-	_refresh_lobby()

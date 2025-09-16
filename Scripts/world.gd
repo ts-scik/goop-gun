@@ -11,6 +11,7 @@ func _ready()-> void:
 	for spawn in spawn_position_nodes:
 		spawn_positions.append(spawn.global_position)
 	player_spawner.spawn_function = _ms_player
+	print("ready")
 
 
 func spawn_player(authority_pid : int) -> void:

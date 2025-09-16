@@ -145,18 +145,12 @@ func _unregister_player(id):
 ## Syncs the players list + scores on clients
 @rpc("authority","call_remote","reliable",LOBBY_CHANNEL)
 func _sync_players(new_players_dict, new_is_playing) -> void:
-	print(new_players_dict)
+	#print(new_players_dict)
 	players_dict = new_players_dict
 	my_player_name = players_dict[multiplayer.get_unique_id()]["name"]
 	GameManager.is_playing = new_is_playing
 	player_list_changed.emit()
 	log_update.emit("Received synchronized playerdata!")
-
-
-@rpc("any_peer","call_remote","reliable",LOBBY_CHANNEL)
-func _request_player_sync(sent_player_data : Dictionary) -> void:
-	players_dict[multiplayer.get_remote_sender_id()] = sent_player_data
-	player_list_changed.emit()
 
 
 ## Returns all player names
