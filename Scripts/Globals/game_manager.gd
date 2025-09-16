@@ -2,6 +2,7 @@
 extends Node
 
 var is_playing = false
+var world_data : Array
 
 var volume_curve : Curve = Curve.new()
 var max_vol = 6.0

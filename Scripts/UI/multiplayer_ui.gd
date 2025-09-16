@@ -10,6 +10,7 @@ func _ready():
 	NetworkManager.player_list_changed.connect(_refresh_lobby)
 	NetworkManager.log_update.connect(_refresh_chatlog)
 	NetworkManager.server_lost.connect(_on_server_lost)
+	NetworkManager.game_loading.connect(_on_game_loading)
 	$Connect/IPAddress.text = NetworkManager.DEFAULT_IP_ADDRESS
 	if OS.has_environment("USERNAME"):
 		$Connect/Name.text = OS.get_environment("USERNAME")
@@ -92,12 +93,6 @@ func _on_game_ended():
 	$Connect/ErrorLabel.set_text("")
 
 
-## Signal for server to signal to clients that the lobby should be hidden
-@rpc("authority","call_local")
-func _hide_lobby():
-	$Lobby.hide()
-
-
 ## Refreshes player list
 func _refresh_lobby():
 	if(!GameManager.is_playing):
@@ -113,8 +108,7 @@ func _refresh_lobby():
 func _on_start_pressed():
 	assert(multiplayer.is_server())
 	$Lobby/Start.hide()
-	_hide_lobby.rpc()
-	NetworkManager.start_game()
+	NetworkManager.setup_game()
 
 
 ## Handle the "leave lobby" button
@@ -127,6 +121,11 @@ func _on_leave_lobby_pressed() -> void:
 	$Connect/Server.disabled = false
 	$Connect/Client.disabled = false
 	$Connect/ErrorLabel.set_text("")
+
+
+## Handles hiding lobby once game starts
+func _on_game_loading() -> void:
+	$Lobby.hide()
 
 
 ## Handles incoming log messages from server
