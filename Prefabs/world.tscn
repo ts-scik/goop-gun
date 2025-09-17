@@ -7,7 +7,7 @@
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_xjhai"]
 sky_top_color = Color(0.423518, 0.519657, 0.559584, 1)
 sky_horizon_color = Color(0, 0, 0, 1)
-sky_energy_multiplier = 0.15
+sky_energy_multiplier = 0.3
 ground_bottom_color = Color(0.0915908, 0.073615, 0.052732, 1)
 ground_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
 energy_multiplier = 0.5

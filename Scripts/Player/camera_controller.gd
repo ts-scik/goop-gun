@@ -49,7 +49,6 @@ var debug_box : bool = false # Flag for if we want to show the boundary_rect
 func _ready() -> void:
 	# Turn off automatic physics interpolation for the Camera3D
 	set_physics_interpolation_mode(Node.PHYSICS_INTERPOLATION_MODE_OFF)
-	
 	# Early return if not multiplayer authority - clients own their cameras
 	if not is_multiplayer_authority(): return
 	# Disable transform inheritance from parent
@@ -59,10 +58,10 @@ func _ready() -> void:
 	# Capture the mouse
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	# Get the player camera, and start using it
+	gun_controller = get_node("GunController")
 	player_camera = get_node("PlayerCamera")
 	player_camera.current = true
 	# Get the gun controller and its debug UI
-	gun_controller = get_node("GunController")
 	boundary_rect = get_node("GunCanvas/BoundaryRect")
 	red_dot = get_node("GunCanvas/RedDot")
 	# Update all our screen-size-related variables
@@ -91,7 +90,6 @@ func _input(event: InputEvent) -> void:
 	elif Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and !aim_toggle and event.is_action_released("aim"):
 		# Disable aiming
 		aim_held = false
-		is_aiming = false
 
 
 ## Handles camera rotation / gun positioning
@@ -165,43 +163,38 @@ func mouse_input_management() -> void:
 func manage_aiming(delta) -> void:
 	# get target pos/rot
 	var player_interp = player_controller.get_global_transform_interpolated()
-	var unaimed_target_pos = to_local(
-		player_interp.origin + (player_interp.basis * holstered_pos)
-	)
-	var unaimed_target_rot = player_interp.basis.get_euler() + holstered_rot
+	var unaimed_target_pos = to_local(player_interp.origin + (player_interp.basis * holstered_pos))
+	var unaimed_target_rot = holstered_rot - Vector3(self.rotation.x,0,0)
 	
 	# If we're in an aim transition,
 	if(aim_held or ads_timer > 0.0):
 		# If we're trying to aim
 		if(aim_held):
-			# update the aim timer
-			ads_timer += delta
-			# if we're there, update the aim variable
-			if(ads_timer/ads_time >= 1.0):
+			ads_timer += delta # update the aim timer
+			if(ads_timer/ads_time >= 1.0): # if we're there, update the aim variable
 				ads_timer = ads_time
 				is_aiming = true
 				# Debug - update our debug red-dot color
 				if(debug_dot): red_dot.color = Color.RED
 			last_aimed_target_pos = Vector3(0,0,-gun_hold_distance)
-			last_aimed_target_rot = self.global_rotation + Vector3.ZERO
+			last_aimed_target_rot = Vector3.ZERO
 		# If we're trying to de-aim
 		elif(!aim_held):
-			# update the aim timer
-			ads_timer = clampf(ads_timer, 0.0, ads_timer-delta)
-			# update is_aiming, last_aimed stuff
-			if(is_aiming):
+			ads_timer = clampf(ads_timer, 0.0, ads_timer-delta) # update the aim timer
+			if(is_aiming): # update is_aiming, last_aimed stuff
 				is_aiming = false
 				last_aimed_target_pos = gun_controller.position
-				last_aimed_target_rot = gun_controller.global_rotation
+				last_aimed_target_rot = gun_controller.rotation
 				# Debug - update our debug red-dot color
 				if(debug_dot):
 					red_dot.color = Color.BLUE
 					red_dot.position = screen_size/2
 		gun_controller.position = lerp(unaimed_target_pos, last_aimed_target_pos, ads_timer/ads_time)
-		gun_controller.global_rotation = lerp(unaimed_target_rot, last_aimed_target_rot, ads_timer/ads_time)
+		gun_controller.rotation = lerp(unaimed_target_rot, last_aimed_target_rot, ads_timer/ads_time)
 	else:
 		gun_controller.position = unaimed_target_pos
-		gun_controller.global_rotation = unaimed_target_rot
+		gun_controller.rotation = unaimed_target_rot
+
 
 ## Shoots
 func shoot():
@@ -216,14 +209,15 @@ func shoot():
 
 ## Updates the gun's position+rotation (for if gun exists in local space)
 func update_gun_local_space():
-	# Update whether gun is global/local
-	#gun_controller.top_level = false
 	# Update the gun's position
 	gun_controller.position = to_local(player_camera.project_position(mouse_position,gun_hold_distance))
 	# Update the gun's rotation (relative to camera)
-	var player_camera_interp = to_local(player_camera.get_global_transform_interpolated().origin) # get interpolated player_camera position in local space
-	var gun_controller_interp = to_local(gun_controller.get_global_transform_interpolated().origin) # get interpolated gun_controller position in local space
-	var fw_dir = gun_controller_interp - player_camera_interp # find vector from player camera to gun_controller (interpolated)
+# TODO: why was i interpolating this????
+	#var player_camera_interp = to_local(player_camera.get_global_transform_interpolated().origin) # get interpolated player_camera position in local space
+	#var gun_controller_interp = to_local(gun_controller.get_global_transform_interpolated().origin) # get interpolated gun_controller position in local space
+	#var fw_dir = gun_controller_interp - player_camera_interp # find vector from player camera to gun_controller (interpolated)
+# TODO : see above
+	var fw_dir = to_local(gun_controller.global_position) - to_local(player_camera.global_position) # find vector from player camera to gun_controller
 	gun_controller.basis = Basis.looking_at(fw_dir, Vector3.UP, false)
 
 

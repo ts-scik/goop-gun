@@ -37,6 +37,6 @@ func _ms_player(authority_pid : int) -> PlayerController:
 
 
 ## Custom spawn function override for BarrelSpawner
-func _ms_barrel(authority_pid : int) -> RigidBody3D:
+func _ms_barrel(_authority_pid : int) -> RigidBody3D:
 	var barrel : RigidBody3D = barrel_scene.instantiate()
 	return barrel
