@@ -15,7 +15,7 @@ anchor_bottom = 0.5
 offset_left = -138.5
 offset_top = -83.5
 offset_right = 138.5
-offset_bottom = 83.5
+offset_bottom = 114.0
 grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("2_p37wi")
@@ -73,6 +73,7 @@ offset_left = 15.0
 offset_top = 138.0
 offset_right = 257.0
 offset_bottom = 161.0
+vertical_alignment = 1
 
 [node name="Port" type="Label" parent="Connect"]
 layout_mode = 1
@@ -82,6 +83,22 @@ offset_right = 268.5
 offset_bottom = 30.5
 theme = ExtResource("2_p37wi")
 text = "PORT: 47757"
+
+[node name="QuitButton" type="Button" parent="Connect"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -23.0
+offset_top = -31.5
+offset_right = 23.0
+offset_bottom = -8.5
+grow_horizontal = 2
+grow_vertical = 0
+theme = ExtResource("2_p37wi")
+text = "QUIT"
 
 [node name="ErrorDialog" type="AcceptDialog" parent="."]
 
@@ -114,6 +131,7 @@ offset_right = 575.0
 offset_bottom = 250.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("2_p37wi")
 
 [node name="Start" type="Button" parent="Lobby"]
 visible = false
@@ -167,5 +185,6 @@ item_1/text = "test2"
 
 [connection signal="pressed" from="Connect/Server" to="." method="_on_server_pressed"]
 [connection signal="pressed" from="Connect/Client" to="." method="_on_client_pressed"]
+[connection signal="pressed" from="Connect/QuitButton" to="." method="_on_quit_button_pressed"]
 [connection signal="pressed" from="Lobby/Start" to="." method="_on_start_pressed"]
 [connection signal="pressed" from="Lobby/LeaveLobby" to="." method="_on_leave_lobby_pressed"]

@@ -40,3 +40,8 @@ func _ms_player(authority_pid : int) -> PlayerController:
 func _ms_barrel(_authority_pid : int) -> RigidBody3D:
 	var barrel : RigidBody3D = barrel_scene.instantiate()
 	return barrel
+
+
+## Resets world to default state
+func reset() -> void:
+	pass

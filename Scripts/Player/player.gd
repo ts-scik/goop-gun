@@ -40,7 +40,8 @@ func _ready() -> void:
 
 ## Handle non-physics inputs (pausing, scoreboard)
 func _process(_delta: float) -> void:
-	if not is_multiplayer_authority(): return
+	if NetworkManager.peer.get_connection_status() == 0 : return # early return if we have no server
+	if not is_multiplayer_authority(): return # Early return if we don't have authority (players should move themselves)
 	# Pause menu
 	if Input.is_action_just_pressed("pause"):
 		_on_menu_key()
@@ -55,9 +56,9 @@ func _process(_delta: float) -> void:
 
 ## Handle player movement
 func _physics_process(delta: float) -> void:
-	# Early return if we don't have authority (players should move themselves)
 	# TODO: adjust this so players don't have *total* authority
-	if not is_multiplayer_authority(): return
+	if NetworkManager.peer.get_connection_status() == 0 : return # early return if we have no server
+	if not is_multiplayer_authority(): return # Early return if we don't have authority (players should move themselves)
 	
 	# Apply gravity if we're airborne
 	if not is_on_floor():

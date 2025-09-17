@@ -182,7 +182,7 @@ layout_mode = 2
 size_flags_horizontal = 4
 theme = ExtResource("2_7do1g")
 theme_override_font_sizes/font_size = 25
-text = "QUIT GAME"
+text = "LEAVE GAME"
 
 [connection signal="toggled" from="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/ToggleMargins/TogglesHBox/AimToggleButton" to="." method="_on_aim_toggle_button_toggled"]
 [connection signal="toggled" from="MenuContainer/MenuVBox/ButtonMargins/ButtonsContainer/ToggleMargins/TogglesHBox/CrouchToggleButton" to="." method="_on_crouch_toggle_button_toggled"]

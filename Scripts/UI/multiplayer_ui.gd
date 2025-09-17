@@ -11,6 +11,7 @@ func _ready():
 	NetworkManager.log_update.connect(_refresh_chatlog)
 	NetworkManager.server_lost.connect(_on_server_lost)
 	NetworkManager.game_loading.connect(_on_game_loading)
+	NetworkManager.game_left.connect(_on_game_left)
 	$Connect/IPAddress.text = NetworkManager.DEFAULT_IP_ADDRESS
 	if OS.has_environment("USERNAME"):
 		$Connect/Name.text = OS.get_environment("USERNAME")
@@ -66,8 +67,7 @@ func _on_connection_success():
 
 ## Handles lobby connection failure
 func _on_connection_failed():
-	$Connect/Server.disabled = false
-	$Connect/Client.disabled = false
+	_end_of_connection()
 	$Connect/ErrorLabel.set_text("Connection failed!")
 
 
@@ -75,22 +75,39 @@ func _on_connection_failed():
 func _on_game_error(errtxt):
 	$ErrorDialog.dialog_text = errtxt
 	$ErrorDialog.popup_centered()
-	$Connect/Server.disabled = false
-	$Connect/Client.disabled = false
 
 
 ## Handles losing connection to server
 func _on_server_lost():
+	_end_of_connection()
+
+
+## Handles leaving game
+func _on_game_left():
+	_end_of_connection()
+
+
+## Handles end-of-connection stuff -- common code used by multiple other signals
+func _end_of_connection()-> void:
+	$Lobby/Start.hide()
 	$Lobby.hide()
-	$Connect.show()
-
-
-## Handles end-of-game
-func _on_game_ended():
 	$Connect.show()
 	$Connect/Server.disabled = false
 	$Connect/Client.disabled = false
 	$Connect/ErrorLabel.set_text("")
+	$Lobby/ChatLog.clear()
+
+
+## Handle the "leave lobby" button
+func _on_leave_lobby_pressed() -> void:
+	NetworkManager.leave_game()
+
+
+## Handles end-of-game
+func _on_game_ended():
+	if(multiplayer.has_multiplayer_peer()):
+		$Lobby.show()
+		_refresh_lobby()
 
 
 ## Refreshes player list
@@ -104,23 +121,11 @@ func _refresh_lobby():
 		$Lobby/Players/List.add_item(p)
 
 
-## Handle starting the game
+## Handle starting the game -- SERVER-ONLY
 func _on_start_pressed():
 	assert(multiplayer.is_server())
 	$Lobby/Start.hide()
 	NetworkManager.setup_game()
-
-
-## Handle the "leave lobby" button
-func _on_leave_lobby_pressed() -> void:
-	NetworkManager.peer.close()
-	NetworkManager.players_dict.clear()
-	$Lobby/Start.hide()
-	$Lobby.hide()
-	$Connect.show()
-	$Connect/Server.disabled = false
-	$Connect/Client.disabled = false
-	$Connect/ErrorLabel.set_text("")
 
 
 ## Handles hiding lobby once game starts
@@ -131,3 +136,8 @@ func _on_game_loading() -> void:
 ## Handles incoming log messages from server
 func _refresh_chatlog(text : String) -> void:
 	$Lobby/ChatLog.add_text(text+"\n")
+
+
+## Handles quitting the game
+func _on_quit_button_pressed() -> void:
+	get_tree().quit()
