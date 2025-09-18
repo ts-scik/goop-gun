@@ -1,4 +1,4 @@
-#class_name NetworkManager
+class_name BaseNetworkManager
 extends Node
 
 const DEFAULT_IP_ADDRESS : String = "localhost"
@@ -29,7 +29,6 @@ signal server_lost()
 signal game_started()
 signal game_loading()
 signal all_players_loaded()
-signal world_generated()
 
 
 ## Connects necessary signals
@@ -39,7 +38,6 @@ func _ready() -> void:
 	multiplayer.connected_to_server.connect(_connected_ok)
 	multiplayer.connection_failed.connect(_connected_fail)
 	multiplayer.server_disconnected.connect(_server_disconnected)
-	world_generated.connect(_on_world_generated)
 
 
 ## Starts server
@@ -176,6 +174,7 @@ func _unregister_player(id):
 	player_list_changed.emit()
 	_single_player_remove.rpc(id)
 
+
 # TODO: combine this and other sync functions
 ## Syncs the players list + gamestate on clients
 ## Server calls this on Clients when a new user connects
@@ -238,11 +237,11 @@ func setup_game() -> void:
 	get_node("/root/MainScene").add_child(world)
 	# Signal to players that we're getting set-up
 	_server_start_setup.rpc(false)
-	# Generate the world
+	# Generate the world (server)
 	GameManager.world_data = _generate_world_data() # create our world_data, and store it
-	_generate_world() # actually generate the world
-	# TODO: should await world generation
+	await _generate_world() # actually generate the world
 	players_loaded.append(multiplayer.get_unique_id()) # mark that we've finished loading
+	# Generate the world (clients)
 	_receive_world_data.rpc(GameManager.world_data) # Send the worlddata to players, and ask them to generate it client-side
 	if (players_loaded.size() != players_dict.size()): # If we have peers, wait for everyone to finish loading the world in
 		await all_players_loaded
@@ -266,42 +265,29 @@ func _server_start_setup(is_playing : bool) -> void:
 ## Generates world
 # TODO -- also this should be elsewhere
 func _generate_world_data() -> Array:
-	var room_array = [
-		[ #0,x
-			["0","0","room1"],["0","1","room2"]
-		],
-		[ #1,x
-			["1","0","room3"],["1","1","room4"]
-		]
-	]
+	var world_size = Vector2(2,3)
+	var room_array = []
+	for x in world_size.x:
+		var curr_row = []
+		for y in world_size.y:
+				curr_row.append("rm_01-connector")
+		room_array.append(curr_row)
 	return room_array
 
 
 ## Signal from Server to Clients, giving them the world data, with which to set up the game
-# TODO
 @rpc("authority","call_remote","reliable",LOBBY_CHANNEL)
 func _receive_world_data(world_data : Array) -> void:
 	GameManager.world_data = world_data # store world_data in our GameManager singleton
 	_generate_world() # do the actual world generation/loading
-	#await world_generated # await _generate_world() completion
-	#_signal_loaded.rpc_id(get_multiplayer_authority()) # tell the server that we've finished our meal
-
-
-## Handle world_generated signal by letting Server know that we're ready
-# TODO - why can't I just use an await above??
-func _on_world_generated() -> void:
-	_signal_loaded.rpc_id(get_multiplayer_authority()) # tell the server that we've finished our meal
 
 
 ## Generates world, using given world_data
 func _generate_world() -> void:
-	# TODO: actual level generation based on world data
-	#print(GameManager.world_data)
 	var world = get_tree().get_root().get_node("MainScene/World")
-	var geometry = load("res://Prefabs/Level/geometry.tscn").instantiate()
-	world.add_child(geometry)
-	if(!multiplayer.is_server()): # TODO: this "if" is only here because we can't just do an await in _receive_world_data()
-		world_generated.emit() # signal that we've finished generating the level, and can continue
+	await world.load_world(GameManager.world_data)
+	if(!multiplayer.is_server()):
+		_signal_loaded.rpc_id(get_multiplayer_authority()) # tell the server that we've finished our meal
 
 
 ## Signal from Clients to Server, signalling that they're ready to roll
@@ -351,11 +337,6 @@ func end_game() -> void:
 	if(!GameManager.is_playing): return # early return if the game isn't in session
 	get_tree().paused = true # pause while we do cleanup
 	GameManager.is_playing = false # set not playing
-	# TODO : replace loop below with a function like "world.reset()", which also clears geometry/enemies/etc
-	#for pid in players_loaded: # Delete every player in the world
-	#	var path = NodePath("/root/MainScene/World/"+str(pid))
-	#	if has_node(path):
-	#		get_node(path).queue_free()
 	players_loaded.clear() # clear the players_loaded
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	game_ended.emit()

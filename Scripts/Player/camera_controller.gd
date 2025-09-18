@@ -50,7 +50,7 @@ func _ready() -> void:
 	# Turn off automatic physics interpolation for the Camera3D
 	set_physics_interpolation_mode(Node.PHYSICS_INTERPOLATION_MODE_OFF)
 	# Early return if not multiplayer authority - clients own their cameras
-	if not is_multiplayer_authority(): return
+	if NetworkManager.peer != null and not is_multiplayer_authority(): return
 	# Disable transform inheritance from parent
 	top_level = true
 	# Find the target nodes
@@ -71,8 +71,9 @@ func _ready() -> void:
 ## Handles input [event]s for mouse whenever they arrive
 func _input(event: InputEvent) -> void:
 	# Early return if not multiplayer authority - clients own their cameras
-	if NetworkManager.peer.get_connection_status() == 0 : return
-	if not is_multiplayer_authority(): return
+	if NetworkManager.peer != null:
+		if NetworkManager.peer.get_connection_status() == 0 : return
+		if not is_multiplayer_authority(): return
 	
 	# If the mouse is captured -> handle mouse movement
 	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and event is InputEventMouseMotion:
@@ -96,8 +97,9 @@ func _input(event: InputEvent) -> void:
 ## Handles camera rotation / gun positioning
 func _process(delta: float) -> void:
 	# Early return if not multiplayer authority - clients own their cameras
-	if NetworkManager.peer.get_connection_status() == 0 : return # early return if we have no server
-	if not is_multiplayer_authority(): return # Early return if we don't have authority (players should move themselves)
+	if NetworkManager.peer != null:
+		if NetworkManager.peer.get_connection_status() == 0 : return
+		if not is_multiplayer_authority(): return
 	
 	# If the window has been resized, do some viewport updates
 	if(screen_size != Vector2(get_viewport().size)): viewport_update()
@@ -118,8 +120,9 @@ func _process(delta: float) -> void:
 ## On the physics tick, snap our transform to the player head marker (helps with multiplayer sync)
 func _physics_process(_delta: float) -> void:
 	# Early return if not multiplayer authority - clients own their cameras
-	if NetworkManager.peer.get_connection_status() == 0 : return
-	if not is_multiplayer_authority(): return
+	if NetworkManager.peer != null:
+		if NetworkManager.peer.get_connection_status() == 0 : return
+		if not is_multiplayer_authority(): return
 	
 	# Snap our global_transform to the player's head marker
 	global_transform = player_controller.camera_controller_anchor.global_transform

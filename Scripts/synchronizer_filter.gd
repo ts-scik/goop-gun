@@ -14,6 +14,5 @@ func _check_is_in_network(client_pid : int):
 		return true
 	else:
 		return false
-	
-	#return NetworkManager.players_dict.keys().has(client_pid)
+	# and why does the below sometimes work instead??
 	#return NetworkManager.players_loaded.has(client_pid)

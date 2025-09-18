@@ -31,7 +31,7 @@ func _enter_tree() -> void:
 
 ## Connect signals, display HUD
 func _ready() -> void:
-	if not is_multiplayer_authority(): return
+	if NetworkManager.peer != null and not is_multiplayer_authority(): return
 	pause_menu.value_update.connect(_on_menu_value_update)
 	
 	HUD.show()
@@ -40,8 +40,10 @@ func _ready() -> void:
 
 ## Handle non-physics inputs (pausing, scoreboard)
 func _process(_delta: float) -> void:
-	if NetworkManager.peer.get_connection_status() == 0 : return # early return if we have no server
-	if not is_multiplayer_authority(): return # Early return if we don't have authority (players should move themselves)
+	if NetworkManager.peer != null:
+		if NetworkManager.peer.get_connection_status() == 0 : return
+		if not is_multiplayer_authority(): return
+
 	# Pause menu
 	if Input.is_action_just_pressed("pause"):
 		_on_menu_key()
@@ -57,8 +59,9 @@ func _process(_delta: float) -> void:
 ## Handle player movement
 func _physics_process(delta: float) -> void:
 	# TODO: adjust this so players don't have *total* authority
-	if NetworkManager.peer.get_connection_status() == 0 : return # early return if we have no server
-	if not is_multiplayer_authority(): return # Early return if we don't have authority (players should move themselves)
+	if NetworkManager.peer != null:
+		if NetworkManager.peer.get_connection_status() == 0 : return
+		if not is_multiplayer_authority(): return
 	
 	# Apply gravity if we're airborne
 	if not is_on_floor():
@@ -128,9 +131,9 @@ func die(shooter : String = ""):
 		if(!has_node("/root/MainScene/World")):
 			position = Vector3.ZERO
 		else:
-			var positions : Array = get_node("/root/MainScene/World").spawn_positions
+			var positions : Array = get_node("/root/MainScene/World").player_spawn_positions
 			var selection = randi_range(0, positions.size()-1)
-			position = positions[selection]
+			position = positions[selection].global_position
 		HUD.update_health(health)
 	print("i am dead! killed by the evil ",shooter)
 	NetworkManager.players_dict[int(shooter)]["score"]+=1

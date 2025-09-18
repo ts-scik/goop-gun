@@ -1,5 +1,5 @@
-extends CanvasLayer
 class_name PlayerHUD
+extends CanvasLayer
 
 @onready var healthbar = get_node("Base/Health")
 @onready var scoreboard = get_node("Base/ScoreContainer")
