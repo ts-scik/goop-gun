@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="RoomData" load_steps=2 format=3 uid="uid://cgq7jnc7j34sh"]
+
+[ext_resource type="Script" uid="uid://de0qtj4ldm061" path="res://Prefabs/Level/Rooms/Resources/room_data.gd" id="1_bhpne"]
+
+[resource]
+script = ExtResource("1_bhpne")
+Exits = [[Vector3(0, 0, -1), 0], [Vector3(1, 0, 0), 1]]
+CW_Rotations = Array[int]([0, 3])
+room_scene_name = "rm_03-L-turn"
+metadata/_custom_type_script = "uid://de0qtj4ldm061"

@@ -239,6 +239,7 @@ func setup_game() -> void:
 	_server_start_setup.rpc(false)
 	# Generate the world (server)
 	GameManager.world_data = _generate_world_data() # create our world_data, and store it
+	world.generate_world_data()
 	await _generate_world() # actually generate the world
 	players_loaded.append(multiplayer.get_unique_id()) # mark that we've finished loading
 	# Generate the world (clients)

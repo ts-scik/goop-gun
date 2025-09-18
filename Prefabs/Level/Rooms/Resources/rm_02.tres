@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="RoomData" load_steps=2 format=3 uid="uid://c7ub01tep5qwh"]
+
+[ext_resource type="Script" uid="uid://de0qtj4ldm061" path="res://Prefabs/Level/Rooms/Resources/room_data.gd" id="1_n6fyj"]
+
+[resource]
+script = ExtResource("1_n6fyj")
+Exits = [[Vector3(0, 0, -1), 0], [Vector3(0, 0, 1), 2]]
+CW_Rotations = Array[int]([0, 2])
+room_scene_name = "rm_02-hallway"
+metadata/_custom_type_script = "uid://de0qtj4ldm061"
