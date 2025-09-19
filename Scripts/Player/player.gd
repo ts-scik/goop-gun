@@ -78,12 +78,13 @@ func _physics_process(delta: float) -> void:
 		
 	# TODO DEBUG
 	"""
-	var flyspeed = 1000
-	velocity.y = 0
-	if Input.is_action_pressed("jump"):
-		velocity.y = delta*flyspeed
-	elif Input.is_action_pressed("crouch"):
-		velocity.y = -delta*flyspeed
+	if(1==1):
+		var flyspeed = 1000
+		velocity.y = 0
+		if Input.is_action_pressed("jump"):
+			velocity.y = delta*flyspeed
+		elif Input.is_action_pressed("crouch"):
+			velocity.y = -delta*flyspeed
 	"""
 	
 	# Handle movement inputs

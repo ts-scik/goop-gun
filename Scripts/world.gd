@@ -60,7 +60,7 @@ func _ms_barrel(_authority_pid : int) -> RigidBody3D:
 func generate_world_data() -> Array:
 	# TODO: move this
 	# Populate an array with our possible rooms + their data
-	var room_names = ["rm_01","rm_02","rm_03","rm_04","rm_05"]
+	var room_names = ["rm_01","rm_02","rm_03","rm_04","rm_05","rm_06"]
 	for n in room_names:
 		rooms.append(load("res://Prefabs/Level/Rooms/Resources/"+n+".tres"))
 	var main_room = rooms[0]
@@ -102,7 +102,7 @@ func get_exits_mark_fills(room : RoomData, pos : Vector3i, rot : int) -> Array:
 		var cell_rotated := Vector3i.ZERO
 		if(cell_pos_local != cell_rotated): # If the cell pos is (0,0,0), don't rotate it
 			cell_rotated = scik.Vector3i_rotated(cell_pos_local, Vector3i.UP, 90*-rot)
-		var cell_pos : Vector3i = cell_rotated + pos + room.Origin
+		var cell_pos : Vector3i = cell_rotated + pos
 		# Mark the cell as used in our world_grid (TODO: hate that this is a dict)
 		var cell_pos_as_string := vector3i_as_string(cell_pos)
 		world_grid[cell_pos_as_string] = true
@@ -114,7 +114,7 @@ func get_exits_mark_fills(room : RoomData, pos : Vector3i, rot : int) -> Array:
 			# Determine the edge's position relative to cell origin
 			var edge_rotated := scik.Vector3i_rotated(offset, Vector3i.UP, 90*-((edge_idx+rot)%4))
 			# Get edge position on grid (currently doubling coords instead of using offset of 0.5)
-			var edge_pos : Vector3i = edge_rotated + (2*pos) + (2*room.Origin) + (2*cell_rotated)
+			var edge_pos : Vector3i = edge_rotated + (2*pos) + (2*cell_rotated)
 			var edge_pos_as_string := vector3i_as_string(edge_pos)
 			
 			# If this is an exit, try adding it to our exits list
@@ -141,7 +141,7 @@ func get_exits_mark_fills(room : RoomData, pos : Vector3i, rot : int) -> Array:
 func add_room_recursive(pos : Vector3i, base_rot : int, curr_depth : int, max_depth : int) -> Array:
 	#print(pos, base_rot, "\td: ",curr_depth)
 	if is_occupied(pos): # Early return if our position is marked
-		print("backtrack") # -- hopefully shouldn't hit this?? TODO - hitting it a bit
+		#print("backtrack") # -- hopefully shouldn't hit this?? TODO - hitting it a bit
 		return []
 	if (curr_depth > max_depth): return [] # Early return if we're past max recursion/path depth
 	# Get a random valid room + valid rotation of that room
@@ -149,10 +149,13 @@ func add_room_recursive(pos : Vector3i, base_rot : int, curr_depth : int, max_de
 	if(chosen_room_and_rotation.is_empty()): return [] # Early return if there weren't any legal rooms
 	var chosen_room : RoomData = chosen_room_and_rotation[0]
 	var chosen_rotation : int = chosen_room_and_rotation[1] # rotation IN GRID
+	var pos_adj = pos
+	if(chosen_room.Origin != Vector3i.ZERO):
+		pos_adj = pos + scik.Vector3i_rotated(chosen_room.Origin, Vector3.UP, -90*base_rot)
 	# Place the chosen room
-	var exits = get_exits_mark_fills(chosen_room, pos, chosen_rotation) # Place the chosen room in world_grid
+	var exits = get_exits_mark_fills(chosen_room, pos_adj, chosen_rotation) # Place the chosen room in world_grid
 	var result_data = [] # Place the room in world_data 
-	result_data.append([chosen_room.Name, pos, chosen_rotation])
+	result_data.append([chosen_room.Name, pos_adj, chosen_rotation])
 	# Recursively place a room at each exit
 	for exit in exits:
 		result_data.append_array(add_room_recursive(exit[0], exit[1], curr_depth+1, max_depth))
@@ -164,8 +167,12 @@ func get_random_room_rot(pos : Vector3i, base_rot : int) -> Array:
 	var valid_room_rots : Array = []
 	# Check all rooms
 	for room in rooms:
+		# Adjust position in case of non-standard origin
+		var pos_adj = pos
+		if(room.Origin != Vector3i.ZERO):
+			pos_adj = pos + scik.Vector3i_rotated(room.Origin, Vector3.UP, -90*base_rot)
 		# Check for valid rotations of the rooms
-		var valid_rotations = get_valid_rotations(room, pos, base_rot)
+		var valid_rotations = get_valid_rotations(room, pos_adj, base_rot)
 		if valid_rotations.size() > 0: # If we got any valid rotations back, add them
 			valid_room_rots.append([room, valid_rotations])
 	if(valid_room_rots.is_empty()): return [] # Early return if no rooms can be added
@@ -196,9 +203,9 @@ func check_valid_room_placement(room : RoomData, pos : Vector3i, rot : int) -> b
 		var cell_rotated_local := Vector3i.ZERO
 		if(cell_pos_local != cell_rotated_local): # If the cell pos is (0,0,0), don't rotate it
 			cell_rotated_local = scik.Vector3i_rotated(cell_pos_local, Vector3i.UP, 90*-(rot%4))
-		var cell_pos_grid : Vector3i = cell_rotated_local + pos + room.Origin
+		var cell_pos_grid : Vector3i = cell_rotated_local + pos
 		# Determine the world_edge_grid offset for the edges (means we have to pass less variables)
-		var edge_grid_offset : Vector3i = (2*pos) + (2*room.Origin) + (2*cell_rotated_local)
+		var edge_grid_offset : Vector3i = (2*pos) + (2*cell_rotated_local)
 		var cell_edges : Array = cell[1]
 		# Determine if the cell is valid
 		var is_valid_cell = check_valid_cell_placement(cell_pos_grid, cell_edges, rot, edge_grid_offset)
@@ -207,8 +214,7 @@ func check_valid_room_placement(room : RoomData, pos : Vector3i, rot : int) -> b
 
 
 ## Checks whether or not a given cell placement [cell_pos_grid], with edges [cell_edges], at a given rotation [rot], would be valid
-## edge_grid_offset is passed separately to avoid extra variables -- calculated by ((2*pos)+(2*room.origin)+(2*cell_rotated_local))
-# TODO - optimize this
+## edge_grid_offset is passed separately to avoid extra variables -- calculated by ((2*pos)+(2*cell_rotated_local))
 func check_valid_cell_placement(cell_pos_grid : Vector3i, cell_edges : Array, rot : int, edge_grid_offset : Vector3i) -> bool:
 	# Step 1 - check if the cell would even fit
 	if is_occupied(cell_pos_grid): return false # Early return if the cell is occupied
