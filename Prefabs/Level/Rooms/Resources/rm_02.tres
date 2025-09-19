@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_n6fyj")
-Exits = [[Vector3(0, 0, -1), 0], [Vector3(0, 0, 1), 2]]
+Exits = [[Vector3(0, 0, -1), 2], [Vector3(0, 0, 1), 0]]
 CW_Rotations = Array[int]([0, 2])
 room_scene_name = "rm_02-hallway"
 metadata/_custom_type_script = "uid://de0qtj4ldm061"

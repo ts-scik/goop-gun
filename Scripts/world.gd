@@ -65,9 +65,12 @@ func generate_world_data() -> Array:
 				world_grid[x][y].append(false)
 
 	# recursively add all our rooms
-	world_data = add_rooms(rooms[0],world_data, 10)
-	
-	print(world_data)
+	var max_depth = 3
+	world_data = add_rooms(rooms[0],world_data, max_depth)
+	print("start data")
+	for data in world_data:
+		print(data)
+	print("end data")
 	return world_data
 
 
@@ -100,39 +103,34 @@ func add_room_recursive(pos : Vector3, facing : int, curr_depth : int, max_depth
 	if(valid_room_rots.is_empty()): return []
 	# Randomly select from available rooms+rotations
 	var chosen_room_rot = valid_room_rots[randi_range(0,valid_room_rots.size()-1)]
-	var chosen_room = chosen_room_rot[0]
-	var chosen_rotation = chosen_room_rot[randi_range(0,chosen_room_rot[1].size()-1)]
-	#TODO - do we need to offset the chosen rotation by our facing??
-	# Then, place the room in world_data
-	
+	var chosen_room : RoomData = chosen_room_rot[0]
+	var chosen_rotation : int = chosen_room_rot[1][randi_range(0,chosen_room_rot[1].size()-1)]
+	chosen_rotation = (chosen_rotation+facing)%4
+	# Then, place the room in world_grid
+	for cell in chosen_room.Fills:
+		var rotated_cell = cell.rotated(Vector3.UP, -PI/2*chosen_rotation)
+		world_grid[rotated_cell.x][rotated_cell.y][rotated_cell.z]=true
 	# Then, place the room in world_grid
 	var result_data = []
-	result_data.append([chosen_room, pos, chosen_room_rot])
+	result_data.append([chosen_room, pos, chosen_rotation])
 	# Finally, recursively place a room at each exit
 	for exit in chosen_room.Exits:
-		var exit_pos = exit[0] #TODO - this isn't right
-		var exit_facing = exit[1] #TODO - this isn't right
+		var exit_pos = exit[0] + pos #TODO - this isn't right
+		var exit_facing = (exit[1] + chosen_rotation)%4 #TODO - this isn't right
 		result_data.append_array(add_room_recursive(exit_pos, exit_facing, curr_depth+1, max_depth))
 	return result_data
 
 
 ## Return all valid rotations of [room] at given [pos] with starting [facing]
-#TODO
 func try_placement(room : RoomData, pos : Vector3, facing : int) -> Array:
 	var valid_rotations = []
 	for rot in room.CW_Rotations:
-		var potential_fills : Array[Vector3]
-		match(rot):
-			(0):
-				potential_fills = [Vector3.ZERO + pos] #TODO
-			(1):
-				pass #TODO
-			(2):
-				pass #TODO
-			(3):
-				pass #TODO
-		if(!potential_fills.is_empty()): # can be removed after above is finished
-			if !is_occupied(potential_fills): valid_rotations.append(rot)
+		var potential_fills : Array[Vector3] = []
+		for cell in room.Fills:
+			# TODO: does Vector3.rotated() below work how i think it does??
+			var cell_rotated = cell.rotated(Vector3.UP, -PI/2 * (facing+rot))
+			potential_fills.append(cell_rotated + pos)
+		if !is_occupied(potential_fills): valid_rotations.append(rot)
 	return valid_rotations
 
 
@@ -144,21 +142,22 @@ func is_occupied(potential_fills : Array[Vector3]) -> bool:
 
 
 ## Loads in gameworld - new and improved!!
-func new_load_world(world_data : Array) -> void:
+func load_world(world_data : Array) -> void:
 	for room_data in world_data:
-		var room_name = room_data[0]
+		print(room_data)
+		var room_name : String = room_data[0].room_scene_name
 		var pos = room_data[1]
 		var facing = room_data[2]
 		var room_node : ModularRoom = load("res://Prefabs/Level/Rooms/Scenes/"+room_name+".tscn").instantiate()
 		add_child(room_node)
 		room_node.global_position = grid_to_world(pos.x, pos.y, pos.z)
-		room_node.rotate_y(deg_to_rad(90)*facing)
+		room_node.rotate_y(-PI/2*facing)
 		player_spawn_positions.append_array(room_node.PlayerSpawns)
 		barrel_spawn_positions.append_array(room_node.BarrelSpawns)
 
 
 ## Loads in gameworld
-func load_world(world_data : Array) -> void:
+func old_load_world(world_data : Array) -> void:
 	for x in world_data.size():
 		for y in world_data[x].size():
 			var pos = Vector2(x,y)

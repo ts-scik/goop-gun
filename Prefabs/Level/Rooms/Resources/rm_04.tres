@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_iywns")
 Fills = Array[Vector3]([Vector3(0, 0, 0), Vector3(0, 0, 1), Vector3(1, 0, 1)])
-Exits = [[Vector3(0, 0, -1), 0], [Vector3(1, 0, 0), 1], [Vector3(2, 0, 1), 1]]
+Exits = [[Vector3(0, 0, -1), 2], [Vector3(1, 0, 0), 3], [Vector3(2, 0, 1), 3]]
 CW_Rotations = Array[int]([0, 3])
 room_scene_name = "rm_04-big-L-turn"
 metadata/_custom_type_script = "uid://de0qtj4ldm061"
