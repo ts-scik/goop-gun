@@ -5,6 +5,6 @@
 [resource]
 script = ExtResource("1_yy3fw")
 Name = "rm_05-end"
-Cells = [[Vector3i(0, 0, 0), [1, 2, 2, 2]]]
+Cells = [[Vector3i(0, 0, 0), [2, 2, 1, 2]]]
 CW_Rotations = Array[int]([0])
 metadata/_custom_type_script = "uid://de0qtj4ldm061"

@@ -263,19 +263,6 @@ func _server_start_setup(is_playing : bool) -> void:
 	get_tree().set_pause(true) # Pause the game while setting up
 
 
-## Generates world
-# TODO -- also this should be elsewhere
-func _generate_world_data() -> Array:
-	var world_size = Vector2(2,3)
-	var room_array = []
-	for x in world_size.x:
-		var curr_row = []
-		for y in world_size.y:
-				curr_row.append("rm_01-connector")
-		room_array.append(curr_row)
-	return room_array
-
-
 ## Signal from Server to Clients, giving them the world data, with which to set up the game
 @rpc("authority","call_remote","reliable",LOBBY_CHANNEL)
 func _receive_world_data(world_data : Array) -> void:

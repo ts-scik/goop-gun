@@ -142,3 +142,8 @@ func _refresh_chatlog(text : String) -> void:
 ## Handles quitting the game
 func _on_quit_button_pressed() -> void:
 	get_tree().quit()
+
+
+## TODO - temp thing for recursion depth setting
+func _on_recursion_box_text_changed() -> void:
+	GameManager.max_room_depth = int(get_node("Lobby/RecursionBox").text)

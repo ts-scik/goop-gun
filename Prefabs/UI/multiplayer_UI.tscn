@@ -183,8 +183,26 @@ item_count = 2
 item_0/text = "test"
 item_1/text = "test2"
 
+[node name="RecursionBox" type="TextEdit" parent="Lobby"]
+custom_minimum_size = Vector2(80, 30)
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -10.0
+offset_top = -81.0
+offset_right = 10.0
+offset_bottom = -61.0
+grow_horizontal = 2
+grow_vertical = 0
+theme = ExtResource("2_p37wi")
+placeholder_text = "rec_amt"
+
 [connection signal="pressed" from="Connect/Server" to="." method="_on_server_pressed"]
 [connection signal="pressed" from="Connect/Client" to="." method="_on_client_pressed"]
 [connection signal="pressed" from="Connect/QuitButton" to="." method="_on_quit_button_pressed"]
 [connection signal="pressed" from="Lobby/Start" to="." method="_on_start_pressed"]
 [connection signal="pressed" from="Lobby/LeaveLobby" to="." method="_on_leave_lobby_pressed"]
+[connection signal="text_changed" from="Lobby/RecursionBox" to="." method="_on_recursion_box_text_changed"]

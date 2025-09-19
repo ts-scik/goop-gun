@@ -5,6 +5,6 @@
 [resource]
 script = ExtResource("1_bhpne")
 Name = "rm_03-L-turn"
-Cells = [[Vector3i(0, 0, 0), [2, 1, 1, 2]]]
+Cells = [[Vector3i(0, 0, 0), [2, 2, 1, 1]]]
 CW_Rotations = Array[int]([0, 3])
 metadata/_custom_type_script = "uid://de0qtj4ldm061"
