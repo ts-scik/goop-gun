@@ -1,42 +1,51 @@
-[gd_scene load_steps=2 format=3 uid="uid://7tcj2t0c766m"]
+[gd_scene load_steps=4 format=3 uid="uid://7tcj2t0c766m"]
 
 [ext_resource type="Script" uid="uid://07gywnyf8aq6" path="res://Prefabs/Level/room.gd" id="1_b26ul"]
 
-[node name="Rm04BigLturn" type="Node3D" node_paths=PackedStringArray("PlayerSpawns", "BarrelSpawns")]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cp416"]
+albedo_color = Color(1, 0, 0, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_syp6i"]
+material = SubResource("StandardMaterial3D_cp416")
+
+[node name="Rm04BigLturn" type="Node3D" node_paths=PackedStringArray("PlayerSpawns")]
 script = ExtResource("1_b26ul")
 PlayerSpawns = [NodePath("PlayerSpawns/PlayerSpawn")]
-BarrelSpawns = [NodePath("BarrelSpawns/BarrelSpawn")]
-Fills = Array[Vector3]([Vector3(0, 0, 0), Vector3(1, 0, 1), Vector3(0, 0, 1)])
-Exits = Array[Vector3]([Vector3(1, 0, 0), Vector3(0, 0, -1), Vector3(2, 0, 1)])
-CW_Rotations = Array[int]([0, 3])
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.099999964, 0, 0, 0, 1, 0, 2.95, -7)
+mesh = SubResource("BoxMesh_syp6i")
 
 [node name="RoomCombiner" type="CSGCombiner3D" parent="."]
 use_collision = true
 
-[node name="FloorCielingCombiner" type="CSGCombiner3D" parent="RoomCombiner"]
+[node name="CielContainer" type="CSGCombiner3D" parent="RoomCombiner"]
+visible = false
 
-[node name="floor" type="CSGBox3D" parent="RoomCombiner/FloorCielingCombiner"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
-size = Vector3(15, 0.5, 15)
-
-[node name="floor2" type="CSGBox3D" parent="RoomCombiner/FloorCielingCombiner"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 15)
-size = Vector3(15, 0.5, 15)
-
-[node name="floor3" type="CSGBox3D" parent="RoomCombiner/FloorCielingCombiner"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, -0.25, 15)
-size = Vector3(15, 0.5, 15)
-
-[node name="cieling" type="CSGBox3D" parent="RoomCombiner/FloorCielingCombiner"]
+[node name="cieling" type="CSGBox3D" parent="RoomCombiner/CielContainer"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.25, 0)
 size = Vector3(15, 0.5, 15)
 
-[node name="cieling2" type="CSGBox3D" parent="RoomCombiner/FloorCielingCombiner"]
+[node name="cieling2" type="CSGBox3D" parent="RoomCombiner/CielContainer"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.25, 15)
 size = Vector3(15, 0.5, 15)
 
-[node name="cieling3" type="CSGBox3D" parent="RoomCombiner/FloorCielingCombiner"]
+[node name="cieling3" type="CSGBox3D" parent="RoomCombiner/CielContainer"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 5.25, 15)
+size = Vector3(15, 0.5, 15)
+
+[node name="FloorCombiner" type="CSGCombiner3D" parent="RoomCombiner"]
+
+[node name="floor" type="CSGBox3D" parent="RoomCombiner/FloorCombiner"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
+size = Vector3(15, 0.5, 15)
+
+[node name="floor2" type="CSGBox3D" parent="RoomCombiner/FloorCombiner"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 15)
+size = Vector3(15, 0.5, 15)
+
+[node name="floor3" type="CSGBox3D" parent="RoomCombiner/FloorCombiner"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, -0.25, 15)
 size = Vector3(15, 0.5, 15)
 
 [node name="wall_W" type="CSGCombiner3D" parent="RoomCombiner"]
@@ -99,8 +108,3 @@ size = Vector3(0.5, 5, 30)
 [node name="PlayerSpawns" type="Node3D" parent="."]
 
 [node name="PlayerSpawn" type="Marker3D" parent="PlayerSpawns"]
-
-[node name="BarrelSpawns" type="Node3D" parent="."]
-
-[node name="BarrelSpawn" type="Marker3D" parent="BarrelSpawns"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 1.5, 3.5)

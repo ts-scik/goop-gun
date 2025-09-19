@@ -4,7 +4,8 @@ extends CharacterBody3D
 
 
 # Movement constants
-const JUMP_VELOCITY = 4.5
+#const JUMP_VELOCITY = 4.5
+const JUMP_VELOCITY = 30
 const SPEED = 8.0
 const GRAVITY = 9.8
 
@@ -54,6 +55,9 @@ func _process(_delta: float) -> void:
 		HUD.scoreboard.show()
 	elif Input.is_action_just_released("scoreboard"):
 		HUD.scoreboard.hide()
+	# Die
+	if Input.is_action_just_pressed("kill"):
+		die.rpc()
 
 
 ## Handle player movement
@@ -135,8 +139,9 @@ func die(shooter : String = ""):
 			var selection = randi_range(0, positions.size()-1)
 			position = positions[selection].global_position
 		HUD.update_health(health)
-	print("i am dead! killed by the evil ",shooter)
-	NetworkManager.players_dict[int(shooter)]["score"]+=1
+	if(NetworkManager.players_dict.has(int(shooter))):
+		print("i am dead! killed by the evil ",shooter)
+		NetworkManager.players_dict[int(shooter)]["score"]+=1
 	HUD.update_scores()
 
 
