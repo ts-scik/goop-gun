@@ -1,6 +1,6 @@
-[gd_scene load_steps=4 format=3 uid="uid://crc22grqjpkq8"]
+[gd_scene load_steps=4 format=3 uid="uid://cnp70lg4vt45"]
 
-[ext_resource type="Script" uid="uid://07gywnyf8aq6" path="res://Prefabs/Level/room.gd" id="1_714ec"]
+[ext_resource type="Script" uid="uid://07gywnyf8aq6" path="res://Prefabs/Level/room.gd" id="1_bqbxi"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_178ac"]
 albedo_color = Color(1, 0, 0, 1)
@@ -8,8 +8,8 @@ albedo_color = Color(1, 0, 0, 1)
 [sub_resource type="BoxMesh" id="BoxMesh_7lld6"]
 material = SubResource("StandardMaterial3D_178ac")
 
-[node name="Rm03Lturn" type="Node3D" node_paths=PackedStringArray("PlayerSpawns")]
-script = ExtResource("1_714ec")
+[node name="Rm04TConnector" type="Node3D" node_paths=PackedStringArray("PlayerSpawns")]
+script = ExtResource("1_bqbxi")
 PlayerSpawns = [NodePath("PlayerSpawns/PlayerSpawn")]
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
@@ -41,18 +41,23 @@ operation = 2
 size = Vector3(0.5, 3, 2.2)
 
 [node name="wall_E" type="CSGCombiner3D" parent="RoomCombiner"]
-transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -7.25, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.25, 0, 0)
 
 [node name="wall" type="CSGBox3D" parent="RoomCombiner/wall_E"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5000005, 2.5, 2.75)
-size = Vector3(5.5, 5, 9.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, -2.75)
+size = Vector3(0.5, 5, 9.5)
+
+[node name="doorway" type="CSGBox3D" parent="RoomCombiner/wall_E"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+operation = 2
+size = Vector3(0.5, 3, 2.2)
 
 [node name="wall_S" type="CSGCombiner3D" parent="RoomCombiner"]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, -7.25)
 
 [node name="wall" type="CSGBox3D" parent="RoomCombiner/wall_S"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 2.5)
-size = Vector3(0.5, 5, 9)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
+size = Vector3(0.5, 5, 14)
 
 [node name="doorway" type="CSGBox3D" parent="RoomCombiner/wall_S"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)

@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_bhpne")
-Exits = [[Vector3(0, 0, -1), 2], [Vector3(1, 0, 0), 3]]
+Name = "rm_03-L-turn"
+Cells = [[Vector3i(0, 0, 0), [2, 1, 1, 2]]]
 CW_Rotations = Array[int]([0, 3])
-room_scene_name = "rm_03-L-turn"
 metadata/_custom_type_script = "uid://de0qtj4ldm061"

@@ -4,5 +4,5 @@
 
 [resource]
 script = ExtResource("1_tkbgv")
-room_scene_name = "rm_01-connector"
+Name = "rm_01-cross"
 metadata/_custom_type_script = "uid://de0qtj4ldm061"

@@ -9,19 +9,14 @@ var player_spawn_positions : Array[Marker3D] # Stores global_position variables 
 var barrel_spawn_positions : Array[Marker3D] # Stores global_position variables of spawn locations
 
 var rooms : Array
-var main_room
 var world_grid : Dictionary = {}
+var world_edge_grid : Dictionary = {}
+enum {BLANK_MARK = 0, EXIT_MARK = 1, WALL_MARK = 2}
 
 ## Store all the spawn positions
 func _ready()-> void:
 	player_spawner.spawn_function = _ms_player
 	barrel_spawner.spawn_function = _ms_barrel
-	
-	# Populate an array with our possible rooms + their data
-	var room_names = ["rm_01","rm_02","rm_03","rm_04"]
-	for n in room_names:
-		rooms.append(load("res://Prefabs/Level/Rooms/Resources/"+n+".tres"))
-	main_room = load("res://Prefabs/Level/Rooms/Resources/"+"rm_01"+".tres")
 
 
 """
@@ -63,11 +58,20 @@ func _ms_barrel(_authority_pid : int) -> RigidBody3D:
 
 ## Generates world data
 func generate_world_data() -> Array:
-	# Populate an array with booleans to store our grid
+	# TODO: move this
+	# Populate an array with our possible rooms + their data
+	var room_names = ["rm_01","rm_02","rm_03","rm_04","rm_05"]
+	for n in room_names:
+		rooms.append(load("res://Prefabs/Level/Rooms/Resources/"+n+".tres"))
+	var main_room = rooms[0]
+	
+	# Set up our world data storage
 	var world_data = []
+	world_grid = {}
+	world_edge_grid = {}
 
 	# recursively add all our rooms
-	var max_depth = 10
+	var max_depth = 1
 	world_data = add_rooms(main_room,world_data, max_depth)
 	return world_data
 
@@ -75,115 +79,185 @@ func generate_world_data() -> Array:
 ## Recursively adds rooms to world_data
 func add_rooms(start_room : RoomData, world_data : Array, max_depth : int) -> Array:
 	# Add the start room
-	var pos = Vector3.ZERO
-	world_grid[str(int(pos.x))+str(int(pos.y))+str(int(pos.z))] = true
-	world_data.append([start_room, pos, 0])
+	var pos := Vector3i.ZERO
+	var base_rot := 0
+	world_data.append([start_room, pos, base_rot]) # Add the room to world_data
+	var exits = get_exits_mark_fills(start_room, pos, base_rot) # Get exits and mark fills
 	# Recursively add rooms at all the exits
-	for exit in start_room.Exits:
-	#var exit = start_room.Exits[0]
-	#if(1==1):
-		print("new branch")
-		var exit_pos = exit[0]
-		var exit_facing = exit[1]
-		world_data.append_array(add_room_recursive(exit_pos, exit_facing, 1, max_depth))
+	for exit in exits:
+		world_data.append_array(add_room_recursive(exit[0], exit[1], 1, max_depth))
 	return world_data
 
 
+## Marks positions on world grid, for [room] at [pos] with rotation [rot]
+## Also returns all exit positions + intended exit room rotations
+func get_exits_mark_fills(room : RoomData, pos : Vector3i, rot : int) -> Array:
+	var exits = []
+	# Mark each cell
+	for cell in room.Cells:
+		var cell_pos_local : Vector3i = cell[0]
+		var cell_edges : Array = cell[1]
+		# Rotate the cell relative to cell origin (if necessary)
+		var cell_rotated := Vector3i.ZERO
+		if(cell_pos_local != cell_rotated): # If the cell pos is (0,0,0), don't rotate it
+			cell_rotated = scik.Vector3i_rotated(cell_pos_local, Vector3i.UP, 90*-rot)
+		var cell_pos : Vector3i = cell_rotated + pos + room.Origin
+		# Mark the cell as used in our world_grid (TODO: hate that this is a dict)
+		var cell_pos_as_string := vector3i_as_string(cell_pos)
+		world_grid[cell_pos_as_string] = true
+		
+		# Mark each edge of the cell + get its exits
+		# TODO: this doesn't work for the y-axis
+		for edge_idx in cell_edges.size():
+			var offset := Vector3i(0,0,1)
+			# Determine the edge's position relative to cell origin
+			var edge_rotated := scik.Vector3i_rotated(offset, Vector3i.UP, 90*-((edge_idx+rot)%4))
+			# If this is an exit, add it to our exits list
+			if(cell_edges[edge_idx] == EXIT_MARK):
+				var exit_pos = edge_rotated+cell_pos # exit room position (wrt to parent pos)
+				var exit_base_rot = (edge_idx+rot) # idk which of these TODO
+				#var exit_base_rot = (edge_idx+2+rot)%4 # exit room's intended rotation (wrt to parent rot)
+				exits.append([exit_pos, exit_base_rot])
+			# Get edge position on grid (currently doubling coords instead of using offset of 0.5)
+			var edge_pos : Vector3i = edge_rotated + (2*pos) + (2*room.Origin) + (2*cell_rotated)
+			# Mark the cell on our world_ede_grid (TODO: hate that this is a dict)
+			var edge_pos_as_string := vector3i_as_string(edge_pos)
+			world_edge_grid[edge_pos_as_string] = cell_edges[edge_idx]
+	return exits
+
+
 ## Recursively adds a room + its exits to world_data
-func add_room_recursive(pos : Vector3, facing : int, curr_depth : int, max_depth : int) -> Array:
-	#print(pos, facing, "\td: ",curr_depth)
-	# Early return if our position is marked
-	if is_occupied([pos]):
-		#print("backtrack")
+func add_room_recursive(pos : Vector3i, base_rot : int, curr_depth : int, max_depth : int) -> Array:
+	print(pos, base_rot, "\td: ",curr_depth)
+	if is_occupied(pos): # Early return if our position is marked
+		print("backtrack") # -- hopefully shouldn't hit this??
 		return []
-	# Early return if we're past max recursion dept
-	if (curr_depth > max_depth):
-		#print("max_depth")
-		return []
-	# Check what rooms can be legally added
-	var valid_room_rots : Array = []
-	for room in rooms:
-		# Check for valid rotations of the rooms
-		var valid_rotations = try_placement(room, pos, facing)
-		if valid_rotations.size() > 0:
-			valid_room_rots.append([room, valid_rotations])
-	# If no rooms can be added, return
-	if(valid_room_rots.is_empty()):
-		#print("dead-end")
-		return []
-	# Randomly select from available rooms+rotations
-	var chosen_room_rot = valid_room_rots[randi_range(0,valid_room_rots.size()-1)]
-	var chosen_room : RoomData = chosen_room_rot[0]
-	var chosen_rotation : int = chosen_room_rot[1][randi_range(0,chosen_room_rot[1].size()-1)]
-	chosen_rotation = (chosen_rotation+facing)%4
-	# Then, place the room in world_grid
-	for cell in chosen_room.Fills:
-		var rotated_cell = cell.rotated(Vector3.UP, -PI/2*chosen_rotation)
-		rotated_cell += pos
-		world_grid[str(int(rotated_cell.x))+str(int(rotated_cell.y))+str(int(rotated_cell.z))]=true
-	# Then, place the room in world_grid
-	var result_data = []
+	if (curr_depth > max_depth): return [] # Early return if we're past max recursion/path depth
+	# Get a random valid room + valid rotation of that room
+	var chosen_room_and_rotation = get_random_room_rot(pos, base_rot)
+	if(chosen_room_and_rotation.is_empty()): return [] # Early return if there weren't any legal rooms
+	var chosen_room : RoomData = chosen_room_and_rotation[0]
+	var chosen_rotation : int = chosen_room_and_rotation[1]
+	# Place the chosen room
+	var exits = get_exits_mark_fills(chosen_room, pos, chosen_rotation) # Place the chosen room in world_grid
+	var result_data = [] # Place the room in world_data 
 	result_data.append([chosen_room, pos, chosen_rotation])
-	# Finally, recursively place a room at each exit
-	for exit in chosen_room.Exits:
-		var exit_pos = pos + exit[0].rotated(Vector3.UP, -PI/2*chosen_rotation)
-		var exit_facing = (exit[1] + chosen_rotation)%4
-		result_data.append_array(add_room_recursive(exit_pos, exit_facing, curr_depth+1, max_depth))
+	# Recursively place a room at each exit
+	for exit in exits:
+		result_data.append_array(add_room_recursive(exit[0], exit[1], curr_depth+1, max_depth))
 	return result_data
 
 
+## Returns a randomly selected valid room+rotation at [pos] with start rotation [base_rot]
+func get_random_room_rot(pos : Vector3i, base_rot : int) -> Array:
+	var valid_room_rots : Array = []
+	# Check all rooms
+	for room in rooms:
+		# Check for valid rotations of the rooms
+		var valid_rotations = get_valid_rotations(room, pos, base_rot)
+		if valid_rotations.size() > 0: # If we got any valid rotations back, add them
+			valid_room_rots.append([room, valid_rotations])
+	if(valid_room_rots.is_empty()): return [] # Early return if no rooms can be added
+	# Randomly select from available rooms+rotations
+	# TODO - rooms should have some weight factor for their being chosen
+	var chosen_room_rot = valid_room_rots[randi_range(0,valid_room_rots.size()-1)]
+	var chosen_room : RoomData = chosen_room_rot[0]
+	var chosen_rot : int = chosen_room_rot[1][randi_range(0,chosen_room_rot[1].size()-1)]
+	return [chosen_room, chosen_rot]
+
+
 ## Return all valid rotations of [room] at given [pos] with starting [facing]
-func try_placement(room : RoomData, pos : Vector3, facing : int) -> Array:
+# Returned rotations should be in world_grid space (take base_rot into account!)
+func get_valid_rotations(room : RoomData, pos : Vector3i, base_rot : int) -> Array:
 	var valid_rotations = []
+	# Check validity of each legal rotation for the room
 	for rot in room.CW_Rotations:
-		#if(rot != 0): break #TODO: DEBUG
-		var potential_fills : Array[Vector3] = []
-		for cell in room.Fills:
-			# TODO: does Vector3.rotated() below work how i think it does??
-			var cell_rotated = cell.rotated(Vector3.UP, -PI/2 * (rot+facing))
-			potential_fills.append(cell_rotated + pos)
-		if !is_occupied(potential_fills): valid_rotations.append(rot)
+		var is_valid_rot = check_valid_room_placement(room, pos, (base_rot+rot)%4)
+		if(is_valid_rot): valid_rotations.append((base_rot+rot)%4)
 	return valid_rotations
 
 
-## Returns true if any positions in [potential_fills] are occupied in world_grid
-func is_occupied(potential_fills : Array[Vector3]) -> bool:
-	for pos in potential_fills:
-		if world_grid.has(str(int(pos.x))+str(int(pos.y))+str(int(pos.z))): return true
+## Checks whether or not a given [room] placement [pos], at a given rotation [rot], would be valid
+func check_valid_room_placement(room : RoomData, pos : Vector3i, rot : int) -> bool:
+	for cell in room.Cells:
+		# Determine the cell's position in world grid, given the rotation
+		var cell_pos_local = cell[0]
+		var cell_rotated_local := Vector3i.ZERO
+		if(cell_pos_local != cell_rotated_local): # If the cell pos is (0,0,0), don't rotate it
+			cell_rotated_local = scik.Vector3i_rotated(cell_pos_local, Vector3i.UP, 90*-(rot%4))
+		var cell_pos_grid : Vector3i = cell_rotated_local + pos + room.Origin
+		# Determine the world_edge_grid offset for the edges (means we have to pass less variables)
+		var edge_grid_offset : Vector3i = (2*pos) + (2*room.Origin) + (2*cell_rotated_local)
+		var cell_edges : Array = cell[1]
+		# Determine if the cell is valid
+		var is_valid_cell = check_valid_cell_placement(cell_pos_grid, cell_edges, rot, edge_grid_offset)
+		if not is_valid_cell: return false # Early return if a given cell was invalid
+	return true
+
+
+## Checks whether or not a given cell placement [cell_pos_grid], with edges [cell_edges], at a given rotation [rot], would be valid
+## edge_grid_offset is passed separately to avoid extra variables -- calculated by ((2*pos)+(2*room.origin)+(2*cell_rotated_local))
+# TODO - optimize this
+func check_valid_cell_placement(cell_pos_grid : Vector3i, cell_edges : Array, rot : int, edge_grid_offset : Vector3i) -> bool:
+	# Step 1 - check if the cell would even fit
+	if is_occupied(cell_pos_grid): return false # Early return if the cell is occupied
+	# Step 2 - check if the edges would be Ugly
+	# TODO: this doesn't work for the y-axis
+	for edge_idx in cell_edges.size():
+		# Start by determining where the edge even is
+		var offset := Vector3i(0,0,1)
+		# Determine the edge's position relative to cell origin
+		var edge_rotated_local := scik.Vector3i_rotated(offset, Vector3i.UP, 90*-((edge_idx+rot)%4))
+		# Get edge position on grid (currently doubling coords instead of using offset of 0.5)
+		var edge_pos_edgegrid : Vector3i = edge_rotated_local + edge_grid_offset
+		var edge_pos_edgegrid_as_string := vector3i_as_string(edge_pos_edgegrid)
+		if world_edge_grid.has(edge_pos_edgegrid_as_string):
+			var grid_edge_type = world_edge_grid[edge_pos_edgegrid_as_string]
+			# Determine if edges would be ugly
+			if(grid_edge_type != 0):
+				var cell_edge_type = cell_edges[edge_idx]
+				# TODO - could just be "if cell_edge_type != grid_edge_type" but i'm worried about future edge type additions
+				if(cell_edge_type == WALL_MARK and grid_edge_type == EXIT_MARK): return false # Early return for edge mismatch
+				elif(cell_edge_type == EXIT_MARK and grid_edge_type == WALL_MARK): return false # Early return for edge mismatch
+	return true
+
+
+## Returns true if any positions in [world_grid_positions] are occupied in world_grid
+func is_occupied(pos : Vector3i) -> bool:
+	var pos_as_string := vector3i_as_string(pos)
+	if world_grid.has(pos_as_string): return true
 	return false
 
 
-## Loads in gameworld - new and improved!!
+## Takes a vector3i and stringifies it
+func vector3i_as_string(v : Vector3i) -> String:
+	var x := str(v.x)
+	var y := str(v.y)
+	var z := str(v.z)
+	return x+y+z
+
+
+## Loads in gameworld
 func load_world(world_data : Array) -> void:
 	for room_data in world_data:
-		#print(room_data)
-		var room_name : String = room_data[0].room_scene_name
-		var pos = room_data[1]
-		var facing = room_data[2]
+		# Parse the room data
+		var room_name : String = room_data[0].Name
+		var pos : Vector3i = room_data[1]
+		var rot : int = room_data[2]
+		# Spawn the room
 		var room_node : ModularRoom = load("res://Prefabs/Level/Rooms/Scenes/"+room_name+".tscn").instantiate()
 		$Rooms.add_child(room_node)
-		room_node.global_position = grid_to_world(pos.x, pos.y, pos.z)
-		room_node.rotate_y(-PI/2*facing)
+		# Place the room
+		room_node.global_position = grid_to_world(pos)
+		room_node.rotate_y(-PI/2*rot)
+		# Save the room's spawn data
 		if not room_node.PlayerSpawns.is_empty():
 			player_spawn_positions.append_array(room_node.PlayerSpawns)
 		if not room_node.BarrelSpawns.is_empty():
 			barrel_spawn_positions.append_array(room_node.BarrelSpawns)
 
 
-## Loads in gameworld
-func old_load_world(world_data : Array) -> void:
-	for x in world_data.size():
-		for y in world_data[x].size():
-			var pos = Vector2(x,y)
-			var c_room_name = world_data[pos.x][pos.y]
-			var c_room : ModularRoom = load("res://Prefabs/Level/Rooms/Scenes/"+c_room_name+".tscn").instantiate()
-			add_child(c_room)
-			c_room.global_position = grid_to_world(pos.x, 0, pos.y)
-			player_spawn_positions.append_array(c_room.PlayerSpawns)
-			barrel_spawn_positions.append_array(c_room.BarrelSpawns)
-
-
 ## Converts world_data grid position to real coordinates
-func grid_to_world(x, y, z) -> Vector3:
+func grid_to_world(pos : Vector3i) -> Vector3:
 	var grid_size = 15
-	return Vector3(x*grid_size, y*grid_size, z*grid_size)
+	return Vector3(pos.x*grid_size, pos.y*grid_size, pos.z*grid_size)
