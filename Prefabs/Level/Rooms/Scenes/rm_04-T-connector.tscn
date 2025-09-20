@@ -8,9 +8,8 @@ albedo_color = Color(1, 0, 0, 1)
 [sub_resource type="BoxMesh" id="BoxMesh_7lld6"]
 material = SubResource("StandardMaterial3D_178ac")
 
-[node name="Rm04TConnector" type="Node3D" node_paths=PackedStringArray("PlayerSpawns")]
+[node name="Rm04TConnector" type="Node3D"]
 script = ExtResource("1_bqbxi")
-PlayerSpawns = [NodePath("PlayerSpawns/PlayerSpawn")]
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.099999964, 0, 0, 0, 1, 0, 2.95, -7)
@@ -25,7 +24,6 @@ size = Vector3(15, 0.5, 15)
 
 [node name="cieling" type="CSGBox3D" parent="RoomCombiner"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.25, 0)
-visible = false
 size = Vector3(15, 0.5, 15)
 
 [node name="wall_W" type="CSGCombiner3D" parent="RoomCombiner"]
@@ -70,7 +68,3 @@ transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, 0
 [node name="wall" type="CSGBox3D" parent="RoomCombiner/wall_N"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 2.5, 1.09278474e-07)
 size = Vector3(5.5, 5, 15)
-
-[node name="PlayerSpawns" type="Node3D" parent="."]
-
-[node name="PlayerSpawn" type="Marker3D" parent="PlayerSpawns"]

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="RoomData" load_steps=2 format=3 uid="uid://c52asdhywp4gv"]
+
+[ext_resource type="Script" uid="uid://de0qtj4ldm061" path="res://Prefabs/Level/Rooms/Resources/room_data.gd" id="1_st8yo"]
+
+[resource]
+script = ExtResource("1_st8yo")
+Name = "rm_08-warehouse"
+Origin = Vector3i(1, 0, 1)
+Cells = [[Vector3i(1, 0, 1), [1, 2, 2, 1]], [Vector3i(1, 0, 0), [2, 2, 2, 2]], [Vector3i(1, 0, -1), [2, 2, 2, 2]], [Vector3i(0, 0, 1), [2, 2, 2, 2]], [Vector3i(0, 0, 0), [2, 2, 2, 2]], [Vector3i(0, 0, -1), [2, 2, 2, 2]], [Vector3i(-1, 0, 1), [2, 2, 2, 2]], [Vector3i(-1, 0, 0), [2, 1, 2, 2]], [Vector3i(-1, 0, -1), [2, 2, 1, 2]]]
+CW_Rotations = Array[int]([0, 2])
+metadata/_custom_type_script = "uid://de0qtj4ldm061"

@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="RoomData" load_steps=2 format=3 uid="uid://5i1jjf1afk0l"]
+
+[ext_resource type="Script" uid="uid://de0qtj4ldm061" path="res://Prefabs/Level/Rooms/Resources/room_data.gd" id="1_qr0n3"]
+
+[resource]
+script = ExtResource("1_qr0n3")
+Name = "rm_07-end-stairwell"
+Cells = [[Vector3i(0, 0, 0), [2, 2, 1, 2]], [Vector3i(0, 1, 0), [2, 2, 1, 2]]]
+CW_Rotations = Array[int]([0])
+metadata/_custom_type_script = "uid://de0qtj4ldm061"

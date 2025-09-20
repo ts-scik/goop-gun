@@ -1,0 +1,110 @@
+[gd_scene load_steps=4 format=3 uid="uid://d4g7iah74oid1"]
+
+[ext_resource type="PackedScene" uid="uid://0d4aof4spj0p" path="res://Prefabs/Level/warehouse_csg.tscn" id="1_55axm"]
+[ext_resource type="Script" uid="uid://07gywnyf8aq6" path="res://Prefabs/Level/room.gd" id="1_ni0dq"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bvki4"]
+albedo_color = Color(0.389287, 0.389287, 0.389287, 1)
+
+[node name="Rm08Warehouse" type="Node3D" node_paths=PackedStringArray("PlayerSpawns", "BarrelSpawns")]
+script = ExtResource("1_ni0dq")
+PlayerSpawns = [NodePath("PlayerSpawns/PlayerSpawn"), NodePath("PlayerSpawns/PlayerSpawn2"), NodePath("PlayerSpawns/PlayerSpawn3")]
+BarrelSpawns = [NodePath("BarrelSpawns/BarrelSpawn")]
+
+[node name="WarehouseCSG" parent="." instance=ExtResource("1_55axm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 10)
+
+[node name="boundary" type="CSGCombiner3D" parent="."]
+use_collision = true
+
+[node name="exterior" type="CSGCombiner3D" parent="boundary"]
+
+[node name="floor" type="CSGBox3D" parent="boundary/exterior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
+size = Vector3(45, 0.5, 45)
+material = SubResource("StandardMaterial3D_bvki4")
+
+[node name="wall_N_combiner" type="CSGCombiner3D" parent="boundary/exterior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 22.25)
+
+[node name="wall_N" type="CSGBox3D" parent="boundary/exterior/wall_N_combiner"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.8, 0)
+size = Vector3(45, 9.6, 0.5)
+material = SubResource("StandardMaterial3D_bvki4")
+
+[node name="doorway" type="CSGBox3D" parent="boundary/exterior/wall_N_combiner"]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 15, 1.5, 0)
+operation = 2
+size = Vector3(0.7, 3, 2.2)
+
+[node name="wall_W_combiner" type="CSGCombiner3D" parent="boundary/exterior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.25, 0, 0)
+
+[node name="wall_W" type="CSGBox3D" parent="boundary/exterior/wall_W_combiner"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.8, 0)
+size = Vector3(0.5, 9.6, 44)
+material = SubResource("StandardMaterial3D_bvki4")
+
+[node name="doorway" type="CSGBox3D" parent="boundary/exterior/wall_W_combiner"]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, 1.5, 15)
+operation = 2
+size = Vector3(2.2, 3, 0.7)
+
+[node name="wall_S_combiner" type="CSGCombiner3D" parent="boundary/exterior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -22.25)
+
+[node name="wall_S" type="CSGBox3D" parent="boundary/exterior/wall_S_combiner"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.8, 0)
+size = Vector3(45, 9.6, 0.5)
+material = SubResource("StandardMaterial3D_bvki4")
+
+[node name="doorway" type="CSGBox3D" parent="boundary/exterior/wall_S_combiner"]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -15, 1.5, 0)
+operation = 2
+size = Vector3(0.7, 3, 2.2)
+
+[node name="wall_E_combiner" type="CSGCombiner3D" parent="boundary/exterior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22.25, 0, 0)
+
+[node name="wall_E" type="CSGBox3D" parent="boundary/exterior/wall_E_combiner"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.8, 0)
+size = Vector3(0.5, 9.6, 44)
+material = SubResource("StandardMaterial3D_bvki4")
+
+[node name="doorway" type="CSGBox3D" parent="boundary/exterior/wall_E_combiner"]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, 1.5, 0)
+operation = 2
+size = Vector3(2.2, 3, 0.7)
+
+[node name="interior" type="CSGCombiner3D" parent="boundary"]
+
+[node name="CSGBox3D" type="CSGBox3D" parent="boundary/interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, 3, 5.5000005)
+size = Vector3(10, 6, 1)
+material = SubResource("StandardMaterial3D_bvki4")
+
+[node name="CSGBox3D3" type="CSGBox3D" parent="boundary/interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.9, 3, 16)
+size = Vector3(1, 6, 12)
+material = SubResource("StandardMaterial3D_bvki4")
+
+[node name="CSGBox3D2" type="CSGBox3D" parent="boundary/interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19.999998, 3, -0.49999976)
+size = Vector3(4, 6, 1)
+material = SubResource("StandardMaterial3D_bvki4")
+
+[node name="PlayerSpawns" type="Node3D" parent="."]
+
+[node name="PlayerSpawn" type="Marker3D" parent="PlayerSpawns"]
+transform = Transform3D(0.9659258, 0, -0.25881904, 0, 1, 0, 0.25881904, 0, 0.9659258, 12.4, 0, 5.5000005)
+
+[node name="PlayerSpawn2" type="Marker3D" parent="PlayerSpawns"]
+transform = Transform3D(0.25881895, 0, 0.9659258, 0, 1, 0, -0.9659258, 0, 0.25881895, -2.3000002, 3.5, 6.5000005)
+
+[node name="PlayerSpawn3" type="Marker3D" parent="PlayerSpawns"]
+transform = Transform3D(0.70710677, 0, -0.70710653, 0, 1, 0, 0.70710653, 0, 0.70710677, 14.000001, 3.5, -16.1)
+
+[node name="BarrelSpawns" type="Node3D" parent="."]
+
+[node name="BarrelSpawn" type="Marker3D" parent="BarrelSpawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3.5000002, 5.6)

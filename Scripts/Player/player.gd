@@ -77,15 +77,14 @@ func _physics_process(delta: float) -> void:
 		velocity.y += JUMP_VELOCITY
 		
 	# TODO DEBUG
-	"""
-	if(1==1):
+	if(1==0):
 		var flyspeed = 1000
 		velocity.y = 0
 		if Input.is_action_pressed("jump"):
 			velocity.y = delta*flyspeed
 		elif Input.is_action_pressed("crouch"):
 			velocity.y = -delta*flyspeed
-	"""
+	
 	
 	# Handle movement inputs
 	# TODO: update so we're not directly modifying velocity, add inertia, etc
@@ -146,9 +145,11 @@ func die(shooter : String = ""):
 		if(!has_node("/root/MainScene/World")):
 			position = Vector3.ZERO
 		else:
-			var positions : Array = get_node("/root/MainScene/World").player_spawn_positions
-			var selection = randi_range(0, positions.size()-1)
-			position = positions[selection].global_position
+			var spawns : Array = get_node("/root/MainScene/World").player_spawn_positions
+			var selection = randi_range(0, spawns.size()-1)
+			var chosen_spawn : Marker3D = spawns[selection]
+			self.global_position = chosen_spawn.global_position
+			self.global_rotation.y = chosen_spawn.global_rotation.y
 		HUD.update_health(health)
 	if(NetworkManager.players_dict.has(int(shooter))):
 		print("i am dead! killed by the evil ",shooter)

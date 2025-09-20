@@ -26,7 +26,6 @@ size = Vector3(15, 0.5, 15)
 
 [node name="cieling" type="CSGBox3D" parent="RoomCombiner"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.25, 0)
-visible = false
 size = Vector3(15, 0.5, 15)
 
 [node name="wall_W" type="CSGCombiner3D" parent="RoomCombiner"]

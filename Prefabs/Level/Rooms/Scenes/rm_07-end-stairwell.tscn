@@ -1,0 +1,94 @@
+[gd_scene load_steps=4 format=3 uid="uid://bgu1ykpmr78m2"]
+
+[ext_resource type="Script" uid="uid://07gywnyf8aq6" path="res://Prefabs/Level/room.gd" id="1_h16g4"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vbawm"]
+albedo_color = Color(1, 0, 0, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_nrgi7"]
+material = SubResource("StandardMaterial3D_vbawm")
+
+[node name="Rm07SEndStairwell" type="Node3D" node_paths=PackedStringArray("PlayerSpawns")]
+script = ExtResource("1_h16g4")
+PlayerSpawns = [NodePath("PlayerSpawns/PlayerSpawn")]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.099999964, 0, 0, 0, 1, 0, 2.95, -7)
+mesh = SubResource("BoxMesh_nrgi7")
+
+[node name="RoomCombiner" type="CSGCombiner3D" parent="."]
+use_collision = true
+
+[node name="cieling" type="CSGBox3D" parent="RoomCombiner"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 15.25, 0)
+size = Vector3(15, 0.5, 15)
+
+[node name="floor" type="CSGBox3D" parent="RoomCombiner"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
+size = Vector3(15, 0.5, 15)
+
+[node name="Stairs" type="CSGCombiner3D" parent="RoomCombiner"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 0)
+
+[node name="stair" type="CSGBox3D" parent="RoomCombiner/Stairs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 0.75)
+size = Vector3(4, 10, 12.5)
+
+[node name="stairsub" type="CSGBox3D" parent="RoomCombiner/Stairs"]
+transform = Transform3D(1, 0, 0, 0, 0.7071067, 0.7071067, 0, -0.7071067, 0.7071067, 0, 7.464, -2.138)
+operation = 2
+size = Vector3(4, 7.9, 15.5)
+
+[node name="wall_W" type="CSGCombiner3D" parent="RoomCombiner"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.05, 0, 0)
+
+[node name="wall" type="CSGBox3D" parent="RoomCombiner/wall_W"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.1999998, 7.5, 0)
+size = Vector3(0.5, 15, 15)
+
+[node name="wall_E" type="CSGCombiner3D" parent="RoomCombiner"]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -4.0499997, 0, 0)
+
+[node name="wall" type="CSGBox3D" parent="RoomCombiner/wall_E"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.2, 7.5, 0)
+size = Vector3(0.5, 15, 15)
+
+[node name="wall_S" type="CSGCombiner3D" parent="RoomCombiner"]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, -7.25)
+
+[node name="wall" type="CSGBox3D" parent="RoomCombiner/wall_S"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.499999, 0)
+size = Vector3(0.5, 15, 14)
+
+[node name="doorway" type="CSGBox3D" parent="RoomCombiner/wall_S"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+operation = 2
+size = Vector3(0.5, 3, 2.2)
+
+[node name="doorway2" type="CSGBox3D" parent="RoomCombiner/wall_S"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 11.5, 0)
+operation = 2
+size = Vector3(0.5, 3, 2.2)
+
+[node name="wall_N" type="CSGCombiner3D" parent="RoomCombiner"]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, 0, 7.25)
+
+[node name="wall" type="CSGBox3D" parent="RoomCombiner/wall_N"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.5, 0)
+size = Vector3(0.5, 15, 14)
+
+[node name="midfloor" type="CSGCombiner3D" parent="RoomCombiner"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 0)
+
+[node name="floor2" type="CSGBox3D" parent="RoomCombiner/midfloor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
+size = Vector3(14, 0.5, 14)
+
+[node name="floorhole" type="CSGBox3D" parent="RoomCombiner/midfloor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, -0.5, 2.5)
+operation = 2
+size = Vector3(4, 1, 9)
+
+[node name="PlayerSpawns" type="Node3D" parent="."]
+
+[node name="PlayerSpawn" type="Marker3D" parent="PlayerSpawns"]

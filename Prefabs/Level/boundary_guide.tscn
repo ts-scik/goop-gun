@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3 uid="uid://d3l4j0q08u8fi"]
+[gd_scene load_steps=5 format=3 uid="uid://d3l4j0q08u8fi"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_xpn68"]
 transparency = 1
@@ -7,11 +7,34 @@ albedo_color = Color(1, 0.47843137, 0.47843137, 0.19607843)
 
 [sub_resource type="BoxMesh" id="BoxMesh_rj0h7"]
 material = SubResource("StandardMaterial3D_xpn68")
-size = Vector3(15, 15, 15)
+size = Vector3(15, 10, 15)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rj0h7"]
+albedo_color = Color(0, 1, 1, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_pbm0x"]
+material = SubResource("StandardMaterial3D_rj0h7")
+size = Vector3(0.5, 3, 2.2)
 
 [node name="BoundaryGuide" type="Node3D"]
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7, 0)
+[node name="box" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 0)
 mesh = SubResource("BoxMesh_rj0h7")
 skeleton = NodePath("../..")
+
+[node name="door" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.25, 1.5, 0)
+mesh = SubResource("BoxMesh_pbm0x")
+
+[node name="door2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.25, 1.5, 0)
+mesh = SubResource("BoxMesh_pbm0x")
+
+[node name="door3" type="MeshInstance3D" parent="."]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 1.5, 7.25)
+mesh = SubResource("BoxMesh_pbm0x")
+
+[node name="door4" type="MeshInstance3D" parent="."]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 1.5, -7.25)
+mesh = SubResource("BoxMesh_pbm0x")

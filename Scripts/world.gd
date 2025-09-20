@@ -34,7 +34,9 @@ func _process(_delta: float) -> void:
 ## Function for spawning in a player with given pid
 func spawn_player(authority_pid : int) -> void:
 	var player : PlayerController = player_spawner.spawn(authority_pid)
-	player.global_position = player_spawn_positions[randi_range(0,player_spawn_positions.size()-1)].global_position
+	var chosen_spawn : Marker3D = player_spawn_positions[randi_range(0,player_spawn_positions.size()-1)]
+	player.global_position = chosen_spawn.global_position
+	player.global_rotation.y = chosen_spawn.global_rotation.y
 
 
 ## Function for spawning in relevant entities
@@ -60,10 +62,10 @@ func _ms_barrel(_authority_pid : int) -> RigidBody3D:
 func generate_world_data() -> Array:
 	# TODO: move this
 	# Populate an array with our possible rooms + their data
-	var room_names = ["rm_01","rm_02","rm_03","rm_04","rm_05","rm_06"]
+	var room_names = ["rm_01","rm_02","rm_03","rm_04","rm_05","rm_06","rm_07","rm_08"]
 	for n in room_names:
 		rooms.append(load("res://Prefabs/Level/Rooms/Resources/"+n+".tres"))
-	var main_room = rooms[0]
+	var main_room = rooms[7]
 	
 	# Set up our world data storage
 	var world_data = []
@@ -276,5 +278,5 @@ func load_world(world_data : Array) -> void:
 
 ## Converts world_data grid position to real coordinates
 func grid_to_world(pos : Vector3i) -> Vector3:
-	var grid_size = 15
-	return Vector3(pos.x*grid_size, pos.y*grid_size, pos.z*grid_size)
+	var grid_size = Vector3i(15,10,15)
+	return Vector3(pos.x*grid_size.x, pos.y*grid_size.y, pos.z*grid_size.z)
