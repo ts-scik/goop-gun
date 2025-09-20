@@ -35,8 +35,8 @@ func _process(_delta: float) -> void:
 func spawn_player(authority_pid : int) -> void:
 	var player : PlayerController = player_spawner.spawn(authority_pid)
 	var chosen_spawn : Marker3D = player_spawn_positions[randi_range(0,player_spawn_positions.size()-1)]
-	player.global_position = chosen_spawn.global_position
-	player.global_rotation.y = chosen_spawn.global_rotation.y
+	player.position = chosen_spawn.global_position
+	player.rotation.y = chosen_spawn.global_rotation.y
 
 
 ## Function for spawning in relevant entities
@@ -60,6 +60,7 @@ func _ms_barrel(_authority_pid : int) -> RigidBody3D:
 
 ## Generates world data
 func generate_world_data() -> Array:
+	print("starting world data generation...")
 	# TODO: move this
 	# Populate an array with our possible rooms + their data
 	var room_names = ["rm_01","rm_02","rm_03","rm_04","rm_05","rm_06","rm_07","rm_08"]
@@ -76,6 +77,7 @@ func generate_world_data() -> Array:
 	#var max_depth = 5
 	var max_depth = GameManager.max_room_depth
 	world_data = add_rooms(main_room,world_data, max_depth)
+	print("finished world data generation!!")
 	return world_data
 
 
@@ -258,6 +260,7 @@ func vector3i_as_string(v : Vector3i) -> String:
 
 ## Loads in gameworld
 func load_world(world_data : Array) -> void:
+	print("starting world load...")
 	for room_data in world_data:
 		# Parse the room data
 		var room_name : String = room_data[0]
@@ -274,6 +277,7 @@ func load_world(world_data : Array) -> void:
 			player_spawn_positions.append_array(room_node.PlayerSpawns)
 		if not room_node.BarrelSpawns.is_empty():
 			barrel_spawn_positions.append_array(room_node.BarrelSpawns)
+	print("finished world load!!")
 
 
 ## Converts world_data grid position to real coordinates

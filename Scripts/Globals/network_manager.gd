@@ -111,6 +111,7 @@ func _server_disconnected() -> void:
 	game_error.emit("Server disconnected")
 	_end_of_connection_cleanup()
 	server_lost.emit()
+	get_tree().set_pause(false) # Unpause the game, just in case we were paused before
 
 
 ## Ends session for Client or Server who wishes to leave the game
@@ -275,6 +276,7 @@ func _generate_world() -> void:
 	var world = get_tree().get_root().get_node("MainScene/World")
 	await world.load_world(GameManager.world_data)
 	if(!multiplayer.is_server()):
+		print("signalling load completion...")
 		_signal_loaded.rpc_id(get_multiplayer_authority()) # tell the server that we've finished our meal
 
 

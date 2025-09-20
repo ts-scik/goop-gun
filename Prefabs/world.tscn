@@ -53,9 +53,6 @@ spawn_path = NodePath("..")
 
 [node name="Rooms" type="Node3D" parent="."]
 
-[node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(-4.2222e-08, -0.258819, 0.965926, -1.13133e-08, 0.965926, 0.258819, -1, 1.77636e-15, -4.37114e-08, 22.65, 13.05, -17.15)
-
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
 mesh = SubResource("BoxMesh_p054e")
