@@ -29,6 +29,12 @@ settings/addon_root_folder="res://addons/debug_draw_3d"
 
 project/assembly_name="receiver-proto"
 
+[file_customization]
+
+folder_colors={
+"res://Prefabs/Level/Rooms/": "green"
+}
+
 [input]
 
 jump={

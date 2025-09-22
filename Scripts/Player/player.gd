@@ -37,71 +37,55 @@ func _ready() -> void:
 	
 	HUD.show()
 	HUD.update_health(health)
+	HUD.get_node("SpeedContainer/Speed").player = self
 
 
 ## Handle non-physics inputs (pausing, scoreboard)
-func _process(_delta: float) -> void:
+func _input(event) -> void:
+	# If we're using Network -- early return if not authority
 	if NetworkManager.peer != null:
 		if NetworkManager.peer.get_connection_status() == 0 : return
 		if not is_multiplayer_authority(): return
 
 	# Pause menu
-	if Input.is_action_just_pressed("pause"):
+	if event.is_action_pressed("pause"):
 		_on_menu_key()
 	# Scoreboard
-	# TODO: adjust this so the scoreboard can be updating all the time
-	if Input.is_action_just_pressed("scoreboard"):
+	elif event.is_action_pressed("scoreboard"):
 		HUD.update_scores()
 		HUD.scoreboard.show()
-	elif Input.is_action_just_released("scoreboard"):
+	elif event.is_action_released("scoreboard"):
 		HUD.scoreboard.hide()
 	# Die
-	if Input.is_action_just_pressed("kill"):
+	elif event.is_action_pressed("kill"):
 		die.rpc()
 
 
 ## Handle player movement
 func _physics_process(delta: float) -> void:
-	# TODO: adjust this so players don't have *total* authority
+	# TODO: adjust this so players don't have *total* authority ??
 	if NetworkManager.peer != null:
 		if NetworkManager.peer.get_connection_status() == 0 : return
 		if not is_multiplayer_authority(): return
 	
-	# Apply gravity if we're airborne
-	if not is_on_floor():
-		velocity.y -= GRAVITY * delta
-	
-	# Jump if we're on the floor
-	# TODO: buffer jump inputs
-	if Input.is_action_just_pressed("jump") and is_on_floor():
-		velocity.y += JUMP_VELOCITY
-		
-	# TODO DEBUG
-	if(1==1):
-		var flyspeed = 1000
-		velocity.y = 0
-		if Input.is_action_pressed("jump"):
-			velocity.y = delta*flyspeed
-		elif Input.is_action_pressed("crouch"):
-			velocity.y = -delta*flyspeed
-	
-	
 	# Handle movement inputs
-	# TODO: update so we're not directly modifying velocity, add inertia, etc
+	var fly_debug = false # TODO DEBUG
+	if fly_debug: # TODO DEBUG
+		fly_movement(delta)
+	elif is_on_floor():
+		# walking on ground
+		PM_WalkMove(delta)
+	else:
+		# airborne
+		PM_AirMove(delta)
+	
 	# TODO: keep track of movement to initiate a headbob animation
 	# TODO: add footstep sounds
-	var input_dir = Input.get_vector("left", "right", "forward", "back")
-	var direction = (transform.basis * Vector3(input_dir.x, 0, input_dir.y).normalized())
+	var direction = get_direction()
 	if direction:
-		velocity.x = direction.x * SPEED
-		velocity.z = direction.z * SPEED
 		if(footstep_timer<=0 and is_on_floor()):
 			footstep_timer = footstep_time_length
 			play_footstep_sound.rpc()
-	else:
-		velocity.x = move_toward(velocity.x, 0, SPEED)
-		velocity.z = move_toward(velocity.z, 0, SPEED)
-	
 	if(footstep_timer > 0):
 		footstep_timer -= delta
 	
@@ -114,7 +98,161 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 
+## Returns player's current wishdir normalized
+func get_direction() -> Vector3:
+	var input_dir = Input.get_vector("left", "right", "forward", "back")
+	var direction = (transform.basis * Vector3(input_dir.x, 0, input_dir.y).normalized())
+	return direction
+
+
+func get_wishvel() -> Vector3:
+	var fmove := Input.get_axis("back","forward")
+	var smove := Input.get_axis("left","right")
+	var wishvel : Vector3 = Vector3.ZERO
+	var forward = -transform.basis.z
+	var right = transform.basis.x
+	wishvel.x = (forward.x * fmove) + (right.x * smove)
+	wishvel.z = (forward.z * fmove) + (right.z * smove)
+	wishvel.y = (forward.y * fmove) + (right.y * smove)
+	return wishvel
+
+
+## Applies friction to velocity
+func PM_Friction(delta : float) -> void:
+	var PM_FRICTION : float = 4.0 # Friction factor when on ground -- TODO : make const
+	var PM_STOPSPEED : float = 10.0 # Friction gets multiplied by PM_STOPSPEED when we're moving slower than PM_STOPSPEED -- TODO : why??, make const
+	
+	var vec : Vector3 = velocity
+	if is_on_floor(): #pml.walking
+		vec.y = 0 # ignore slope movement
+	
+	var speed : float = vec.length()
+	if speed < 1: # if we're moving super-slow, just stop moving and early return
+		velocity.x = 0
+		velocity.z = 0
+		return
+	
+	var drop : float = 0
+	
+	# apply ground friction
+	if is_on_floor(): #??? pml.walking
+		var control : float
+		if(speed < PM_STOPSPEED):
+			control = PM_STOPSPEED
+		else:
+			control = speed
+		drop += control * PM_FRICTION * delta
+
+	# scale the velocity
+	var newspeed : float = speed - drop
+	if (newspeed < 0):
+		newspeed = 0
+	newspeed /= speed
+	
+	velocity.x = velocity.x * newspeed
+	velocity.z = velocity.z * newspeed
+	velocity.y = velocity.y * newspeed # # ?????
+
+
+## Quake-style movement acceleration
+func PM_Accelerate(wishdir : Vector3, wishspeed : float, accel : float, frame_time : float) -> void:
+	var addspeed : float
+	var accelspeed : float
+	var currentspeed : float
+	
+	currentspeed = velocity.dot(wishdir)
+	addspeed = wishspeed - currentspeed
+	if (addspeed <= 0):
+		return
+	accelspeed = accel * frame_time * wishspeed
+	if (accelspeed > addspeed):
+		accelspeed = addspeed
+	
+	velocity.x += accelspeed * wishdir.x
+	velocity.z += accelspeed * wishdir.z
+	velocity.y += accelspeed * wishdir.y # ?????
+
+
+## Returns the scale factor to apply to cmd movements
+## "This allows clients to use axial -127 to 127 values for all directions without getting a sqrt(2) distortion in speed."
+func PM_CmdScale() -> float:
+	var scale_factor : float = 1.0 # ??? why 127 in quake? TODO
+	var speed : int = 6 # player's speed? TODO: move this elswehere
+	
+	var forwardmove : float = Input.get_axis("back","forward")
+	var rightmove : float = Input.get_axis("left","right")
+	
+	var maxim : float = abs( forwardmove )
+	if( abs( rightmove ) > maxim):
+		maxim = abs ( rightmove )
+	if ( !maxim ):
+		return 0
+	
+	# TODO: something is going wrong here
+	#var total : float = sqrt( (forwardmove * forwardmove)+ (rightmove * rightmove) )
+	#var mv_scale : float = speed * maxim / (scale_factor * total)
+	
+	var mv_scale : float = speed * maxim / scale_factor
+	return mv_scale
+
+
+## Jumping
+# not doing this at all how quake does it
+func PM_CheckJump() -> bool:
+	# TODO : buffer jump input
+	if Input.is_action_just_pressed("jump") and is_on_floor():
+	#if Input.is_action_pressed("jump"):
+		velocity.y += JUMP_VELOCITY
+		#velocity.y = JUMP_VELOCITY # TODO - quake does this instead... which is better?
+		return true
+	
+	return false
+
+
+## Grounded movement
+const PM_ACCELERATE : float = 10.0
+const PM_AIRACCELERATE : float = 1.0
+func PM_WalkMove(delta) -> void:
+	if PM_CheckJump():
+		#PM_AirMove(delta)
+		return
+
+	PM_Friction(delta)
+	var mv_scale : float = PM_CmdScale()
+	var wishvel : Vector3 = get_wishvel()
+	var wishdir : Vector3 = wishvel.normalized() # ??? should normalize ???
+	var wishspeed := wishdir.length() # ???
+	wishspeed *= mv_scale
+
+	# TODO : clamp wishspeed if crouching
+	
+	var accelerate : float
+	if !is_on_floor(): # this is really for knockback, slippery surfaces, etc
+		accelerate = PM_AIRACCELERATE
+	else:
+		accelerate = PM_ACCELERATE
+	PM_Accelerate(wishdir, wishspeed, accelerate, delta)
+
+
+## Airborne movement
+func PM_AirMove(delta) -> void:
+	PM_Friction(delta)
+	var mv_scale : float = PM_CmdScale()
+	var wishvel : Vector3 = get_wishvel()
+	wishvel.y = 0
+	var wishdir : Vector3 = wishvel.normalized() # ??? should normalize ???
+	var wishspeed := wishdir.length() # ???
+	wishspeed *= mv_scale
+	
+	# not on ground, so little effect on velocity
+	PM_Accelerate(wishdir, wishspeed, PM_AIRACCELERATE, delta)
+	
+	# gravity?? -- quake doesn't do this here TODO
+	if not is_on_floor(): velocity.y -= GRAVITY * delta
+
+
 ## Randomly selects and then plays a footstep sound
+# TODO -- this is really bad -- we're loading the file in every time
 @rpc("authority","call_local","unreliable") # It's okay if a footstep sound is dropped
 func play_footstep_sound() -> void:
 	if($FootstepSound.playing): return
@@ -142,8 +280,10 @@ func die(shooter : String = ""):
 	reset_physics_interpolation()
 	if(is_multiplayer_authority()):
 		health = 3
+		# TODO: this whole chunk should be moved into a spawn function
 		if(!has_node("/root/MainScene/World")):
 			position = Vector3.ZERO
+			print("zeroed")
 		else:
 			var spawns : Array = get_node("/root/MainScene/World").player_spawn_positions
 			var selection = randi_range(0, spawns.size()-1)
@@ -156,6 +296,15 @@ func die(shooter : String = ""):
 		NetworkManager.players_dict[int(shooter)]["score"]+=1
 	HUD.update_scores()
 
+
+## Handles fly movement
+func fly_movement(delta) -> void:
+	var flyspeed = 1000
+	velocity.y = 0
+	if Input.is_action_pressed("jump"):
+		velocity.y = delta*flyspeed
+	elif Input.is_action_pressed("crouch"):
+		velocity.y = -delta*flyspeed
 
 
 ## Handle showing/hiding the menu

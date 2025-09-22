@@ -1,3 +1,4 @@
+class_name RoomsGenerator
 extends Node3D
 
 var rooms : Array
@@ -62,7 +63,6 @@ func get_exits_mark_fills(room : RoomData, pos : Vector3i, rot : int) -> Array:
 		world_grid[cell_pos_as_string] = true
 		
 		# Mark each edge of the cell + get its exits
-		# TODO: this doesn't work for the y-axis
 		for edge_idx in cell_edges.size():
 			var offset := Vector3i(0,0,1)
 			# Determine the edge's position relative to cell origin
@@ -173,7 +173,6 @@ func check_valid_cell_placement(cell_pos_grid : Vector3i, cell_edges : Array, ro
 	# Step 1 - check if the cell would even fit
 	if is_occupied(cell_pos_grid): return false # Early return if the cell is occupied
 	# Step 2 - check if the edges would be Ugly
-	# TODO: this doesn't work for the y-axis
 	for edge_idx in cell_edges.size():
 		# Start by determining where the edge even is
 		var offset := Vector3i(0,0,1)

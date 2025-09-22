@@ -1,7 +1,8 @@
-[gd_scene load_steps=5 format=3 uid="uid://cpco4jqlt1swy"]
+[gd_scene load_steps=6 format=3 uid="uid://cpco4jqlt1swy"]
 
 [ext_resource type="Script" uid="uid://d2gqj6xsm33uy" path="res://Scripts/UI/player_hud.gd" id="1_g0xie"]
 [ext_resource type="Theme" uid="uid://dbc26jnuib7yq" path="res://Themes/main_theme.tres" id="2_5kp3n"]
+[ext_resource type="Script" uid="uid://bickx2gxmdo8m" path="res://Prefabs/UI/spedometer.gd" id="3_c3hdc"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_08u7w"]
 bg_color = Color(0.937255, 0.545098, 0.580392, 1)
@@ -90,3 +91,23 @@ item_0/text = "name1"
 item_1/text = "score1"
 item_2/text = "name2"
 item_3/text = "score2"
+
+[node name="SpeedContainer" type="PanelContainer" parent="."]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -106.0
+offset_top = -72.0
+offset_right = -26.0
+offset_bottom = -32.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="Speed" type="Label" parent="SpeedContainer"]
+layout_mode = 2
+theme = ExtResource("2_5kp3n")
+text = "10"
+horizontal_alignment = 1
+script = ExtResource("3_c3hdc")
