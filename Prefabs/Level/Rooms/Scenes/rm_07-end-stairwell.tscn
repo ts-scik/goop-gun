@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://bgu1ykpmr78m2"]
 
-[ext_resource type="Script" uid="uid://07gywnyf8aq6" path="res://Prefabs/Level/Rooms/room.gd" id="1_h16g4"]
+[ext_resource type="Script" uid="uid://07gywnyf8aq6" path="res://Scripts/Level/room.gd" id="1_h16g4"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vbawm"]
 albedo_color = Color(1, 0, 0, 1)

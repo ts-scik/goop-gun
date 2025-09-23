@@ -31,7 +31,10 @@ project/assembly_name="receiver-proto"
 [file_customization]
 
 folder_colors={
-"res://Prefabs/Level/Rooms/": "green"
+"res://Models/": "orange",
+"res://Prefabs/": "purple",
+"res://Prefabs/Level/Rooms/": "green",
+"res://Scripts/": "blue"
 }
 
 [input]
