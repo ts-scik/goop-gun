@@ -130,15 +130,15 @@ func get_wishvel() -> Vector3:
 
 ## Applies friction to velocity
 func PM_Friction(delta : float) -> void:
-	var PM_FRICTION : float = 4.0 # Friction factor when on ground -- TODO : tweak this, make const
-	var PM_STOPSPEED : float = 10.0 # Friction gets multiplied by PM_STOPSPEED when we're moving slower than PM_STOPSPEED -- TODO : why??, make const
+	var PM_FRICTION : float = 6.0 # Friction factor when on ground -- TODO : tweak this, make const
+	var PM_STOPSPEED : float = 1.5 # Friction gets multiplied by PM_STOPSPEED when we're moving slower than PM_STOPSPEED -- TODO : why??, make const
 	
 	var vec : Vector3 = velocity
 	if pml_walking: #pml.walking
 		vec.y = 0 # ignore slope movement
 	
 	var speed : float = vec.length()
-	if speed < 1: # if we're moving super-slow, just stop moving and early return
+	if speed < 0.5: # if we're moving super-slow, just stop moving and early return
 		velocity.x = 0
 		velocity.z = 0
 		return
@@ -178,7 +178,8 @@ func PM_Accelerate(wishdir : Vector3, wishspeed : float, accel : float, frame_ti
 	accelspeed = accel * frame_time * wishspeed
 	if (accelspeed > addspeed):
 		accelspeed = addspeed
-	
+
+
 	velocity.x += accelspeed * wishdir.x
 	velocity.z += accelspeed * wishdir.z
 	velocity.y += accelspeed * wishdir.y # ?????
@@ -188,7 +189,7 @@ func PM_Accelerate(wishdir : Vector3, wishspeed : float, accel : float, frame_ti
 ## "This allows clients to use axial -127 to 127 values for all directions without getting a sqrt(2) distortion in speed."
 func PM_CmdScale() -> float:
 	var scale_factor : float = 1.0 # ??? why 127 in quake? TODO
-	var speed : int = 6 # player's speed? TODO: move this elswehere
+	var speed : int = 4 # player's speed? TODO: move this elswehere
 	
 	var forwardmove : float = Input.get_axis("back","forward")
 	var rightmove : float = Input.get_axis("left","right")
