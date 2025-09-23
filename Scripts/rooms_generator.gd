@@ -56,7 +56,7 @@ func get_exits_mark_fills(room : RoomData, pos : Vector3i, rot : int) -> Array:
 		# Rotate the cell relative to cell origin (if necessary)
 		var cell_rotated := Vector3i.ZERO
 		if(cell_pos_local != cell_rotated): # If the cell pos is (0,0,0), don't rotate it
-			cell_rotated = scik.Vector3i_rotated(cell_pos_local, Vector3i.UP, 90*-rot)
+			cell_rotated = scik_utils.Vector3i_rotated(cell_pos_local, Vector3i.UP, 90*-rot)
 		var cell_pos : Vector3i = cell_rotated + pos
 		# Mark the cell as used in our world_grid (TODO: hate that this is a dict)
 		var cell_pos_as_string := vector3i_as_string(cell_pos)
@@ -66,7 +66,7 @@ func get_exits_mark_fills(room : RoomData, pos : Vector3i, rot : int) -> Array:
 		for edge_idx in cell_edges.size():
 			var offset := Vector3i(0,0,1)
 			# Determine the edge's position relative to cell origin
-			var edge_rotated := scik.Vector3i_rotated(offset, Vector3i.UP, 90*-((edge_idx+rot)%4))
+			var edge_rotated := scik_utils.Vector3i_rotated(offset, Vector3i.UP, 90*-((edge_idx+rot)%4))
 			# Get edge position on grid (currently doubling coords instead of using offset of 0.5)
 			var edge_pos : Vector3i = edge_rotated + (2*pos) + (2*cell_rotated)
 			var edge_pos_as_string := vector3i_as_string(edge_pos)
@@ -105,7 +105,7 @@ func add_room_recursive(pos : Vector3i, base_rot : int, curr_depth : int, max_de
 	var chosen_rotation : int = chosen_room_and_rotation[1] # rotation IN GRID
 	var pos_adj = pos
 	if(chosen_room.Origin != Vector3i.ZERO):
-		pos_adj = pos + scik.Vector3i_rotated(chosen_room.Origin, Vector3.UP, -90*base_rot)
+		pos_adj = pos + scik_utils.Vector3i_rotated(chosen_room.Origin, Vector3.UP, -90*base_rot)
 	# Place the chosen room
 	var exits = get_exits_mark_fills(chosen_room, pos_adj, chosen_rotation) # Place the chosen room in world_grid
 	var result_data = [] # Place the room in world_data 
@@ -124,7 +124,7 @@ func get_random_room_rot(pos : Vector3i, base_rot : int) -> Array:
 		# Adjust position in case of non-standard origin
 		var pos_adj = pos
 		if(room.Origin != Vector3i.ZERO):
-			pos_adj = pos + scik.Vector3i_rotated(room.Origin, Vector3.UP, -90*base_rot)
+			pos_adj = pos + scik_utils.Vector3i_rotated(room.Origin, Vector3.UP, -90*base_rot)
 		# Check for valid rotations of the rooms
 		var valid_rotations = get_valid_rotations(room, pos_adj, base_rot)
 		if valid_rotations.size() > 0: # If we got any valid rotations back, add them
@@ -156,7 +156,7 @@ func check_valid_room_placement(room : RoomData, pos : Vector3i, rot : int) -> b
 		var cell_pos_local = cell[0]
 		var cell_rotated_local := Vector3i.ZERO
 		if(cell_pos_local != cell_rotated_local): # If the cell pos is (0,0,0), don't rotate it
-			cell_rotated_local = scik.Vector3i_rotated(cell_pos_local, Vector3i.UP, 90*-(rot%4))
+			cell_rotated_local = scik_utils.Vector3i_rotated(cell_pos_local, Vector3i.UP, 90*-(rot%4))
 		var cell_pos_grid : Vector3i = cell_rotated_local + pos
 		# Determine the world_edge_grid offset for the edges (means we have to pass less variables)
 		var edge_grid_offset : Vector3i = (2*pos) + (2*cell_rotated_local)
@@ -177,7 +177,7 @@ func check_valid_cell_placement(cell_pos_grid : Vector3i, cell_edges : Array, ro
 		# Start by determining where the edge even is
 		var offset := Vector3i(0,0,1)
 		# Determine the edge's position relative to cell origin
-		var edge_rotated_local := scik.Vector3i_rotated(offset, Vector3i.UP, 90*-((edge_idx+rot)%4))
+		var edge_rotated_local := scik_utils.Vector3i_rotated(offset, Vector3i.UP, 90*-((edge_idx+rot)%4))
 		# Get edge position on grid (currently doubling coords instead of using offset of 0.5)
 		var edge_pos_edgegrid : Vector3i = edge_rotated_local + edge_grid_offset
 		var edge_pos_edgegrid_as_string := vector3i_as_string(edge_pos_edgegrid)

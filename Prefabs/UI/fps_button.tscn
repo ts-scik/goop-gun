@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://cqsa45gcqdm8"]
 
 [ext_resource type="Theme" uid="uid://dbc26jnuib7yq" path="res://Themes/main_theme.tres" id="1_nrump"]
-[ext_resource type="Script" uid="uid://cfpeqbahtpiu5" path="res://Scripts/fps_button.gd" id="2_vjysn"]
+[ext_resource type="Script" uid="uid://cfpeqbahtpiu5" path="res://Scripts/UI/fps_button.gd" id="2_vjysn"]
 
 [node name="FPS_Button" type="Button"]
 theme = ExtResource("1_nrump")

@@ -8,7 +8,7 @@ signal value_update(value, parameter : String)
 ## Find our ValueSlider nodes, and connect their signals
 func _ready() -> void:
 	# Handle ValueSlider nodes
-	value_sliders = scik.find_children_of_type(self, ValueSlider)
+	value_sliders = scik_utils.find_children_of_type(self, ValueSlider)
 	for slider in value_sliders: slider.value_update.connect(_on_slider_update)
 
 

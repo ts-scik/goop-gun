@@ -6,7 +6,6 @@ extends CharacterBody3D
 # Movement constants
 const JUMP_VELOCITY = 4.5
 const SPEED = 8.0
-#const SPEED = 80.0
 const GRAVITY = 9.8
 
 # Child nodes
@@ -20,6 +19,8 @@ const GRAVITY = 9.8
 var paused = false
 var health : int = 3
 var score : int = 0
+# Variables for movement
+var pml_walking : bool = false
 # Variables for foosteps
 var footstep_timer : float = 0.0
 var footstep_time_length : float = 0.5
@@ -32,20 +33,26 @@ func _enter_tree() -> void:
 
 ## Connect signals, display HUD
 func _ready() -> void:
-	if NetworkManager.peer != null and not is_multiplayer_authority(): return
-	pause_menu.value_update.connect(_on_menu_value_update)
+	# If we're using Network -- early return if not authority
+	if NetworkManager.early_return(self): return
 	
+	pause_menu.value_update.connect(_on_menu_value_update)
+	_HUD_setup()
+
+
+## Setup HUD
+# Called during _ready()
+func _HUD_setup() -> void:
 	HUD.show()
 	HUD.update_health(health)
-	HUD.get_node("SpeedContainer/Speed").player = self
+	
+	HUD.get_node("SpeedContainer/Speed").set_tracked_node(self)
 
 
 ## Handle non-physics inputs (pausing, scoreboard)
 func _input(event) -> void:
 	# If we're using Network -- early return if not authority
-	if NetworkManager.peer != null:
-		if NetworkManager.peer.get_connection_status() == 0 : return
-		if not is_multiplayer_authority(): return
+	if NetworkManager.early_return(self): return
 
 	# Pause menu
 	if event.is_action_pressed("pause"):
@@ -64,15 +71,17 @@ func _input(event) -> void:
 ## Handle player movement
 func _physics_process(delta: float) -> void:
 	# TODO: adjust this so players don't have *total* authority ??
-	if NetworkManager.peer != null:
-		if NetworkManager.peer.get_connection_status() == 0 : return
-		if not is_multiplayer_authority(): return
+	# If we're using Network -- early return if not authority
+	if NetworkManager.early_return(self): return
 	
+	# Set walking/on_ground flag
+	pml_walking = is_on_floor()
+
 	# Handle movement inputs
 	var fly_debug = false # TODO DEBUG
 	if fly_debug: # TODO DEBUG
 		fly_movement(delta)
-	elif is_on_floor():
+	elif pml_walking:
 		# walking on ground
 		PM_WalkMove(delta)
 	else:
@@ -83,7 +92,7 @@ func _physics_process(delta: float) -> void:
 	# TODO: add footstep sounds
 	var direction = get_direction()
 	if direction:
-		if(footstep_timer<=0 and is_on_floor()):
+		if(footstep_timer<=0 and pml_walking):
 			footstep_timer = footstep_time_length
 			play_footstep_sound.rpc()
 	if(footstep_timer > 0):
@@ -98,13 +107,15 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 
-## Returns player's current wishdir normalized
+## Returns player's current wishdir (normalized!)
+# TODO : combine this and wishvel below
 func get_direction() -> Vector3:
 	var input_dir = Input.get_vector("left", "right", "forward", "back")
 	var direction = (transform.basis * Vector3(input_dir.x, 0, input_dir.y).normalized())
 	return direction
 
 
+## Returns player's current wishvel -- NOT NORMALIZED
 func get_wishvel() -> Vector3:
 	var fmove := Input.get_axis("back","forward")
 	var smove := Input.get_axis("left","right")
@@ -119,11 +130,11 @@ func get_wishvel() -> Vector3:
 
 ## Applies friction to velocity
 func PM_Friction(delta : float) -> void:
-	var PM_FRICTION : float = 4.0 # Friction factor when on ground -- TODO : make const
+	var PM_FRICTION : float = 4.0 # Friction factor when on ground -- TODO : tweak this, make const
 	var PM_STOPSPEED : float = 10.0 # Friction gets multiplied by PM_STOPSPEED when we're moving slower than PM_STOPSPEED -- TODO : why??, make const
 	
 	var vec : Vector3 = velocity
-	if is_on_floor(): #pml.walking
+	if pml_walking: #pml.walking
 		vec.y = 0 # ignore slope movement
 	
 	var speed : float = vec.length()
@@ -135,7 +146,7 @@ func PM_Friction(delta : float) -> void:
 	var drop : float = 0
 	
 	# apply ground friction
-	if is_on_floor(): #??? pml.walking
+	if pml_walking: #??? pml.walking
 		var control : float
 		if(speed < PM_STOPSPEED):
 			control = PM_STOPSPEED
@@ -151,7 +162,7 @@ func PM_Friction(delta : float) -> void:
 	
 	velocity.x = velocity.x * newspeed
 	velocity.z = velocity.z * newspeed
-	velocity.y = velocity.y * newspeed # # ?????
+	velocity.y = velocity.y * newspeed # ?????
 
 
 ## Quake-style movement acceleration
@@ -200,8 +211,9 @@ func PM_CmdScale() -> float:
 # not doing this at all how quake does it
 func PM_CheckJump() -> bool:
 	# TODO : buffer jump input
-	if Input.is_action_just_pressed("jump") and is_on_floor():
+	if Input.is_action_just_pressed("jump") and pml_walking:
 	#if Input.is_action_pressed("jump"):
+		pml_walking = false # flag that we're no longer on the floor
 		velocity.y += JUMP_VELOCITY
 		#velocity.y = JUMP_VELOCITY # TODO - quake does this instead... which is better?
 		return true
@@ -213,8 +225,9 @@ func PM_CheckJump() -> bool:
 const PM_ACCELERATE : float = 10.0
 const PM_AIRACCELERATE : float = 1.0
 func PM_WalkMove(delta) -> void:
+	# Check/Perform jump
 	if PM_CheckJump():
-		#PM_AirMove(delta)
+		PM_AirMove(delta)
 		return
 
 	PM_Friction(delta)
@@ -227,7 +240,7 @@ func PM_WalkMove(delta) -> void:
 	# TODO : clamp wishspeed if crouching
 	
 	var accelerate : float
-	if !is_on_floor(): # this is really for knockback, slippery surfaces, etc
+	if !pml_walking: # this is really for knockback, slippery surfaces, etc
 		accelerate = PM_AIRACCELERATE
 	else:
 		accelerate = PM_ACCELERATE
@@ -248,7 +261,7 @@ func PM_AirMove(delta) -> void:
 	PM_Accelerate(wishdir, wishspeed, PM_AIRACCELERATE, delta)
 	
 	# gravity?? -- quake doesn't do this here TODO
-	if not is_on_floor(): velocity.y -= GRAVITY * delta
+	if not pml_walking: velocity.y -= GRAVITY * delta
 
 
 ## Randomly selects and then plays a footstep sound

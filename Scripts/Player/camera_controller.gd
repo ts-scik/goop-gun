@@ -5,8 +5,6 @@ extends Node3D
 # Written using the following godot documentation:
 # https://docs.godotengine.org/en/stable/tutorials/physics/interpolation/advanced_physics_interpolation.html
 
-# //VARIABLE ZONE// #
-
 # Child nodes
 var player_controller : PlayerController # Node that the camera will follow
 var player_camera : Camera3D # Player camera
@@ -42,9 +40,6 @@ var debug_dot : bool = false # Flag for if we want to show the red_dot
 var debug_box : bool = false # Flag for if we want to show the boundary_rect
 
 
-# //PRIMARY FUNCTION ZONE// #
-
-
 ## Get our camera + gun set up
 func _ready() -> void:
 	# Turn off automatic physics interpolation for the Camera3D
@@ -54,7 +49,7 @@ func _ready() -> void:
 	# Disable transform inheritance from parent
 	top_level = true
 	# Find the target nodes
-	player_controller = get_parent() # TODO: bad! ?
+	player_controller = get_parent() # TODO: bad!?
 	# Capture the mouse
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	# Get the player camera, and start using it
@@ -65,112 +60,111 @@ func _ready() -> void:
 	boundary_rect = get_node("GunCanvas/BoundaryRect")
 	red_dot = get_node("GunCanvas/RedDot")
 	# Update all our screen-size-related variables
-	viewport_update()
+	_viewport_update()
 
 
 ## Handles input [event]s for mouse whenever they arrive
 func _input(event: InputEvent) -> void:
-	# Early return if not multiplayer authority - clients own their cameras
-	if NetworkManager.peer != null:
-		if NetworkManager.peer.get_connection_status() == 0 : return
-		if not is_multiplayer_authority(): return
+	# If we're using Network -- early return if not authority
+	if NetworkManager.early_return(self): return
 	
-	# If the mouse is captured -> handle mouse movement
-	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and event is InputEventMouseMotion:
-		mouse_input.x += -event.screen_relative.x * mouse_sensitivity
-		mouse_input.y += -event.screen_relative.y * mouse_sensitivity
-	# Elif mouse is captured -> handle shooting
-	elif Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and aim_held and event.is_action_pressed("shoot"):
-		shoot()
-	# Elif mouse is captured -> handle aim start (or end, if toggle)
-	elif Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and event.is_action_pressed("aim"):
-		# If aim is a hold, enable aiming
-		if(!aim_toggle): aim_held = true
-		# If aim is a toggle, toggle aiming
-		else: aim_held = !aim_held
-	# Elif mouse is captured -> handle aim end (only for hold-to-aim)
-	elif Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and !aim_toggle and event.is_action_released("aim"):
-		# Disable aiming
-		aim_held = false
+	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		# Handle mouse movement
+		if event is InputEventMouseMotion:
+			mouse_input.x += -event.screen_relative.x * mouse_sensitivity
+			mouse_input.y += -event.screen_relative.y * mouse_sensitivity
+		# Handle shooting
+		elif aim_held and event.is_action_pressed("shoot"):
+			shoot()
+		# Handle aim press
+		elif event.is_action_pressed("aim"):
+			# Hold-to-aim -> enable aiming
+			if(!aim_toggle): aim_held = true
+			# Toggle-aim -> toggle aiming
+			else: aim_held = !aim_held
+		# Handle aim release (only for hold-to-aim)
+		elif !aim_toggle and event.is_action_released("aim"):
+			# Hold-to-aim -> disable aiming
+			aim_held = false
 
 
 ## Handles camera rotation / gun positioning
 func _process(delta: float) -> void:
-	# Early return if not multiplayer authority - clients own their cameras
-	if NetworkManager.peer != null:
-		if NetworkManager.peer.get_connection_status() == 0 : return
-		if not is_multiplayer_authority(): return
+	# If we're using Network -- early return if not authority
+	if NetworkManager.early_return(self): return
 	
 	# If the window has been resized, do some viewport updates
-	if(screen_size != Vector2(get_viewport().size)): viewport_update()
+	if(screen_size != Vector2(get_viewport().size)):
+		_viewport_update()
 
-	# Choose a camera update function depending on whether we're fully aimed or not
-	mouse_input_management()
+	# Handle mouse input
+	_mouse_camera_update()
 	
 	# Update the gun's position + rotation if we're aiming (has to be after player controller rotation)
-	# THIS MUST BE AFTER MOUSE_INPUT_MANAGEMENT!!
+	# THIS MUST BE AFTER MOUSE/CAMERA UPDATES!!
 	# TODO: add some kind of sway to gun as mouse moves slower/faster
-	if(aim_held and is_aiming): update_gun_local_space() #if we're aiming
-	else: manage_aiming(delta) # manage aim/de-aim/unaimed states
+	if(aim_held and is_aiming): #if we're aiming, move+rotate the gun
+		_update_gun_local_space() 
+	else: # manage aim/de-aim/unaimed states
+		manage_aiming(delta)
 	
 	# Zero out our mouse input for next frame
 	mouse_input = Vector2.ZERO
-
-
-## On the physics tick, snap our transform to the player head marker (helps with multiplayer sync)
-func _physics_process(_delta: float) -> void:
-	# Early return if not multiplayer authority - clients own their cameras
-	if NetworkManager.peer != null:
-		if NetworkManager.peer.get_connection_status() == 0 : return
-		if not is_multiplayer_authority(): return
 	
-	# Snap our global_transform to the player's head marker
-	global_transform = player_controller.camera_controller_anchor.global_transform
-
-
-# //SUB-FUNCTION ZONE// #
+	# At the end of the tick, snap our transform to the player head marker (helps with multiplayer sync)
+	# TODO : this fixed multiplayer sync, but makes the lighting go crazy
+	#global_transform = player_controller.camera_controller_anchor.global_transform
 
 
 ## Handle mouse input event on camera + gun
-func mouse_input_management() -> void:
+func _mouse_camera_update() -> void:
 	var mouse_y_locked : bool = false
 	var mouse_x_locked : bool = false
 	
-	# Handle AIMED state
+	# AIMED state
 	if(is_aiming):
 		# Update mouse position
-		var mouse_newpos = mouse_position - (mouse_input * aim_sensitivity * (screen_size.y) * 20)
-		var midpoint = screen_size/2
+		var mouse_newpos : Vector2 = mouse_position - (mouse_input * aim_sensitivity * (screen_size.y) * 20)
+		var midpoint : Vector2 = screen_size/2
 		mouse_position.x = clampf(mouse_newpos.x, midpoint.x - gun_deadzone.x, midpoint.x + gun_deadzone.x)
 		mouse_position.y = clampf(mouse_newpos.y, midpoint.y - gun_deadzone.y, midpoint.y + gun_deadzone.z)
 
 		# If the mouse is still within the bounding box on an axis, lock that axis' camera rotation
-		if(mouse_position.x == mouse_newpos.x): mouse_x_locked = true
-		if(mouse_position.y == mouse_newpos.y): mouse_y_locked = true
+		if(mouse_position.x == mouse_newpos.x):
+			mouse_x_locked = true
+		if(mouse_position.y == mouse_newpos.y):
+			mouse_y_locked = true
 		
 		# Debug - Move our debug red-dot
 		if(debug_dot): red_dot.position = mouse_position - (red_dot.size/2)
-	# Handle UNAIMED state
+	# UNAIMED state
 	else:
 		# Reset mouse position to screen center
 		mouse_position = screen_size/2
 	
 	# Rotate the camera (unless it's locked by the bounding boxes)
-	if(!mouse_x_locked): input_rotation.y += mouse_input.x * camera_sensitivity
-	if(!mouse_y_locked): input_rotation.x = clampf(input_rotation.x + (mouse_input.y * camera_sensitivity), deg_to_rad(-90), deg_to_rad(85))
+	if(!mouse_x_locked):
+		input_rotation.y += mouse_input.x * camera_sensitivity
+	if(!mouse_y_locked):
+		input_rotation.x = clampf(input_rotation.x + (mouse_input.y * camera_sensitivity), deg_to_rad(-90), deg_to_rad(85))
 	
 	# Update the player_controller rotation
-	player_controller.camera_controller_anchor.transform.basis = Basis.from_euler(Vector3(input_rotation.x, 0.0, 0.0)) # rotate camera controller (up/down)
-	player_controller.global_transform.basis = Basis.from_euler(Vector3(0.0, input_rotation.y, 0.0)) # rotate player (left/right) # rotate camera controller (up/down)
-	global_transform = player_controller.camera_controller_anchor.get_global_transform_interpolated() # move transform to player head anchor
+	# TODO -- look this over and think about it -- globals/interpolation
+	# Rotate camera controller (up/down)
+	player_controller.camera_controller_anchor.transform.basis = Basis.from_euler(Vector3(input_rotation.x, 0.0, 0.0))
+	# Rotate player controller (left/right)
+	player_controller.global_transform.basis = Basis.from_euler(Vector3(0.0, input_rotation.y, 0.0))
+	# Move transform to player head anchor
+	global_transform = player_controller.camera_controller_anchor.get_global_transform_interpolated()
 
 
 ## Animates gun in/out of aiming position
 func manage_aiming(delta) -> void:
 	# get target pos/rot
-	var player_interp = player_controller.get_global_transform_interpolated()
-	var unaimed_target_pos = to_local(player_interp.origin + (player_interp.basis * holstered_pos))
-	var unaimed_target_rot = holstered_rot - Vector3(self.rotation.x,0,0)
+	var player_interp := player_controller.get_global_transform_interpolated()
+	#var player_interp = player_controller.global_transform # TODO -- why does this get weird??
+	var unaimed_target_pos : Vector3 = to_local(player_interp.origin + (player_interp.basis * holstered_pos))
+	var unaimed_target_rot : Vector3 = holstered_rot - Vector3(self.rotation.x,0,0)
 	
 	# If we're in an aim transition,
 	if(aim_held or ads_timer > 0.0):
@@ -202,9 +196,18 @@ func manage_aiming(delta) -> void:
 		gun_controller.rotation = unaimed_target_rot
 
 
+## Updates the gun's position+rotation (for if gun exists in local space)
+func _update_gun_local_space():
+	# Update the gun's position
+	gun_controller.position = to_local(player_camera.project_position(mouse_position,gun_hold_distance))
+	# Update the gun's rotation (relative to camera)
+	var fw_dir = to_local(gun_controller.global_position) - to_local(player_camera.global_position) # vector from player camera to gun_controller
+	gun_controller.basis = Basis.looking_at(fw_dir, Vector3.UP, false)
+
+
 ## Shoots
 func shoot():
-	# Handle kick
+	# Handle mouse kick
 	kick_amount.x *= ((randi() & 2) - 1)
 	if(is_aiming): mouse_input += (kick_amount * screen_size/1000)
 	# TODO: play a kick animation on camera
@@ -213,22 +216,8 @@ func shoot():
 	gun_controller.shoot.rpc()
 
 
-## Updates the gun's position+rotation (for if gun exists in local space)
-func update_gun_local_space():
-	# Update the gun's position
-	gun_controller.position = to_local(player_camera.project_position(mouse_position,gun_hold_distance))
-	# Update the gun's rotation (relative to camera)
-# TODO: why was i interpolating this????
-	#var player_camera_interp = to_local(player_camera.get_global_transform_interpolated().origin) # get interpolated player_camera position in local space
-	#var gun_controller_interp = to_local(gun_controller.get_global_transform_interpolated().origin) # get interpolated gun_controller position in local space
-	#var fw_dir = gun_controller_interp - player_camera_interp # find vector from player camera to gun_controller (interpolated)
-# TODO : see above
-	var fw_dir = to_local(gun_controller.global_position) - to_local(player_camera.global_position) # find vector from player camera to gun_controller
-	gun_controller.basis = Basis.looking_at(fw_dir, Vector3.UP, false)
-
-
 ## Centers the gun camera, and updates the gun deadzone to match
-func viewport_update():
+func _viewport_update():
 	# Save our new screensize
 	screen_size = get_viewport().size
 	# Reset the mouse input variables

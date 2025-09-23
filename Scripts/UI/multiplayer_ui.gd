@@ -2,6 +2,7 @@ class_name MultiplayerUI
 extends CanvasLayer
 
 
+## Connect necessary signals
 func _ready():
 	# Called every time the node is added to the scene.
 	NetworkManager.connection_failed.connect(_on_connection_failed)
@@ -13,6 +14,7 @@ func _ready():
 	NetworkManager.server_lost.connect(_on_server_lost)
 	NetworkManager.game_loading.connect(_on_game_loading)
 	NetworkManager.game_left.connect(_on_game_left)
+	
 	$Connect/IPAddress.text = NetworkManager.DEFAULT_IP_ADDRESS
 	if OS.has_environment("USERNAME"):
 		$Connect/Name.text = OS.get_environment("USERNAME")
@@ -24,12 +26,15 @@ func _on_server_pressed() -> void:
 	if $Connect/Name.text == "":
 		$Connect/ErrorLabel.text = "Invalid name!"
 		return
+	
 	# Hide the Connect box
 	$Connect.hide()
 	$Connect/ErrorLabel.text = ""
+
 	# Start the Server
 	var player_name = $Connect/Name.text
 	NetworkManager.start_server(player_name) 
+
 	# Show and refresh the lobby
 	$Lobby/Start.show()
 	$Lobby.show()
@@ -42,6 +47,7 @@ func _on_client_pressed() -> void:
 	if $Connect/Name.text == "":
 		$Connect/ErrorLabel.text = "Invalid name!"
 		return
+	
 	# Verify the IP is valid
 	var ip = $Connect/IPAddress.text
 	if not ip.is_valid_ip_address():
@@ -50,13 +56,16 @@ func _on_client_pressed() -> void:
 	if not ip.is_valid_ip_address():
 		$Connect/ErrorLabel.text = "Invalid IP address!"
 		return
+	
 	# Hide the Connect box
 	$Connect/ErrorLabel.text = ""
 	$Connect/Server.disabled = true
 	$Connect/Client.disabled = true
+
 	# Start the Client
 	var player_name = $Connect/Name.text
 	NetworkManager.start_client(ip, player_name)
+
 	# Set "Connecting" state
 	$Connect/ErrorLabel.set_text("Connecting...")
 

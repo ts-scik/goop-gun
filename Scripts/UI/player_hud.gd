@@ -5,12 +5,13 @@ extends CanvasLayer
 @onready var scoreboard = get_node("Base/ScoreContainer")
 
 
+## Update the healthbar value
 func update_health(value : int):
 	healthbar.value = value
 
 
+## Update our scores
 func update_scores():
-	#TODO: this currently only updates when players open the scoreboard, not in real time
 	var player_ids = NetworkManager.players_dict.keys()
 	player_ids.sort()
 	$Base/ScoreContainer/Players/ScoreList.clear()

@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://bmwelugvb25bb"]
 
-[ext_resource type="Script" uid="uid://bb4mxtrdhdwpt" path="res://Scripts/value_slider.gd" id="1_ghutq"]
+[ext_resource type="Script" uid="uid://bb4mxtrdhdwpt" path="res://Scripts/UI/value_slider.gd" id="1_ghutq"]
 [ext_resource type="Theme" uid="uid://dbc26jnuib7yq" path="res://Themes/main_theme.tres" id="1_hklip"]
 
 [node name="ValueSlider" type="HBoxContainer"]

@@ -49,12 +49,13 @@ func _ms_barrel(_authority_pid : int) -> RigidBody3D:
 	return barrel
 
 
-##
+## Generates and returns world_data for world setup and sharing with clients
 func generate_world_data() -> Array:
 	return []
 	#return rooms_generator.generate_world_data()
-	
 
+
+## Loads in the world
 func load_world(world_data : Array):
 	#rooms_generator.load_world(world_data)
 	var geometry = load ("res://Prefabs/Level/geometry.tscn").instantiate()

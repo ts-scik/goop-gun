@@ -1,37 +1,40 @@
 class_name BaseNetworkManager
 extends Node
 
+# Multiplayer configuration
 const DEFAULT_IP_ADDRESS : String = "localhost"
 const DEFAULT_PORT : int = 47757
-
 const MAX_PEERS = 16
-var peer : ENetMultiplayerPeer = null
 var custom_port : int = -1
+var peer : ENetMultiplayerPeer = null
 
+# Channels enum
 enum {LOBBY_CHANNEL = 1, GAMEPLAY_CHANNEL = 2}
 
-# Name for my player.
+# Name for player (on this machine!!)
 var my_player_name : String
 
 # Names for remote players in id:name format.
 var players_dict : Dictionary = {}
+# Array of players who have told us that they're loaded in
 var players_loaded : Array = []
 
 # Signals to let lobby GUI know what's going on.
-signal player_list_changed()
 signal connection_failed()
 signal connection_succeeded()
-signal game_ended()
-signal game_left()
 signal game_error(what)
+signal game_ended()
+signal player_list_changed()
 signal log_update(text)
 signal server_lost()
-signal game_started()
 signal game_loading()
+signal game_left()
+# Signals for server/client loading communication
+signal game_started()
 signal all_players_loaded()
 
 
-## Connects necessary signals
+## Connects necessary signals on startup
 func _ready() -> void:
 	multiplayer.peer_connected.connect(_player_connected)
 	multiplayer.peer_disconnected.connect(_player_disconnected)
@@ -46,15 +49,15 @@ func start_server(new_player_name : String = "DefaultName") -> void:
 	my_player_name = new_player_name
 	peer = ENetMultiplayerPeer.new()
 	peer.create_server(DEFAULT_PORT)
-	multiplayer.set_multiplayer_peer(peer)
-	# Register ourselves
 	log_update.emit("Started server!")
-	# Adds self to dictionary
+	multiplayer.set_multiplayer_peer(peer)
+
+	# Register ourselves
 	players_dict[multiplayer.get_unique_id()] = {"name": new_player_name, "score": 0, "color": Color.WHITE}
 	player_list_changed.emit()
 
 
-## Starts a client
+## Starts a client, attempts connection
 func start_client(ip : String = DEFAULT_IP_ADDRESS, new_player_name : String = "DefaultName") -> void:
 	# Create our client
 	my_player_name = new_player_name
@@ -65,7 +68,7 @@ func start_client(ip : String = DEFAULT_IP_ADDRESS, new_player_name : String = "
 
 
 # Callback from SceneTree.
-## Hangles {peer_connected} signal from client with id [id]
+## Handles {peer_connected} signal from client with id [id]
 func _player_connected(id) -> void:
 	print("Connected to peer with id: ", id)
 	pass
@@ -77,16 +80,18 @@ func _player_disconnected(id) -> void:
 	# Log the player disconnecting (this occurs on ALL instances)
 	print("Lost connection to peer with id: ", id)
 	log_update.emit("peer "+players_dict[id]["name"]+" disconnected!")
+
 	# Early return if not multiplayer authority
 	if !is_multiplayer_authority(): return
-	# Check if game is in progress
+
+	# Handle player removal if game is in-progress
 	if GameManager.is_playing:
-		# If so, delete the disconnected player's player object.
 		game_error.emit("Player " + players_dict[id]["name"] + " disconnected") # emit a player-lost error
 		var path = NodePath("/root/MainScene/World/"+str(id)) # get the path to player's PlayerController
 		if(has_node(path)): get_node(path).queue_free() # delete the lost player's PlayerController
-	# Unregister the lost player.
-	_unregister_player(id) # let everyone else know what's happened
+	
+	# Unregister the lost player
+	_unregister_player(id)
 
 
 # Callback from SceneTree, only for clients (not server).
@@ -123,11 +128,20 @@ func leave_game() -> void:
 	game_left.emit()
 
 
+## Handles common cleanup for intentional / unexpected end-of-session
 func _end_of_connection_cleanup() -> void:
-	if(GameManager.is_playing): end_game() # Ends game, if it were running
-	players_dict.clear()
+	# End the game, if it was ongoing
+	if(GameManager.is_playing):
+		end_game()
+	
+	# Unload the world
 	var path = NodePath("/root/MainScene/World")
-	if(has_node(path)): get_node(path).queue_free()
+	if(has_node(path)):
+		get_node(path).queue_free()
+	
+	# Clear out our playerdata
+	players_dict.clear()
+	players_loaded.clear() # probably unnecessary
 
 
 ## Registers a player on Server, then signals the clients
@@ -137,20 +151,25 @@ func _register_player(new_player_name) -> void:
 	# Setup
 	assert(multiplayer.is_server()) # Assert -- this is a SERVER-ONLY function
 	var id = multiplayer.get_remote_sender_id() # Store the sender ID
+	
 	# Send existing gamestate data to the new client
 	_full_player_sync.rpc_id(id, players_dict, GameManager.is_playing)
+	
 	# Add the new player to dictionary
 	new_player_name = _make_playername_unique(new_player_name)
 	var new_player : Dictionary = {"name": new_player_name, "score": 0, "color": Color.WHITE}
 	players_dict[id] = new_player
+	
 	# Handle multiplayerUI
 	player_list_changed.emit()
 	log_update.emit(new_player["name"]+" connected!")
+	
 	# Sync new player data with all clients (including the new one!)
 	_single_player_sync.rpc(id,new_player) # Send the newly-added player to all clients
 	
-	# If this is a late-joiner:
-	if(GameManager.is_playing): _handle_late_joiner(id)	
+	# If this is a late-joiner, handle that:
+	if(GameManager.is_playing):
+		_handle_late_joiner(id)	
 
 
 ## Takes a [new_player_name], returns it unique-ified
@@ -173,7 +192,7 @@ func _unregister_player(id):
 	if(GameManager.is_playing):
 		players_loaded.erase(id)
 	player_list_changed.emit()
-	_single_player_remove.rpc(id)
+	_single_player_remove.rpc(id) # Let the clients know we've removed a player
 
 
 # TODO: combine this and other sync functions
@@ -196,7 +215,8 @@ func _single_player_sync(new_pid : int, new_player : Dictionary) -> void:
 	players_dict[new_pid] = new_player
 	player_list_changed.emit()
 	log_update.emit(new_player["name"]+" connected!")
-	# If we just got sent our own data, we should update our local name to match
+
+	# If we just got sent our own playerdata, we should update our local name to match
 	if new_pid == multiplayer.get_unique_id():
 		my_player_name = players_dict[multiplayer.get_unique_id()]["name"]
 
@@ -233,22 +253,28 @@ func setup_game() -> void:
 	GameManager.is_playing = false
 	game_loading.emit()
 	get_tree().set_pause(true) # Pause the game while setting up
+
 	# Spawn world -- should sync because of multiplayer synchronizer
 	var world = load("res://Prefabs/world.tscn").instantiate()
 	get_node("/root/MainScene").add_child(world)
+
 	# Signal to players that we're getting set-up
 	_server_start_setup.rpc(false)
+
 	# Generate the world (server)
 	GameManager.world_data = await world.generate_world_data()
 	await _generate_world() # actually generate the world
 	players_loaded.append(multiplayer.get_unique_id()) # mark that we've finished loading
+
 	# Generate the world (clients)
 	_receive_world_data.rpc(GameManager.world_data) # Send the worlddata to players, and ask them to generate it client-side
 	if (players_loaded.size() != players_dict.size()): # If we have peers, wait for everyone to finish loading the world in
 		await all_players_loaded
-	# Spawn everything in
+	
+	# Spawn everything in (server)
 	world.spawn_entities() # Spawn in enemies, items -- use MultiplayerSpawner to avoid weirdness
 	for pid in players_dict: world.spawn_player(pid) # Spawn in players
+	
 	# End-of-setup cleanup
 	_server_finish_setup.rpc(players_loaded) # Signal to clients that we're done setting up
 	peer.refuse_new_connections = false # Resume accepting connections
@@ -274,9 +300,11 @@ func _receive_world_data(world_data : Array) -> void:
 func _generate_world() -> void:
 	var world = get_tree().get_root().get_node("MainScene/World")
 	await world.load_world(GameManager.world_data)
+	
+	# Tell the server that we've finished our meal
 	if(!multiplayer.is_server()):
 		print("signalling load completion...")
-		_signal_loaded.rpc_id(get_multiplayer_authority()) # tell the server that we've finished our meal
+		_signal_loaded.rpc_id(get_multiplayer_authority()) 
 
 
 ## Signal from Clients to Server, signalling that they're ready to roll
@@ -285,6 +313,7 @@ func _signal_loaded() -> void:
 	assert(multiplayer.is_server())
 	var id = multiplayer.get_remote_sender_id()
 	players_loaded.append(id)
+	
 	# If all players have loaded,
 	if (players_loaded.size() == players_dict.size()):
 		print("Everyone is loaded!")
@@ -298,24 +327,27 @@ func _server_finish_setup(received_ready_players : Array) -> void:
 	start_game()
 
 
-## Starts the game
+## Starts the game (Server-only)
 func start_game() -> void:
 	GameManager.is_playing = true
 	get_tree().set_pause(false) # Unpause and unleash the game!
 	game_started.emit()
 
 
-## Handles late-joined players
+## Handles late-joined players (Server-only)
 func _handle_late_joiner(pid) -> void:
 	# Pause gameplay
 	get_tree().set_pause(true) # Pause the game while setting up
 	_server_start_setup.rpc(true) # Ask all clients to pause their game
+
 	# Send world_data
 	_receive_world_data.rpc_id(pid, GameManager.world_data) # send world data to late joiner
 	await all_players_loaded # Wait for player to finish
+
 	# Spawn in newly-joined player
 	var world = get_tree().get_root().get_node("MainScene/World")
 	world.spawn_player(pid)
+
 	# Signal to clients that we're done setting up
 	_server_finish_setup.rpc(players_loaded) # Ask all clients to unpause their game
 	get_tree().set_pause(false) # Unpause and unleash the game!
@@ -323,10 +355,26 @@ func _handle_late_joiner(pid) -> void:
 
 ## Ends the game
 func end_game() -> void:
-	if(!GameManager.is_playing): return # early return if the game isn't in session
+	# Early return if the game isn't in session
+	if(!GameManager.is_playing): 
+		return
+	
 	get_tree().paused = true # pause while we do cleanup
 	GameManager.is_playing = false # set not playing
 	players_loaded.clear() # clear the players_loaded
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	game_ended.emit()
 	get_tree().paused = false # unpause, cleanup complete
+
+
+## Takes a [node] -- returns true if the node is not it's own network authority
+func early_return(node) -> bool:
+	# Check if we're using networking
+	if NetworkManager.peer != null:
+		# return true if we have no peers
+		if NetworkManager.peer.get_connection_status() == 0 :
+			return true
+		# return true if we're not the multiplayer authority
+		if not node.is_multiplayer_authority():
+			return true
+	return false
