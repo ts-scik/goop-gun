@@ -93,6 +93,7 @@ func shoot():
 ## Handles animations
 #TODO: i hate this
 func handle_movement_anim(direction : Vector3):
+	return # TODO - temp early return
 	if(direction.x != 0 or direction.z != 0):
 		anim_tree.set("parameters/conditions/stopped", false)
 		anim_tree.set("parameters/conditions/walking", true)
