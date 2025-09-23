@@ -9,7 +9,7 @@ extends Node3D
 @export var player_controller : PlayerController # Node that the camera will follow
 
 @export_category("Effects")
-@export var enable_tilt : bool = true
+@export var enable_tilt : bool = false
 @export_group("Run Tilt")
 @export var run_pitch : float = 0.1 # Euler degrees
 @export var run_roll : float = 0.25 # Euler degrees
