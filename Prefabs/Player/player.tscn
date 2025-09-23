@@ -1,12 +1,8 @@
-[gd_scene load_steps=28 format=3 uid="uid://dpkim8cla8dii"]
+[gd_scene load_steps=10 format=3 uid="uid://dpkim8cla8dii"]
 
 [ext_resource type="Script" uid="uid://bxc5wvblob2y7" path="res://Scripts/Player/player.gd" id="1_onrkg"]
 [ext_resource type="AudioStream" uid="uid://d08nk0hl5wac7" path="res://Sounds/footsteps/boots/0.ogg" id="2_08u7w"]
-[ext_resource type="Script" uid="uid://tp34olvhc8jf" path="res://Scripts/Player/camera_controller.gd" id="2_i3pqv"]
-[ext_resource type="Script" uid="uid://clf1pp0ppnwps" path="res://Scripts/Player/gun_controller.gd" id="3_hck1p"]
-[ext_resource type="PackedScene" uid="uid://bhs0dqr47vg8p" path="res://Models/kenney_blaster-kit_2.1/blaster-b.glb" id="4_2nftw"]
-[ext_resource type="Script" uid="uid://b8b2ltlkdgkp2" path="res://Scripts/Player/gun_raycast.gd" id="4_knrd4"]
-[ext_resource type="AudioStream" uid="uid://ro6npthlf24i" path="res://Sounds/gunshots/gunshot_cg1.wav" id="5_knrd4"]
+[ext_resource type="PackedScene" uid="uid://w5yidi6yqanc" path="res://Prefabs/Player/camera_controller.tscn" id="3_you5p"]
 [ext_resource type="PackedScene" uid="uid://bdt3orm768b1" path="res://Prefabs/UI/pause_menu.tscn" id="7_4qbli"]
 [ext_resource type="PackedScene" uid="uid://cpco4jqlt1swy" path="res://Prefabs/UI/player_hud.tscn" id="8_08u7w"]
 
@@ -26,177 +22,6 @@ albedo_color = Color(0.490196, 0.490196, 1, 0.784314)
 material = SubResource("StandardMaterial3D_juxdh")
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_i2t4f"]
-
-[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_juxdh"]
-properties/0/path = NodePath(".:top_level")
-properties/0/spawn = true
-properties/0/replication_mode = 1
-properties/1/path = NodePath(".:global_position")
-properties/1/spawn = true
-properties/1/replication_mode = 1
-properties/2/path = NodePath(".:global_rotation")
-properties/2/spawn = true
-properties/2/replication_mode = 1
-properties/3/path = NodePath("GunController:position")
-properties/3/spawn = true
-properties/3/replication_mode = 1
-properties/4/path = NodePath("GunController:rotation")
-properties/4/spawn = true
-properties/4/replication_mode = 1
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_08u7w"]
-albedo_color = Color(1, 0, 0, 1)
-emission_enabled = true
-emission = Color(1, 0.5023, 0.43551, 1)
-emission_energy_multiplier = 0.1
-
-[sub_resource type="BoxMesh" id="BoxMesh_kgmex"]
-material = SubResource("StandardMaterial3D_08u7w")
-size = Vector3(0.01, 0.01, 0.1)
-
-[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_knrd4"]
-animation = &"idle"
-
-[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_hck1p"]
-animation = &"walk"
-
-[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_juxdh"]
-break_loop_at_end = true
-advance_mode = 2
-advance_condition = &"stopped"
-
-[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_4qbli"]
-advance_mode = 2
-advance_condition = &"walking"
-
-[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_08u7w"]
-advance_mode = 2
-
-[sub_resource type="AnimationNodeStateMachine" id="AnimationNodeStateMachine_kgmex"]
-states/idle/node = SubResource("AnimationNodeAnimation_knrd4")
-states/idle/position = Vector2(512, 162)
-states/walk/node = SubResource("AnimationNodeAnimation_hck1p")
-states/walk/position = Vector2(521, 68)
-transitions = ["walk", "idle", SubResource("AnimationNodeStateMachineTransition_juxdh"), "idle", "walk", SubResource("AnimationNodeStateMachineTransition_4qbli"), "Start", "idle", SubResource("AnimationNodeStateMachineTransition_08u7w")]
-
-[sub_resource type="Animation" id="Animation_knrd4"]
-length = 0.001
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("GunModel:position")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Vector3(0, -0.112, 0)]
-}
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("GunModel:rotation")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Vector3(0, 0, 0)]
-}
-
-[sub_resource type="Animation" id="Animation_4qbli"]
-resource_name = "idle"
-length = 3.0
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("GunModel:position")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0, 3),
-"transitions": PackedFloat32Array(1, 1),
-"update": 0,
-"values": [Vector3(0, -0.112, 0), Vector3(0, -0.112, 0)]
-}
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("GunModel:rotation")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0, 3),
-"transitions": PackedFloat32Array(1, 1),
-"update": 0,
-"values": [Vector3(0, 0, 0), Vector3(0, 0, 0)]
-}
-
-[sub_resource type="Animation" id="Animation_juxdh"]
-resource_name = "shoot"
-length = 0.4
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("GunModel:rotation")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.4),
-"transitions": PackedFloat32Array(0.5, 1),
-"update": 0,
-"values": [Vector3(0.349066, 0, 0), Vector3(0, 0, 0)]
-}
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("GunModel:position")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0, 0.4),
-"transitions": PackedFloat32Array(0.5, 1),
-"update": 0,
-"values": [Vector3(0, -0.04, 0), Vector3(0, -0.112, 0)]
-}
-
-[sub_resource type="Animation" id="Animation_hck1p"]
-resource_name = "walk"
-loop_mode = 1
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("GunModel:position")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.25, 0.5, 0.75),
-"transitions": PackedFloat32Array(0.5, 2, 0.5, 2),
-"update": 0,
-"values": [Vector3(0, -0.112, 0), Vector3(-0.0431727, -0.121284, 0), Vector3(0, -0.112, 0), Vector3(0.043, -0.121, 0)]
-}
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("GunModel:rotation")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0, 0.25, 0.5, 0.75),
-"transitions": PackedFloat32Array(0.5, 2, 0.5, 2),
-"update": 0,
-"values": [Vector3(0, 0, 0), Vector3(-0.0191986, 0.0523599, 0.0331613), Vector3(0, 0, 0), Vector3(-0.0191986, -0.0523599, -0.0506145)]
-}
-
-[sub_resource type="AnimationLibrary" id="AnimationLibrary_4qbli"]
-_data = {
-&"RESET": SubResource("Animation_knrd4"),
-&"idle": SubResource("Animation_4qbli"),
-&"shoot": SubResource("Animation_juxdh"),
-&"walk": SubResource("Animation_hck1p")
-}
 
 [node name="Player" type="CharacterBody3D"]
 collision_layer = 2
@@ -219,86 +44,12 @@ shape = SubResource("CapsuleShape3D_i2t4f")
 [node name="HeadPos" type="Marker3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 
-[node name="CameraController" type="Node3D" parent="."]
+[node name="CameraController" parent="." node_paths=PackedStringArray("player_controller") instance=ExtResource("3_you5p")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
-script = ExtResource("2_i3pqv")
-
-[node name="CameraControllerSynchronizer" type="MultiplayerSynchronizer" parent="CameraController"]
-replication_config = SubResource("SceneReplicationConfig_juxdh")
-
-[node name="PlayerCamera" type="Camera3D" parent="CameraController"]
-cull_mask = 1048573
-
-[node name="GunCanvas" type="CanvasLayer" parent="CameraController"]
-visible = false
-
-[node name="BoundaryRect" type="ReferenceRect" parent="CameraController/GunCanvas"]
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -20.0
-offset_top = -20.0
-offset_right = 452.5
-offset_bottom = 246.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-border_color = Color(0, 1, 0, 1)
-border_width = 5.0
-editor_only = false
-
-[node name="RedDot" type="ColorRect" parent="CameraController/GunCanvas"]
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -10.0
-offset_top = -10.0
-offset_right = -5.0
-offset_bottom = -5.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-color = Color(1, 0, 0, 1)
-
-[node name="GunController" type="Node3D" parent="CameraController"]
-transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, -1, -0.75)
-script = ExtResource("3_hck1p")
-
-[node name="GunModel" parent="CameraController/GunController" instance=ExtResource("4_2nftw")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.112, 0)
-
-[node name="sight" type="MeshInstance3D" parent="CameraController/GunController/GunModel"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.112, 0.025)
-mesh = SubResource("BoxMesh_kgmex")
-
-[node name="GunRaycast" type="RayCast3D" parent="CameraController/GunController"]
-enabled = false
-target_position = Vector3(0, 0, -200)
-collision_mask = 3
-script = ExtResource("4_knrd4")
-
-[node name="GunSound" type="AudioStreamPlayer3D" parent="CameraController/GunController"]
-stream = ExtResource("5_knrd4")
-
-[node name="GunAnimationTree" type="AnimationTree" parent="CameraController/GunController"]
-tree_root = SubResource("AnimationNodeStateMachine_kgmex")
-anim_player = NodePath("../GunAnimator")
-parameters/conditions/stopped = false
-parameters/conditions/walking = false
-
-[node name="GunAnimator" type="AnimationPlayer" parent="CameraController/GunController"]
-libraries = {
-&"": SubResource("AnimationLibrary_4qbli")
-}
+player_controller = NodePath("..")
 
 [node name="PauseMenu" parent="." instance=ExtResource("7_4qbli")]
 visible = false
 
 [node name="HUD" parent="." instance=ExtResource("8_08u7w")]
 visible = false
-
-[editable path="CameraController/GunController/GunModel"]

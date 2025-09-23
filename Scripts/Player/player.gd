@@ -3,19 +3,22 @@ extends CharacterBody3D
 ## Manages all player input + movement (except for the camera)
 
 # Movement constants
-const GRAVITY : float = 9.8
-const PM_JUMP_VELOCITY : float = 4.5 # jump velocity
-const PM_SPEED : float = 4.0 # move velocity
-const PM_ACCELERATE : float = 10.0 # Acceleration factor on ground
-const PM_AIRACCELERATE : float = 1.0 # Acceleration factor in air
-const PM_FRICTION : float = 6.0 # Friction factor when on ground TODO - tweak
-# TODO : make below dependent on speed??
-const PM_STOPSPEED : float = 1.0 # Minimum speed factor for friction calculation
+@export_category("Movement Variables")
+@export_group("Jumping")
+@export var GRAVITY : float = 9.8
+@export var PM_JUMP_VELOCITY : float = 4.5 # jump velocity
+@export_group("Movement")
+@export var PM_SPEED : float = 4.0 # move velocity
+@export var PM_ACCELERATE : float = 8.0 # Acceleration factor on ground
+@export var PM_AIRACCELERATE : float = 1.0 # Acceleration factor in air
+@export_group("Friction")
+@export var PM_FRICTION : float = 6.0 # Friction factor when on ground TODO - tweak
+@export var PM_STOPSPEED : float = 0.75 # Minimum speed factor for friction calculation
 
 # Child nodes
 @onready var camera_controller_anchor : Marker3D = $HeadPos
-@onready var gun_container = get_node("CameraController/GunController")
-@onready var player_camera_ctrlr = get_node("CameraController")
+@onready var camera_controller : CameraController= get_node("CameraController")
+@onready var gun_controller : GunController = get_node("CameraController/GunController")
 @onready var pause_menu : CanvasLayer = get_node("PauseMenu")
 @onready var HUD : CanvasLayer = get_node("HUD")
 
@@ -23,13 +26,15 @@ const PM_STOPSPEED : float = 1.0 # Minimum speed factor for friction calculation
 var paused = false
 var health : int = 3
 var score : int = 0
-
 # Variables for movement
 var was_on_floor : bool = false
 var fly_enabled : bool = false # debug for fly movement
 # Variables for foosteps
 var footstep_timer : float = 0.0
 var footstep_time_length : float = 0.5
+# Variables for gun handling
+var aim_held : bool = false # Flag for ADS input
+var aim_toggle : bool = false # Whether or not we're using toggle-aim
 
 # Variables for input buffering
 var input_action_buffer : Array[int] = [] # input buffer array (actions)
@@ -69,10 +74,26 @@ func _HUD_setup() -> void:
 	HUD.get_node("SpeedContainer/Speed").set_tracked_node(self)
 
 
-## Handle instantaneous inputs (pausing, scoreboard, jump)
+## Handle instantaneous inputs (pausing, scoreboard, jump, mouse)
 func _input(event) -> void:
 	# If we're using Network -- early return if not authority
 	if NetworkManager.early_return(self): return
+	
+	# Mouse
+	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		# Handle shooting
+		if event.is_action_pressed("shoot"):
+			buffer_input(SHOOT_INPUT, input_timers[SHOOT_INPUT])
+		# Handle aim press
+		elif event.is_action_pressed("aim"):
+			# Hold-to-aim -> enable aiming
+			if(!aim_toggle): aim_held = true
+			# Toggle-aim -> toggle aiming
+			else: aim_held = !aim_held
+		# Handle aim release (only for hold-to-aim)
+		elif !aim_toggle and event.is_action_released("aim"):
+			# Hold-to-aim -> disable aiming
+			aim_held = false
 
 	# Pause menu
 	if event.is_action_pressed("pause"):
@@ -90,11 +111,20 @@ func _input(event) -> void:
 		buffer_input(JUMP_INPUT, input_timers[JUMP_INPUT])
 
 
+## Handle buffered inputs
 func _process(delta: float) -> void:
 	# If we're using Network -- early return if not authority
 	if NetworkManager.early_return(self): return
 	
-	# Update the input buffer
+	# Try to shoot
+	var can_shoot : bool = true #TODO
+	if(can_shoot):
+		var buffered_shoot = input_buffer_retrieve(SHOOT_INPUT) # check for buffered shoot input
+		if(buffered_shoot):
+			camera_controller.camera_shoot()
+			gun_controller.shoot.rpc()
+	
+	# Update the input buffer -- do this at the *end* of the frame
 	input_buffer_update(delta)
 
 
@@ -131,7 +161,7 @@ func _physics_process(delta: float) -> void:
 	# Handle movement animation based on movement direction
 	# TODO: update so that this is the camera's responsibility (?)
 	# TODO: update so that gun animation is dependent on headbob
-	gun_container.handle_movement_anim(direction)
+	gun_controller.handle_movement_anim(direction)
 	
 	# Actually do our movement
 	move_and_slide()
@@ -257,9 +287,13 @@ func PM_FlyMove(delta) -> void:
 
 ## Takes an [action] and places it into [input_buffer] with expiry time [buffer_time]
 ## Returns false if the buffer failed
+# TODO should rework this whole input buffer thing... single array of timers, probably
+# why would we ever want to queue two of the same input?????
 func buffer_input(action : int, buffer_time : float) -> bool:
 	# Early return if we're trying to buffer a jump input, and we've already got one buffered
 	if(action == JUMP_INPUT and input_action_buffer.has(JUMP_INPUT)):
+		return false
+	if(action == SHOOT_INPUT and input_action_buffer.has(SHOOT_INPUT)):
 		return false
 	input_action_buffer.append(action)
 	input_time_buffer.append(buffer_time)
@@ -335,7 +369,6 @@ func die(shooter : String = ""):
 			self.rotation.y = chosen_spawn.global_rotation.y
 		HUD.update_health(health)
 	if(NetworkManager.players_dict.has(int(shooter))):
-		print("i am dead! killed by the evil ",shooter)
 		NetworkManager.players_dict[int(shooter)]["score"]+=1
 	HUD.update_scores()
 
@@ -363,14 +396,14 @@ func _on_menu_value_update(value, parameter : String) -> void:
 				print(new_vol)
 				AudioServer.set_bus_volume_db(AudioServer.get_bus_index("Master"),(new_vol))
 		"mouse_sense":
-			player_camera_ctrlr.mouse_sensitivity = value / 1000
+			camera_controller.mouse_sensitivity = value / 1000
 		"cam_sense":
-			player_camera_ctrlr.camera_sensitivity = value / 10
+			camera_controller.camera_sensitivity = value / 10
 		"aim_sense":
-			player_camera_ctrlr.aim_sensitivity = value / 1000
+			camera_controller.aim_sensitivity = value / 1000
 		"debug_box":
-			player_camera_ctrlr.toggle_debug(value, "box")
+			camera_controller.toggle_debug(value, "box")
 		"debug_dot":
-			player_camera_ctrlr.toggle_debug(value, "dot")
+			camera_controller.toggle_debug(value, "dot")
 		"aim_toggle":
-			player_camera_ctrlr.aim_toggle = value
+			aim_toggle = value

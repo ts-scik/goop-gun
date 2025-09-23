@@ -1,0 +1,41 @@
+[gd_scene load_steps=2 format=3 uid="uid://32skufn11hat"]
+
+[ext_resource type="Script" uid="uid://cxbfkk7ii1jim" path="res://Scripts/UI/gun_canvas.gd" id="1_dgt5d"]
+
+[node name="GunCanvas" type="CanvasLayer" node_paths=PackedStringArray("boundary_rect", "red_dot")]
+visible = false
+script = ExtResource("1_dgt5d")
+boundary_rect = NodePath("BoundaryRect")
+red_dot = NodePath("RedDot")
+
+[node name="BoundaryRect" type="ReferenceRect" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 452.5
+offset_bottom = 246.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+border_color = Color(0, 1, 0, 1)
+border_width = 5.0
+editor_only = false
+
+[node name="RedDot" type="ColorRect" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -10.0
+offset_top = -10.0
+offset_right = -5.0
+offset_bottom = -5.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 0, 0, 1)
