@@ -8,7 +8,9 @@ extends CharacterBody3D
 @export var GRAVITY : float = 9.8
 @export var PM_JUMP_VELOCITY : float = 4.5 # jump velocity
 @export_group("Movement")
-@export var PM_SPEED : float = 4.0 # move velocity
+@export var PM_WALKSPEED : float = 4.0 # move velocity
+@export var PM_RUNSPEED : float = 7.0 # run velocity
+@export var PM_CROUCHSPEED : float = 2.0 # crouch velocity
 @export var PM_ACCELERATE : float = 8.0 # Acceleration factor on ground
 @export var PM_AIRACCELERATE : float = 1.0 # Acceleration factor in air
 @export_group("Friction")
@@ -29,6 +31,8 @@ var score : int = 0
 # Variables for movement
 var was_on_floor : bool = false
 var fly_enabled : bool = false # debug for fly movement
+var is_crouching : bool = false
+var is_running : bool = false
 # Variables for foosteps
 var footstep_timer : float = 0.0
 var footstep_time_length : float = 0.5
@@ -37,12 +41,11 @@ var aim_held : bool = false # Flag for ADS input
 var aim_toggle : bool = false # Whether or not we're using toggle-aim
 
 # Variables for input buffering
-var input_action_buffer : Array[int] = [] # input buffer array (actions)
-var input_time_buffer : Array[float] = [] # input buffer array (timers)
+var input_buffer : Array[float] = []
 # Enum for bufferable inputs
 enum {
-	JUMP_INPUT = 1,
-	SHOOT_INPUT = 2
+	JUMP_INPUT = 0,
+	SHOOT_INPUT = 1
 }
 # Dictionary reference for how long to buffer any given bufferable input type
 const input_timers : Dictionary = {
@@ -60,6 +63,10 @@ func _enter_tree() -> void:
 func _ready() -> void:
 	# If we're using Network -- early return if not authority
 	if NetworkManager.early_return(self): return
+	
+	# Input buffer Setup
+	input_buffer.resize(input_timers.size())
+	input_buffer.fill(0.0)
 	
 	# UI Setup
 	pause_menu.value_update.connect(_on_menu_value_update)
@@ -83,7 +90,7 @@ func _input(event) -> void:
 	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		# Handle shooting
 		if event.is_action_pressed("shoot"):
-			buffer_input(SHOOT_INPUT, input_timers[SHOOT_INPUT])
+			buffer_input(SHOOT_INPUT)
 		# Handle aim press
 		elif event.is_action_pressed("aim"):
 			# Hold-to-aim -> enable aiming
@@ -94,6 +101,9 @@ func _input(event) -> void:
 		elif !aim_toggle and event.is_action_released("aim"):
 			# Hold-to-aim -> disable aiming
 			aim_held = false
+
+	# Crouching/running
+	# TODO !!
 
 	# Pause menu
 	if event.is_action_pressed("pause"):
@@ -108,7 +118,7 @@ func _input(event) -> void:
 	elif event.is_action_pressed("kill"):
 		die.rpc()
 	elif event.is_action_pressed("jump"):
-		buffer_input(JUMP_INPUT, input_timers[JUMP_INPUT])
+		buffer_input(JUMP_INPUT)
 
 
 ## Handle buffered inputs
@@ -118,6 +128,7 @@ func _process(delta: float) -> void:
 	
 	# Try to shoot
 	var can_shoot : bool = true #TODO
+	can_shoot = aim_held # TODO
 	if(can_shoot):
 		var buffered_shoot = input_buffer_retrieve(SHOOT_INPUT) # check for buffered shoot input
 		if(buffered_shoot):
@@ -148,20 +159,8 @@ func _physics_process(delta: float) -> void:
 		# airborne
 		PM_AirMove(delta)
 	
-	# TODO: keep track of movement to initiate a headbob animation
-	# TODO: add footstep sounds
-	var direction = PM_Wishdir()
-	if direction:
-		if(footstep_timer<=0 and was_on_floor):
-			footstep_timer = footstep_time_length
-			play_footstep_sound.rpc()
-	if(footstep_timer > 0):
-		footstep_timer -= delta
-	
-	# Handle movement animation based on movement direction
-	# TODO: update so that this is the camera's responsibility (?)
-	# TODO: update so that gun animation is dependent on headbob
-	gun_controller.handle_movement_anim(direction)
+	# Foostep management
+	_handle_footsteps(delta)
 	
 	# Actually do our movement
 	move_and_slide()
@@ -183,7 +182,7 @@ func PM_Friction(delta : float) -> void:
 		vec.y = 0 # ignore slope movement
 	
 	var speed : float = vec.length()
-	var minspeed : float = PM_SPEED / 10.0
+	var minspeed : float = PM_CROUCHSPEED / 10.0
 	if speed < minspeed: # if we're moving <10% of PM_SPEED, just stop moving and early return
 		velocity.x = 0
 		velocity.z = 0
@@ -197,7 +196,6 @@ func PM_Friction(delta : float) -> void:
 
 	# scale the velocity
 	var newspeed : float = max(speed - drop, 0) / speed
-	
 	velocity = (velocity * newspeed)
 
 
@@ -219,8 +217,18 @@ func PM_InputScale() -> float:
 	var maxmove : float = max( abs( forwardmove ), abs( rightmove ) )
 	if ( !maxmove ):
 		return 0
-
-	return PM_SPEED * maxmove
+	
+	# Crouchrunning
+	if(is_running and is_crouching):
+		return (PM_RUNSPEED / PM_CROUCHSPEED) * maxmove # TODO - jank?
+	# Running
+	if(is_running):
+		return PM_RUNSPEED * maxmove
+	# Crouching
+	if(is_crouching):
+		return PM_CROUCHSPEED * maxmove
+	# Walking
+	return PM_WALKSPEED * maxmove
 
 
 ## Jumping
@@ -234,7 +242,6 @@ func PM_CheckJump() -> bool:
 		velocity.y += PM_JUMP_VELOCITY # add jump velocity
 		#velocity.y = PM_JUMP_VELOCITY # TODO - quake does this instead... which is better?
 		return true
-	
 	return false
 
 
@@ -248,8 +255,6 @@ func PM_WalkMove(delta) -> void:
 	PM_Friction(delta)
 	var wishdir : Vector3 = PM_Wishdir()
 	var wishspeed := wishdir.length() * PM_InputScale()
-
-	# TODO : clamp wishspeed if crouching
 	
 	var accelerate : float
 	if !was_on_floor: # this is really for knockback, slippery surfaces, etc
@@ -285,47 +290,75 @@ func PM_FlyMove(delta) -> void:
 		velocity.y = -delta*flyspeed
 
 
-## Takes an [action] and places it into [input_buffer] with expiry time [buffer_time]
-## Returns false if the buffer failed
-# TODO should rework this whole input buffer thing... single array of timers, probably
-# why would we ever want to queue two of the same input?????
-func buffer_input(action : int, buffer_time : float) -> bool:
-	# Early return if we're trying to buffer a jump input, and we've already got one buffered
-	if(action == JUMP_INPUT and input_action_buffer.has(JUMP_INPUT)):
+## Takes an [action] and attempts to buffer it
+## Returns [true] on successful buffer, [false] on buffer fail
+func buffer_input(action_idx : int) -> bool:
+	# Assert to avoid index OOB
+	assert(input_buffer.get(action_idx) != null)
+	# Action is already buffered
+	if(input_buffer[action_idx] > 0.0):
 		return false
-	if(action == SHOOT_INPUT and input_action_buffer.has(SHOOT_INPUT)):
-		return false
-	input_action_buffer.append(action)
-	input_time_buffer.append(buffer_time)
-	return true
+	# Action is unbuffered
+	else:
+		input_buffer[action_idx] = input_timers[action_idx]
+		return true
 
 
-## Updates the input buffer, removing any expired inputs
-func input_buffer_update(delta : float) -> void:
-	assert(input_action_buffer.size() == input_time_buffer.size()) # assert for buffer parity
+## Updates the input buffer, zeroing out any expired inputs
+func input_buffer_update(delta : float) -> Array[int]:
 	var pop_array : Array[int] = []
-	# Iterate over the time buffer, decrease the timers, and mark expired inputs for removal
-	for idx in input_time_buffer.size():
-		input_time_buffer[idx] -= delta
-		if(input_time_buffer[idx] <= 0.0):
+	for idx in input_buffer.size():
+		input_buffer[idx] -= delta
+		if(input_buffer[idx] <= 0.0):
+			input_buffer[idx] = 0.0
 			pop_array.append(idx)
+	return pop_array
+
+
+## If we have [action] buffered, return {true}. Else, return {false}.
+func input_buffer_check(action_idx : int) -> bool:
+	# Assert to avoid index OOB
+	assert(input_buffer.get(action_idx) != null)
 	
-	# Remove any expired inputs
-	for idx in pop_array:
-		input_time_buffer.remove_at(idx)
-		input_action_buffer.remove_at(idx)
-
-
-## If we have an instance of [action] buffered, pop the oldest instance, and return true
-## If we don't have [action] buffered, return false
-func input_buffer_retrieve(action : int) -> bool:
-	assert(input_action_buffer.size() == input_time_buffer.size()) # assert for buffer parity
-	for idx in input_action_buffer.size():
-		if input_action_buffer[idx] == action:
-			input_action_buffer.remove_at(idx)
-			input_time_buffer.remove_at(idx)
-			return true
+	# If action is buffered, return true
+	if(input_buffer[action_idx] > 0.0):
+		return true
 	return false
+
+
+## If we have [action] buffered, zero it and return {true}
+## Else, return {false}
+func input_buffer_retrieve(action_idx : int) -> bool:
+	# Assert to avoid index OOB
+	assert(input_buffer.get(action_idx) != null)
+	
+	# If action is buffered, zero it and return true
+	if (input_buffer[action_idx] > 0.0):
+		input_buffer[action_idx] = 0.0
+		return true
+	return false
+
+
+## Handles footstep sounds, viewbob
+func _handle_footsteps(delta) -> void:
+	var direction : Vector3 = PM_Wishdir()
+	
+	# On-ground footstep update
+	if(was_on_floor):
+		# TODO: keep track of movement to initiate a headbob animation
+		if direction:
+			if(footstep_timer <= 0):
+				footstep_timer = footstep_time_length
+				play_footstep_sound.rpc()
+	
+	# Update footstep timer
+	if(footstep_timer > 0.0):
+		footstep_timer = max(footstep_timer - delta, 0.0)
+	
+	# Handle movement animation based on movement direction
+	# TODO: update so that this is the camera's responsibility (?)
+	# TODO: update so that gun animation is dependent on headbob
+	gun_controller.handle_movement_anim(direction)
 
 
 ## Randomly selects and then plays a footstep sound
@@ -339,6 +372,8 @@ func play_footstep_sound() -> void:
 
 
 ## Take damage when hit
+# TODO - we should be able to shoot ourselves, and take damage from enemies
+# TODO - we should get as parameter where the shot came from (as a vector)
 @rpc("any_peer","reliable") # Any peer can tell us we've been shot
 func receive_damage(dmg : int = 1, shooter : String = ""):
 	print("ack!! i, ", multiplayer.get_unique_id(),", was shot by ", NetworkManager.players_dict[int(shooter)]["name"] + "\t" + shooter)
@@ -349,6 +384,7 @@ func receive_damage(dmg : int = 1, shooter : String = ""):
 
 
 ## Die if out of health
+# TODO TODO: is borken
 # TODO: we should tell the server we've died, and ask it to handle the respawning
 # TODO: add some kind of death animation / respawn time
 # TODO: add better respawn logic
@@ -385,6 +421,7 @@ func _on_menu_key() -> void:
 
 
 ## Handle main menu value updates
+# TODO - hate that this is here
 func _on_menu_value_update(value, parameter : String) -> void:
 	match(parameter):
 		"master_vol":

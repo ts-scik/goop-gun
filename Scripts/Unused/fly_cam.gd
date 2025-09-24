@@ -19,7 +19,6 @@ func _physics_process(delta: float) -> void:
 
 	var camera_sensitivity = 0.0005
 	input_rotation.y += mouse_input.x * camera_sensitivity
-	#input_rotation.x += mouse_input.y * camera_sensitivity
 	input_rotation.x = clampf(input_rotation.x + (mouse_input.y * camera_sensitivity), deg_to_rad(-90), deg_to_rad(85))
 	self.basis = Basis.from_euler(Vector3(input_rotation.x, input_rotation.y, 0.0)) # rotate camera controller (up/down)input_rotation
 	mouse_input = Vector2.ZERO
