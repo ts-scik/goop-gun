@@ -82,7 +82,6 @@ func _process(delta: float) -> void:
 	if(screen_size != Vector2(get_viewport().size)):
 		_viewport_update()
 
-
 	# Handle mouse input
 	var target_transform : Transform3D = _mouse_camera_update()
 	
@@ -92,7 +91,6 @@ func _process(delta: float) -> void:
 	var target_rotation = target_transform.basis.get_euler()
 	global_transform = target_transform
 	rotation = target_rotation + offset_rotation
-	
 	
 	# Update the gun's position + rotation - THIS MUST BE AFTER MOUSE/CAMERA UPDATES!!
 	# TODO: add some kind of sway to gun as mouse moves slower/faster
