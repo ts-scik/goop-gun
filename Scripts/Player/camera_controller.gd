@@ -17,9 +17,9 @@ extends Node3D
 @export var max_pitch : float = 1.0 # Euler degrees
 @export var max_roll : float = 2.5 # Euler degrees
 @export_group("Gun Kick")
-@export var kick_amount = Vector2(0.1,0.5) # Cursor's x/y screen kick amount
+@export var kick_amount = Vector2(0.1,0.1) # Cursor's x/y screen kick amount
 @export_group("Aim FOV")
-@export var aimed_fov_percent : float = 0.8
+@export var aimed_fov_percent : float = 0.9
 
 var desired_fov : float = 75.0 # TODO - this should be player-configurable
 # Child nodes
@@ -180,6 +180,8 @@ func _calculate_view_offset(delta) -> Vector3:
 ## Shoots
 func camera_shoot():
 	# Handle mouse kick
+	# TODO - make it so that this doesn't cause horizontal rotation, and minimize vertical camera rotation
+	# TODO - make this a lerp rather than an instantaneous snap
 	var kick_store = kick_amount
 	kick_store.x *= ((randi() & 2) - 1)
 	if(gun_controller.is_aiming):

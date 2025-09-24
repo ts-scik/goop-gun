@@ -29,10 +29,11 @@ var paused = false
 var health : int = 3
 var score : int = 0
 # Variables for movement
-var was_on_floor : bool = false
+var was_on_floor : bool = false # Whether we were on floor at start of frame
 var fly_enabled : bool = false # debug for fly movement
-var is_crouching : bool = false
-var is_running : bool = false
+var is_crouching : bool = false # Flag for crouching
+var is_running : bool = false # Flag for running
+var crouch_toggle : bool = false # Whether we're using toggle-crouch
 # Variables for foosteps
 var footstep_timer : float = 0.0
 var footstep_time_length : float = 0.5
@@ -447,3 +448,5 @@ func _on_menu_value_update(value, parameter : String) -> void:
 			camera_controller.toggle_debug(value, "dot")
 		"aim_toggle":
 			aim_toggle = value
+		"crouch_toggle":
+			crouch_toggle = value
