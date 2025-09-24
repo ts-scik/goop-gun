@@ -30,6 +30,7 @@ replication_config = SubResource("SceneReplicationConfig_dtqie")
 [node name="GunController" parent="." node_paths=PackedStringArray("camera_controller") instance=ExtResource("2_7w2as")]
 transform = Transform3D(1, 0, 0, 0, 1.0000002, 0, 0, 0, 1.0000002, 0, 0, -0.75)
 camera_controller = NodePath("..")
+ads_time = null
 
 [node name="PlayerCamera" type="Camera3D" parent="."]
 cull_mask = 1048573

@@ -5,6 +5,7 @@ const BULLET_DECAL = preload("res://Prefabs/Player/bullet_decal.tscn")
 
 
 ## Shoots the raycast
+# TODO - update this (currently can only shoot other clients)
 func shoot():
 	force_raycast_update()
 	if is_colliding():
@@ -24,6 +25,7 @@ func shoot():
 
 
 ## Applies bullet decal
+# TODO - look this over
 func _bullet_decal(pos:Vector3, normal:Vector3) -> void:
 	var decal : Node3D = BULLET_DECAL.instantiate()
 	get_tree().current_scene.add_child(decal)

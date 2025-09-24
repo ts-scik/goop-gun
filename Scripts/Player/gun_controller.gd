@@ -60,7 +60,7 @@ func _manage_gun_unaimed(delta) -> void:
 			last_aimed_target_rot = Vector3.ZERO
 		# If we're trying to de-aim
 		elif(!aim_held):
-			ads_timer = clampf(ads_timer, 0.0, ads_timer-delta) # update the aim timer
+			ads_timer = max(ads_timer-delta, 0.0) # update the aim timer
 			if(is_aiming): # update is_aiming, last_aimed stuff
 				is_aiming = false
 				is_aiming_update.emit(is_aiming)
