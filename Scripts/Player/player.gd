@@ -61,6 +61,9 @@ func _ready() -> void:
 	# If we're using Network -- early return if not authority
 	if NetworkManager.early_return(self): return
 	
+	# Store ourselves in the gamemanager
+	GameManager.local_player = self
+	
 	# UI Setup
 	pause_menu.value_update.connect(_on_menu_value_update)
 	_HUD_setup()

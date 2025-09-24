@@ -10,12 +10,18 @@ extends Node3D
 
 @export_category("Effects")
 @export var enable_tilt : bool = false
+@export var enable_aim_zoom : bool = true
 @export_group("Run Tilt")
 @export var run_pitch : float = 0.1 # Euler degrees
 @export var run_roll : float = 0.25 # Euler degrees
 @export var max_pitch : float = 1.0 # Euler degrees
 @export var max_roll : float = 2.5 # Euler degrees
+@export_group("Gun Kick")
+@export var kick_amount = Vector2(0.1,0.5) # Cursor's x/y screen kick amount
+@export_group("Aim FOV")
+@export var aimed_fov_percent : float = 0.8
 
+var desired_fov : float = 75.0 # TODO - this should be player-configurable
 # Child nodes
 var player_camera : Camera3D # Player camera
 var gun_controller : Node3D # Gun's container
@@ -24,7 +30,6 @@ var mouse_sensitivity : float = 0.005 # Mouse overall sensitivitiy
 var camera_sensitivity : float = 0.5 # Mouse camera sensitivity
 var aim_sensitivity : float = 0.005 # Mouse aim sensitivity
 # Mouse input variables
-var is_aiming : bool
 var mouse_input : Vector2 # Stores mouse input each frame
 var input_rotation : Vector3 # Stores mouse_input converted to rotation
 # Gun deadzone variables
@@ -32,8 +37,6 @@ var mouse_position : Vector2 = Vector2.ZERO # Mouse cursor's position onscreen
 var mouse_deadzone : Vector3 = Vector3(0.15, 0.65, 0.35) # Mouse deadzone (in screen %) (x, yTop, yBottom)
 var screen_size : Vector2 # Size of screen (in pixels)
 var gun_deadzone : Vector3 # Gun's deadzone size (in pixels)
-# Gun aiming variables
-var kick_amount = Vector2(0.1,0.5) # Cursor's x/y screen kick amount
 # Debug stuff
 var guncanvas : GunCanvas # Node for mouse_position debug display
 var debug_dot : bool = false # Flag for if we want to show the red_dot
@@ -86,9 +89,12 @@ func _process(delta: float) -> void:
 	var target_transform : Transform3D = _mouse_camera_update()
 	
 	# Handle camera effects
+	var target_fov : float = _determine_zoom_fov()
 	var offset_rotation : Vector3 = _calculate_view_offset(delta)
-	
 	var target_rotation = target_transform.basis.get_euler()
+	
+	# Update camera
+	player_camera.fov = target_fov
 	global_transform = target_transform
 	rotation = target_rotation + offset_rotation
 	
@@ -106,7 +112,7 @@ func _mouse_camera_update() -> Transform3D:
 	var mouse_x_locked : bool = false
 	
 	# AIMED state
-	if(is_aiming):
+	if(gun_controller.is_aiming):
 		# Update mouse position
 		var mouse_newpos : Vector2 = mouse_position - (mouse_input * aim_sensitivity * (screen_size.y) * 20)
 		var midpoint : Vector2 = screen_size/2
@@ -142,6 +148,13 @@ func _mouse_camera_update() -> Transform3D:
 	return player_controller.camera_controller_anchor.get_global_transform_interpolated()
 
 
+## Determines how zoom-in the fov should be, given the current gun_controller ads_ratio
+func _determine_zoom_fov() -> float:
+	if not enable_aim_zoom or gun_controller.ads_ratio() <= 0.0:
+		return desired_fov
+	return lerpf(desired_fov, desired_fov * aimed_fov_percent, gun_controller.ads_ratio())
+
+
 ## Returns offset angle based on camera effects
 func _calculate_view_offset(delta) -> Vector3:
 	var velocity = player_controller.velocity
@@ -169,7 +182,7 @@ func camera_shoot():
 	# Handle mouse kick
 	var kick_store = kick_amount
 	kick_store.x *= ((randi() & 2) - 1)
-	if(is_aiming):
+	if(gun_controller.is_aiming):
 		mouse_input += (kick_store * screen_size/1000)
 
 
@@ -193,11 +206,10 @@ func _viewport_update():
 
 ## Handle update to is_aiming state
 func _on_is_aiming_update(n_is_aiming : bool):
-	is_aiming = n_is_aiming
 	# Debug - update our debug red-dot color
-	if(debug_dot and is_aiming):
+	if(debug_dot and n_is_aiming):
 		guncanvas.update_dot_color(Color.RED)
-	if(debug_dot and !is_aiming):
+	if(debug_dot and !n_is_aiming):
 		guncanvas.update_dot_pos(screen_size/2)
 		guncanvas.update_dot_color(Color.BLUE)
 

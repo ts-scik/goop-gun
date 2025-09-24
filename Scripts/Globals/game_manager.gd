@@ -5,6 +5,7 @@ extends Node
 var is_playing = false
 var world_data : Array
 var max_room_depth = 5
+var local_player : PlayerController = null
 
 # Volume variables
 var volume_curve : Curve

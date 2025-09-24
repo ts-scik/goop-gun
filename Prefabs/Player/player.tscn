@@ -47,6 +47,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 [node name="CameraController" parent="." node_paths=PackedStringArray("player_controller") instance=ExtResource("3_you5p")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 player_controller = NodePath("..")
+enable_tilt = null
+run_pitch = null
+run_roll = null
+max_pitch = null
+max_roll = null
 
 [node name="PauseMenu" parent="." instance=ExtResource("7_4qbli")]
 visible = false
