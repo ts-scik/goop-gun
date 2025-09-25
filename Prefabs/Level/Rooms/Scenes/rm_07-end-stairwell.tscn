@@ -8,9 +8,10 @@ albedo_color = Color(1, 0, 0, 1)
 [sub_resource type="BoxMesh" id="BoxMesh_nrgi7"]
 material = SubResource("StandardMaterial3D_vbawm")
 
-[node name="Rm07SEndStairwell" type="Node3D" node_paths=PackedStringArray("PlayerSpawns")]
+[node name="Rm07SEndStairwell" type="Node3D" node_paths=PackedStringArray("PlayerSpawns", "BarrelSpawns")]
 script = ExtResource("1_h16g4")
 PlayerSpawns = [NodePath("PlayerSpawns/PlayerSpawn")]
+BarrelSpawns = [NodePath("BarrelSpawns/BarrelSpawn")]
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.099999964, 0, 0, 0, 1, 0, 2.95, -7)
@@ -92,3 +93,8 @@ size = Vector3(4, 1, 9)
 [node name="PlayerSpawns" type="Node3D" parent="."]
 
 [node name="PlayerSpawn" type="Marker3D" parent="PlayerSpawns"]
+
+[node name="BarrelSpawns" type="Node3D" parent="."]
+
+[node name="BarrelSpawn" type="Marker3D" parent="BarrelSpawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.25, 10, 2.5)

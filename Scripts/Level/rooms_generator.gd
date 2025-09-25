@@ -8,16 +8,20 @@ enum {BLANK_MARK = 0, EXIT_MARK = 1, WALL_MARK = 2}
 var player_spawn_positions : Array[Marker3D] # Stores global_position variables of spawn locations
 var barrel_spawn_positions : Array[Marker3D] # Stores global_position variables of spawn locations
 
+var main_room : RoomData
+var dead_end : RoomData
+
 
 ## Generates world data
 func generate_world_data() -> Array:
 	print("starting world data generation...")
 	# TODO: move this
 	# Populate an array with our possible rooms + their data
-	var room_names = ["rm_01","rm_02","rm_03","rm_04","rm_05","rm_06","rm_07","rm_08"]
+	var room_names = ["rm_01","rm_02","rm_03","rm_04","rm_05","rm_06","rm_07"]
 	for n in room_names:
 		rooms.append(load("res://Prefabs/Level/Rooms/Resources/"+n+".tres"))
-	var main_room = rooms[7]
+	main_room = load("res://Prefabs/Level/Rooms/Resources/"+"rm_08"+".tres")
+	dead_end = rooms[5-1]
 	
 	# Set up our world data storage
 	var world_data = []
@@ -99,7 +103,7 @@ func add_room_recursive(pos : Vector3i, base_rot : int, curr_depth : int, max_de
 		return []
 	if (curr_depth > max_depth): return [] # Early return if we're past max recursion/path depth
 	# Get a random valid room + valid rotation of that room
-	var chosen_room_and_rotation = get_random_room_rot(pos, base_rot)
+	var chosen_room_and_rotation = get_random_room_rot(pos, base_rot, float(curr_depth)/float(max_depth))
 	if(chosen_room_and_rotation.is_empty()): return [] # Early return if there weren't any legal rooms
 	var chosen_room : RoomData = chosen_room_and_rotation[0]
 	var chosen_rotation : int = chosen_room_and_rotation[1] # rotation IN GRID
@@ -117,7 +121,7 @@ func add_room_recursive(pos : Vector3i, base_rot : int, curr_depth : int, max_de
 
 
 ## Returns a randomly selected valid room+rotation at [pos] with start rotation [base_rot]
-func get_random_room_rot(pos : Vector3i, base_rot : int) -> Array:
+func get_random_room_rot(pos : Vector3i, base_rot : int, depth_ratio : float) -> Array:
 	var valid_room_rots : Array = []
 	# Check all rooms
 	for room in rooms:
@@ -130,9 +134,34 @@ func get_random_room_rot(pos : Vector3i, base_rot : int) -> Array:
 		if valid_rotations.size() > 0: # If we got any valid rotations back, add them
 			valid_room_rots.append([room, valid_rotations])
 	if(valid_room_rots.is_empty()): return [] # Early return if no rooms can be added
+	
+	# If there are multiple room options, find the dead-end room and store its index
+	# (since dead_end only has one rotation, it can only appear once in the list)
+	# (TODO - this is a very stupid way of doing this)
+	var dead_end_idx = -1
+	if(valid_room_rots.size() > 1):
+		# iterate over valid_room_rots, looking for dead_end_idx
+		for room_rot_idx in valid_room_rots.size()-1:
+			if(valid_room_rots[room_rot_idx][0].Name == dead_end.Name):
+				# if we found the dead end room, save it, and bail out
+				dead_end_idx = room_rot_idx # save the idx
+				room_rot_idx = valid_room_rots.size() # end the loop
+		# if we haven't yet hit max depth, pull the dead_end out of our options set
+		if(depth_ratio < 1.0 and dead_end_idx >= 0):
+			# if we found a dead_end, remove it
+			valid_room_rots.remove_at(dead_end_idx)
+	
+	
+	var chosen_room_rot : Array
+	# if we're at max depth, and we found a dead_end room, just choose that
+	if (dead_end_idx >= 0 and depth_ratio >= 1.0):
+		chosen_room_rot = valid_room_rots[dead_end_idx]
+	# otherwise,
 	# Randomly select from available rooms+rotations
 	# TODO - rooms should have some weight factor for their being chosen
-	var chosen_room_rot = valid_room_rots[randi_range(0,valid_room_rots.size()-1)]
+	else:
+		chosen_room_rot = valid_room_rots[randi_range(0,valid_room_rots.size()-1)]
+	
 	var chosen_room : RoomData = chosen_room_rot[0]
 	var chosen_rot : int = chosen_room_rot[1][randi_range(0,chosen_room_rot[1].size()-1)]
 	return [chosen_room, chosen_rot]
@@ -215,14 +244,22 @@ func grid_to_world(pos : Vector3i) -> Vector3:
 
 ## Loads in gameworld
 func load_world(world_data : Array) -> void:
+	var loaded_rooms : Dictionary = {}
 	print("starting world load...")
 	for room_data in world_data:
 		# Parse the room data
 		var room_name : String = room_data[0]
 		var pos : Vector3i = room_data[1]
 		var rot : int = room_data[2]
+		# Load and cache the room (or load it from cache)
+		var room_res : Resource
+		if loaded_rooms.has(room_name):
+			room_res = loaded_rooms[room_name]
+		else:
+			room_res = load("res://Prefabs/Level/Rooms/Scenes/"+room_name+".tscn")
+			loaded_rooms[room_name] = room_res
 		# Spawn the room
-		var room_node : ModularRoom = load("res://Prefabs/Level/Rooms/Scenes/"+room_name+".tscn").instantiate()
+		var room_node : Node = room_res.instantiate()
 		self.add_child(room_node)
 		# Place the room
 		room_node.global_position = grid_to_world(pos)

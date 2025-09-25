@@ -16,7 +16,7 @@ extends Node3D
 @export var max_pitch : float = 1.0 # Euler degrees
 @export var max_roll : float = 2.5 # Euler degrees
 @export_group("Gun Kick")
-@export var kick_amount = Vector2(0.1,0.1) # Cursor's x/y screen kick amount
+@export var kick_amount = Vector2(0.1,0.2) # Cursor's x/y screen kick amount
 @export_group("Aim FOV")
 @export var enable_aim_zoom : bool = true
 @export var aimed_fov_percent : float = 0.9
@@ -216,7 +216,7 @@ func camera_shoot():
 	var kick_store = kick_amount
 	kick_store.x *= ((randi() & 2) - 1)
 	if(qck.is_aiming):
-		mouse_input += (kick_store * screen_size/1000)
+		mouse_input += kick_store # TODO scale with screen size
 
 
 ## Centers the gun camera, and updates the gun deadzone to match

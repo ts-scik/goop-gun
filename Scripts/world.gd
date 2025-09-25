@@ -5,6 +5,8 @@ extends Node3D
 @export var player_spawner : MultiplayerSpawner # player MultiplayerSpawner node
 @export var barrel_spawner : MultiplayerSpawner
 
+var player_spawn_positions : Array
+
 var rooms_generator : RoomsGenerator
 
 ## Store all the spawn positions
@@ -17,7 +19,6 @@ func _ready()-> void:
 ## Function for spawning in a player with given pid
 func spawn_player(authority_pid : int) -> void:
 	var player : PlayerController = player_spawner.spawn(authority_pid)
-	var player_spawn_positions = rooms_generator.player_spawn_positions
 	if player_spawn_positions.is_empty():
 		player.position = Vector3.ZERO
 		return
@@ -28,12 +29,16 @@ func spawn_player(authority_pid : int) -> void:
 
 ## Function for spawning in relevant entities
 func spawn_entities() -> void:
-	var barrel : RigidBody3D = barrel_spawner.spawn(1)
 	var barrel_spawn_positions = rooms_generator.barrel_spawn_positions
 	if barrel_spawn_positions.is_empty():
+		var barrel : RigidBody3D = barrel_spawner.spawn(1)
 		barrel.global_position = Vector3.ZERO + (Vector3.FORWARD * 3)
 		return
-	barrel.global_position = barrel_spawn_positions[randi_range(0,barrel_spawn_positions.size()-1)].global_position
+	else:
+		for barrel_spawn_pos in barrel_spawn_positions:
+			var barrel : RigidBody3D = barrel_spawner.spawn(1)
+			var chosen_pos = barrel_spawn_pos.global_position
+			barrel.global_position = chosen_pos
 
 
 ## Custom spawn function override for PlayerSpawner
@@ -51,12 +56,13 @@ func _ms_barrel(_authority_pid : int) -> RigidBody3D:
 
 ## Generates and returns world_data for world setup and sharing with clients
 func generate_world_data() -> Array:
-	return []
-	#return rooms_generator.generate_world_data()
+	#return []
+	return rooms_generator.generate_world_data()
 
 
 ## Loads in the world
-func load_world(world_data : Array):
-	#rooms_generator.load_world(world_data)
-	var geometry = load ("res://Prefabs/Level/geometry.tscn").instantiate()
-	add_child(geometry)
+func load_world(world_data : Array) -> void:
+	rooms_generator.load_world(world_data)
+	player_spawn_positions = rooms_generator.player_spawn_positions
+	#var geometry = load ("res://Prefabs/Level/geometry.tscn").instantiate()
+	#add_child(geometry)

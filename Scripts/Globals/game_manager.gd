@@ -4,7 +4,7 @@ extends Node
 # Game state variables
 var is_playing = false
 var world_data : Array
-var max_room_depth = 5
+var max_room_depth = 3
 var local_player : PlayerController = null
 
 # Volume variables

@@ -8,9 +8,10 @@ albedo_color = Color(1, 0, 0, 1)
 [sub_resource type="BoxMesh" id="BoxMesh_syp6i"]
 material = SubResource("StandardMaterial3D_cp416")
 
-[node name="Rm06BigLturn" type="Node3D" node_paths=PackedStringArray("PlayerSpawns")]
+[node name="Rm06BigLturn" type="Node3D" node_paths=PackedStringArray("PlayerSpawns", "BarrelSpawns")]
 script = ExtResource("1_pn57h")
 PlayerSpawns = [NodePath("PlayerSpawns/PlayerSpawn")]
+BarrelSpawns = [NodePath("BarrelSpawns/BarrelSpawn")]
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.099999964, 0, 0, 0, 1, 0, 2.95, -22)
@@ -107,3 +108,8 @@ size = Vector3(0.5, 5, 30)
 [node name="PlayerSpawns" type="Node3D" parent="."]
 
 [node name="PlayerSpawn" type="Marker3D" parent="PlayerSpawns"]
+
+[node name="BarrelSpawns" type="Node3D" parent="."]
+
+[node name="BarrelSpawn" type="Marker3D" parent="BarrelSpawns"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 0.05, -3.5)
