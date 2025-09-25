@@ -42,17 +42,8 @@ var aim_held : bool = false # Flag for ADS input
 var aim_toggle : bool = false # Whether or not we're using toggle-aim
 
 # Variables for input buffering
-var input_buffer : Array[float] = []
-# Enum for bufferable inputs
-enum {
-	JUMP_INPUT = 0,
-	SHOOT_INPUT = 1
-}
-# Dictionary reference for how long to buffer any given bufferable input type
-const input_timers : Dictionary = {
-	JUMP_INPUT : 0.1,
-	SHOOT_INPUT : 0.05,
-}
+var input_buffer : InputBuffer
+enum {JUMP_INPUT = 0, SHOOT_INPUT = 1,}
 
 
 ## Set multiplayer auth
@@ -67,10 +58,9 @@ func _ready() -> void:
 	
 	# Store ourselves in the gamemanager
 	GameManager.local_player = self
-
-	# Input buffer Setup
-	input_buffer.resize(input_timers.size())
-	input_buffer.fill(0.0)
+	
+	# Buffer setup
+	input_buffer = InputBuffer.new()
 	
 	# UI Setup
 	pause_menu.value_update.connect(_on_menu_value_update)
@@ -94,7 +84,7 @@ func _input(event) -> void:
 	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		# Handle shooting
 		if event.is_action_pressed("shoot"):
-			buffer_input(SHOOT_INPUT)
+			input_buffer.buffer_input(SHOOT_INPUT)
 		# Handle aim press
 		elif event.is_action_pressed("aim"):
 			# Hold-to-aim -> enable aiming
@@ -122,7 +112,7 @@ func _input(event) -> void:
 	elif event.is_action_pressed("kill"):
 		die.rpc()
 	elif event.is_action_pressed("jump"):
-		buffer_input(JUMP_INPUT)
+		input_buffer.buffer_input(JUMP_INPUT)
 
 
 ## Handle buffered inputs
@@ -134,13 +124,13 @@ func _process(delta: float) -> void:
 	var can_shoot : bool = true #TODO
 	can_shoot = aim_held # TODO
 	if(can_shoot):
-		var buffered_shoot = input_buffer_retrieve(SHOOT_INPUT) # check for buffered shoot input
+		var buffered_shoot = input_buffer.buffer_retrieve(SHOOT_INPUT) # check for buffered shoot input
 		if(buffered_shoot):
 			camera_controller.camera_shoot()
 			gun_controller.shoot.rpc()
 	
 	# Update the input buffer -- do this at the *end* of the frame
-	input_buffer_update(delta)
+	input_buffer.buffer_update(delta)
 
 
 ## Handle player movement
@@ -152,16 +142,7 @@ func _physics_process(delta: float) -> void:
 	# Set walking/on_ground flag
 	was_on_floor = is_on_floor()
 
-	# Handle movement inputs
-	if fly_enabled:
-		# fly movement (for debug)
-		PM_FlyMove(delta)
-	elif was_on_floor:
-		# walking on ground
-		PM_WalkMove(delta)
-	else:
-		# airborne
-		PM_AirMove(delta)
+	pmove.movement_update(self, delta)
 	
 	# Foostep management
 	_handle_footsteps(delta)
@@ -170,182 +151,9 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 
-## Returns player's current wishdir (normalized!)
-func PM_Wishdir() -> Vector3:
-	var fmove := Input.get_axis("back","forward")
-	var smove := Input.get_axis("left","right")
-	# (forward * fmove + right * smove).normalized()
-	return ( ( -transform.basis.z * fmove ) + ( transform.basis.x * smove ) ).normalized()
-
-
-## Applies friction to velocity
-func PM_Friction(delta : float) -> void:
-	var vec : Vector3 = velocity # what is this even for
-	if was_on_floor:
-		# TODO : should this be on vec or velocity??
-		vec.y = 0 # ignore slope movement
-	
-	var speed : float = vec.length()
-	var minspeed : float = PM_CROUCHSPEED / 10.0
-	if speed < minspeed: # if we're moving <10% of PM_SPEED, just stop moving and early return
-		velocity.x = 0
-		velocity.z = 0
-		return
-	
-	# apply ground friction
-	var drop : float = 0
-	if was_on_floor:
-		var control : float = max(speed, PM_STOPSPEED)
-		drop += control * PM_FRICTION * delta
-
-	# scale the velocity
-	var newspeed : float = max(speed - drop, 0) / speed
-	velocity = (velocity * newspeed)
-
-
-## Quake-style movement acceleration
-func PM_Accelerate(wishdir : Vector3, wishspeed : float, accel : float, frame_time : float) -> void:
-	var currentspeed : float = velocity.dot(wishdir)
-	var addspeed : float = wishspeed - currentspeed
-	if (addspeed <= 0):
-		return
-	var accelspeed : float = min( ( accel * frame_time * wishspeed ), addspeed ) 
-	velocity += (accelspeed * wishdir)
-
-
-## Returns player speed multiplied by input axes
-func PM_InputScale() -> float:
-	var forwardmove : float = Input.get_axis("back","forward")
-	var rightmove : float = Input.get_axis("left","right")
-	
-	var maxmove : float = max( abs( forwardmove ), abs( rightmove ) )
-	if ( !maxmove ):
-		return 0
-	
-	# Crouchrunning
-	if(is_running and is_crouching):
-		return (PM_RUNSPEED / PM_CROUCHSPEED) * maxmove # TODO - jank?
-	# Running
-	if(is_running):
-		return PM_RUNSPEED * maxmove
-	# Crouching
-	if(is_crouching):
-		return PM_CROUCHSPEED * maxmove
-	# Walking
-	return PM_WALKSPEED * maxmove
-
-
-## Jumping
-func PM_CheckJump() -> bool:
-	# TODO : not doing this at all how quake does it
-	if was_on_floor: # check if we were on ground at frame start
-		var buffered_jump = input_buffer_retrieve(JUMP_INPUT) # check for buffered jump input
-		if !buffered_jump: # early return if we have no buffered input
-			return false
-		was_on_floor = false # flag that we're no longer on the floor
-		velocity.y += PM_JUMP_VELOCITY # add jump velocity
-		#velocity.y = PM_JUMP_VELOCITY # TODO - quake does this instead... which is better?
-		return true
-	return false
-
-
-## Grounded movement
-func PM_WalkMove(delta) -> void:
-	# Check/Perform jump
-	if PM_CheckJump():
-		PM_AirMove(delta)
-		return
-
-	PM_Friction(delta)
-	var wishdir : Vector3 = PM_Wishdir()
-	var wishspeed := wishdir.length() * PM_InputScale()
-	
-	var accelerate : float
-	if !was_on_floor: # this is really for knockback, slippery surfaces, etc
-		accelerate = PM_AIRACCELERATE
-	else:
-		accelerate = PM_ACCELERATE
-	PM_Accelerate(wishdir, wishspeed, accelerate, delta)
-
-
-## Airborne movement
-func PM_AirMove(delta) -> void:
-	PM_Friction(delta)
-	var mv_scale : float = PM_InputScale()
-	var wishdir : Vector3 = PM_Wishdir()
-	wishdir.y = 0
-	var wishspeed := wishdir.length()
-	wishspeed *= mv_scale
-	
-	# not on ground, so little effect on velocity
-	PM_Accelerate(wishdir, wishspeed, PM_AIRACCELERATE, delta)
-	
-	# gravity?? -- quake doesn't do this here TODO - should this be in ground movement too?
-	if not was_on_floor: velocity.y -= GRAVITY * delta
-
-
-## Handles fly movement
-func PM_FlyMove(delta) -> void:
-	var flyspeed = 1000
-	velocity.y = 0
-	if Input.is_action_pressed("jump"):
-		velocity.y = delta*flyspeed
-	elif Input.is_action_pressed("crouch"):
-		velocity.y = -delta*flyspeed
-
-
-## Takes an [action] and attempts to buffer it
-## Returns [true] on successful buffer, [false] on buffer fail
-func buffer_input(action_idx : int) -> bool:
-	# Assert to avoid index OOB
-	assert(input_buffer.get(action_idx) != null)
-	# Action is already buffered
-	if(input_buffer[action_idx] > 0.0):
-		return false
-	# Action is unbuffered
-	else:
-		input_buffer[action_idx] = input_timers[action_idx]
-		return true
-
-
-## Updates the input buffer, zeroing out any expired inputs
-func input_buffer_update(delta : float) -> Array[int]:
-	var pop_array : Array[int] = []
-	for idx in input_buffer.size():
-		input_buffer[idx] -= delta
-		if(input_buffer[idx] <= 0.0):
-			input_buffer[idx] = 0.0
-			pop_array.append(idx)
-	return pop_array
-
-
-## If we have [action] buffered, return {true}. Else, return {false}.
-func input_buffer_check(action_idx : int) -> bool:
-	# Assert to avoid index OOB
-	assert(input_buffer.get(action_idx) != null)
-	
-	# If action is buffered, return true
-	if(input_buffer[action_idx] > 0.0):
-		return true
-	return false
-
-
-## If we have [action] buffered, zero it and return {true}
-## Else, return {false}
-func input_buffer_retrieve(action_idx : int) -> bool:
-	# Assert to avoid index OOB
-	assert(input_buffer.get(action_idx) != null)
-	
-	# If action is buffered, zero it and return true
-	if (input_buffer[action_idx] > 0.0):
-		input_buffer[action_idx] = 0.0
-		return true
-	return false
-
-
 ## Handles footstep sounds, viewbob
 func _handle_footsteps(delta) -> void:
-	var direction : Vector3 = PM_Wishdir()
+	var direction : Vector3 = pmove.PM_Wishdir(self)
 	
 	# On-ground footstep update
 	if(was_on_floor):

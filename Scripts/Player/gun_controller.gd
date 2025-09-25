@@ -12,7 +12,7 @@ signal is_aiming_update(bool)
 @onready var anim_player : AnimationPlayer = get_node("GunAnimator")
 @onready var gun_sound : AudioStreamPlayer3D = get_node("GunSound")
 @onready var ray : RayCast3D = get_node("GunRaycast")
-@onready var last_frame_glob_rot : Vector3 = self.global_rotation
+@onready var last_cc_rot : Vector3 = self.global_rotation
 
 @export_category("Animating")
 @export var gun_sway_max : Vector3 = Vector3(deg_to_rad(3.5), deg_to_rad(5), deg_to_rad(5))
@@ -112,12 +112,12 @@ var camera_sway : Vector3 = Vector3.ZERO
 func _determine_sway(delta) -> Vector3:
 	
 	# store post-update, pre-sway basis
-	var this_frame_glob_rot := self.global_rotation
+	var cc_rot := camera_controller.rotation
 	var rot_change : Vector3 = Vector3.ZERO
 	
 	# Rotation change -- only calculated if not holstered
 	if(is_aiming or player_controller.aim_held or ads_timer > 0.0):
-		rot_change = this_frame_glob_rot - last_frame_glob_rot
+		rot_change = cc_rot - last_cc_rot
 	
 		# Keep rot_change inbounds
 		for idx in 3:
@@ -136,7 +136,7 @@ func _determine_sway(delta) -> Vector3:
 	camera_sway = lerp(camera_sway, Vector3.ZERO, delta*RECENTER)
 
 	# Store this frame's pre-sway basis for next frame
-	last_frame_glob_rot = this_frame_glob_rot
+	last_cc_rot = cc_rot
 
 	return camera_sway * gun_sway_max
 
