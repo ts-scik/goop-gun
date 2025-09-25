@@ -9,18 +9,24 @@ signal is_aiming_update(bool)
 
 @onready var pmk : PlayerController = cmk.pmk # TODO - bad!!! bad!!!
 
-@onready var anim_tree : AnimationTree = get_node("GunAnimationTree")
-@onready var anim_player : AnimationPlayer = get_node("GunAnimator")
 @onready var gun_sound : AudioStreamPlayer3D = get_node("GunSound")
-@onready var ray : RayCast3D = get_node("GunRaycast")
+@onready var gun_model : Node3D = get_node("GunModelHolder")
+@onready var ray : RayCast3D = get_node("GunModelHolder/GunRaycast")
 @onready var last_cc_rot : Vector3 = cmk.rotation
 
 @export_category("Animating")
+@export_group("Sway")
 @export var gun_sway_max : Vector3 = Vector3(deg_to_rad(3.5), deg_to_rad(5), deg_to_rad(5))
+@export_group("Shaking")
 @export var gun_shake_angle_max : Vector3 = Vector3(deg_to_rad(5),deg_to_rad(5),deg_to_rad(5))
 @export var gun_shake_time_percent : float = 0.8
-var gun_shake_timer : float = 0.0
-var gun_shake_time_length : float = 0.0
+var gun_shake_stored : Vector3 = Vector3.ZERO
+var _gun_shake_tween : Tween
+@export_group("Shooting")
+@export var shoot_angle_max : Vector3 = Vector3(deg_to_rad(10), 0, 0)
+@export var gun_shoot_time : float = 0.25
+var _gun_shoot_tween : Tween
+
 @export_category("Aiming")
 @export var gun_hold_distance : float = 0.7 # How far gun is held out from player
 @export var ads_time : float = 0.25 # ADS time (in seconds)
@@ -45,16 +51,19 @@ func manage_positioning(delta) -> void:
 	else:
 		# Fully unaimed OR in aim transition
 		target_transform = _manage_gun_unaimed(delta)
-	var target_position := target_transform.origin
-	var target_rotation := target_transform.basis.get_euler()
+		
+	self.position = target_transform.origin
+	self.rotation = target_transform.basis.get_euler() # rotation rather than basis, so we maintain scale
 	
 	# apply sway
 	var sway_amount : Vector3 = _determine_sway(delta)
 	# do shake
-	var shake_amount : Vector3 = _determine_shake(delta)
+	var shake_amount : Vector3 = _determine_shake()
+	# do shoot anim
+	var shoot_amount : Vector3 = _determine_shooting()
 	
-	self.position = target_position
-	self.rotation = target_rotation + sway_amount + shake_amount
+	# apply gun model effects
+	gun_model.rotation = Vector3.ZERO + sway_amount + shake_amount + shoot_amount
 
 
 ## Returns how far into ads we are, from (0.0, 1.0)
@@ -116,7 +125,6 @@ func _manage_gun_aimed() -> Transform3D:
 ## Returns Vector3 angle for how much gun should sway, given camera velocity
 var camera_sway : Vector3 = Vector3.ZERO
 func _determine_sway(delta) -> Vector3:
-	
 	# store post-update, pre-sway basis
 	var cc_rot := cmk.rotation
 	var rot_change : Vector3 = Vector3.ZERO
@@ -132,10 +140,10 @@ func _determine_sway(delta) -> Vector3:
 	
 		rot_change.z = rot_change.y # TODO - are you sure?
 	
-	# Apply rot_change to camera_sway
-	var CHANGESCALE = 1
-	camera_sway += (rot_change * CHANGESCALE)
-	camera_sway.clampf(-1.0, 1.0)
+		# Apply rot_change to camera_sway
+		var CHANGESCALE = 1
+		camera_sway += (rot_change * CHANGESCALE)
+		camera_sway.clampf(-1.0, 1.0)
 	
 	# Recenter
 	var RECENTER = 7
@@ -148,28 +156,13 @@ func _determine_sway(delta) -> Vector3:
 
 
 ## Handles gun shake animation
-func _determine_shake(delta) -> Vector3:
-	#Early return if not shaking
-	if gun_shake_timer <= 0.0:
-		return Vector3.ZERO
-		
-	var shake_angle : Vector3 = Vector3.ZERO
-	
-	var gun_shake_ratio : float = gun_shake_timer / gun_shake_time_length
-	var randomized_shake : Vector3
-	randomized_shake.x = randf_range(-gun_shake_ratio, gun_shake_ratio)
-	randomized_shake.y = randf_range(-gun_shake_ratio, gun_shake_ratio)
-	randomized_shake.z = randf_range(-gun_shake_ratio, gun_shake_ratio)
-	
-	shake_angle = gun_shake_angle_max * randomized_shake
-	
-	gun_shake_timer = max(gun_shake_timer-delta, 0)
-	
-	return shake_angle
-	
-	# TODO - shake should be most aggressive right after this function is called, then weaken
-	# TODO - shake should be randomized
-	# TODO - shake's most aggressive amount should be gun_shake_angle_max
+func _determine_shake() -> Vector3:
+	if(v_offset == 0 and h_offset == 0): return Vector3.ZERO
+	return Vector3(v_offset, h_offset, 0)
+
+
+func _determine_shooting() -> Vector3:
+	return current_shoot_angle
 
 
 ## Shoots
@@ -179,12 +172,46 @@ func shoot() -> void:
 	ray.shoot()
 	# handle sound
 	gun_sound.play()
-	# handle animation
-	anim_player.stop()
-	anim_player.play("shoot")
+	# handle anim
+	start_gun_shoot_tilt()
+
+
+## Starts gun shoot animation
+func start_gun_shoot_tilt() -> void:
+	if _gun_shoot_tween:
+		_gun_shoot_tween.kill()
+		
+	_gun_shoot_tween = create_tween()
+	_gun_shoot_tween.tween_method(update_gun_shoot, 0.0, 1.0, gun_shoot_time).set_ease(Tween.EASE_OUT)
+
+
+## Handles gun shoot animation
+var current_shoot_angle : Vector3 = Vector3.ZERO
+func update_gun_shoot(alpha : float) -> void:
+	current_shoot_angle = lerp(shoot_angle_max, Vector3.ZERO, alpha)
+
+
+## Starts end-of-footstep gun shake
+func start_gun_shake(footstep_time_length : float) -> void:
+	var gun_shake_time_length = footstep_time_length * gun_shake_time_percent
+	
+	if _gun_shake_tween:
+		_gun_shake_tween.kill()
+	
+	var amount = 0.5
+	_gun_shake_tween = create_tween()
+	_gun_shake_tween.tween_method(update_gun_shake.bind(amount), 0.0, 1.0, gun_shake_time_length).set_ease(Tween.EASE_OUT)
 
 
 ## Handles end-of-footstep gun shake
-func start_gun_shake(footstep_time_length : float) -> void:
-	gun_shake_time_length = footstep_time_length * gun_shake_time_percent
-	gun_shake_timer = gun_shake_time_length
+var h_offset : float = 0.0
+var v_offset : float = 0.0
+func update_gun_shake(alpha: float, amount: float) -> void:
+	var MIN_GUN_SHAKE = 0.01
+	var MAX_GUN_SHAKE = 0.05
+	
+	amount = remap(amount, 0.0, 1.0 , MIN_GUN_SHAKE, MAX_GUN_SHAKE)
+	
+	var current_shake_amount = amount * (1.0 - alpha)
+	h_offset = randf_range(-current_shake_amount, current_shake_amount)
+	v_offset = randf_range(-current_shake_amount, current_shake_amount)

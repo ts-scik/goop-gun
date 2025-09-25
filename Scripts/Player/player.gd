@@ -8,7 +8,7 @@ extends CharacterBody3D
 @export var GRAVITY : float = 9.8
 @export var PM_JUMP_VELOCITY : float = 4.5 # jump velocity
 @export_group("Movement")
-@export var PM_WALKSPEED : float = 4.0 # move velocity
+@export var PM_WALKSPEED : float = 2.5 # move velocity
 @export var PM_RUNSPEED : float = 7.0 # run velocity
 @export var PM_CROUCHSPEED : float = 2.0 # crouch velocity
 @export var PM_ACCELERATE : float = 8.0 # Acceleration factor on ground
@@ -37,7 +37,8 @@ var crouch_toggle : bool = false # Whether we're using toggle-crouch
 # Variables for foosteps
 var footstep_timer : float = 0.0
 @export_group("Footsteps")
-@export var footstep_time_length : float = 1.0
+@export var footstep_time_length : float = 0.75
+@export var footstep_peak_pct : float = 0.65
 # Variables for gun handling
 var aim_held : bool = false # Flag for ADS input
 var aim_toggle : bool = false # Whether or not we're using toggle-aim
@@ -153,24 +154,35 @@ func _physics_process(delta: float) -> void:
 
 
 ## Handles footstep sounds, viewbob
+var dip_passed : bool = false
 func _handle_footsteps(delta) -> void:
 	var direction : Vector3 = pmove.PM_Wishdir(self)
+	
+	var peak_threshold = footstep_peak_pct * footstep_time_length
+	
 	# If we're on the ground and moving,
 	if(was_on_floor and direction):
-		# increase the timer
 		footstep_timer = min(footstep_timer + delta, footstep_time_length)
-		# If we hit the timer's top end
-		if(footstep_timer >= footstep_time_length):
+		# trigger sound at dip
+		if(footstep_timer >= peak_threshold) and (dip_passed == false):
 			# play a sound
 			play_footstep_sound.rpc()
 			# trigger the gun shake
 			gun_controller.start_gun_shake(footstep_time_length)
+		# If we hit the timer's top end
+		if(footstep_timer >= footstep_time_length):
 			# reset the timer
 			footstep_timer = 0.0
-	# If we're either not grounded, or not moving
+			dip_passed = false
+	# If we've stopped moving, but haven't hit the peak yet, reverse
+	elif(footstep_timer < peak_threshold):
+		footstep_timer = max(footstep_timer - delta, 0)
+	# If we've stopped moving, and we've already passed the peak, just finish the anim
 	else:
-		# decrease the timer
-		footstep_timer = max(footstep_timer - delta, 0.0)
+		footstep_timer = min(footstep_timer + delta, footstep_time_length)
+	
+	if(footstep_timer >= peak_threshold):
+		dip_passed = true
 
 
 ## Randomly selects and then plays a footstep sound

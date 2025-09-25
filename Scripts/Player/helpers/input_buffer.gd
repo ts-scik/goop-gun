@@ -10,7 +10,7 @@ enum {
 }
 # Dictionary reference for how long to buffer any given bufferable input type
 const input_timers : Dictionary = {
-	JUMP_INPUT : 0.1,
+	JUMP_INPUT : 1.07,
 	SHOOT_INPUT : 0.05,
 }
 

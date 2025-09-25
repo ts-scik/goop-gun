@@ -9,10 +9,8 @@ extends Node3D
 @export var pmk : PlayerController # Node that the camera will follow
 
 @export_category("Effects")
-@export var enable_tilt : bool = false
-@export var enable_aim_zoom : bool = true
-@export var enable_viewbob : bool = true
 @export_group("Run Tilt")
+@export var enable_tilt : bool = false
 @export var run_pitch : float = 0.1 # Euler degrees
 @export var run_roll : float = 0.25 # Euler degrees
 @export var max_pitch : float = 1.0 # Euler degrees
@@ -20,7 +18,12 @@ extends Node3D
 @export_group("Gun Kick")
 @export var kick_amount = Vector2(0.1,0.1) # Cursor's x/y screen kick amount
 @export_group("Aim FOV")
+@export var enable_aim_zoom : bool = true
 @export var aimed_fov_percent : float = 0.9
+@export_group("Viewbob")
+@export var enable_viewbob : bool = true
+@export var viewbob_curve : Curve
+@export var max_bob_height : float = 0.06
 
 var desired_fov : float = 75.0 # TODO - this should be player-configurable
 # Child nodes
@@ -187,12 +190,8 @@ func _calculate_effects(delta) -> Transform3D:
 		var foot_time_ratio : float = pmk.footstep_timer/pmk.footstep_time_length
 		# TODO - develop some kind of viewbob curve
 		# temp solution -- symmetrical arc peaking at 0.5
-		var max_bob_height : float = 0.3 # TODO make this an export var
 		var bob_amount : float
-		if(foot_time_ratio <= 0.5):
-			bob_amount = foot_time_ratio
-		else:
-			bob_amount = 1.0 - foot_time_ratio
+		bob_amount = viewbob_curve.sample_baked(foot_time_ratio)
 		pos.y += max_bob_height * bob_amount
 	
 	var out_tf : Transform3D
