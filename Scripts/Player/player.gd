@@ -36,7 +36,8 @@ var is_running : bool = false # Flag for running
 var crouch_toggle : bool = false # Whether we're using toggle-crouch
 # Variables for foosteps
 var footstep_timer : float = 0.0
-var footstep_time_length : float = 0.5
+@export_group("Footsteps")
+@export var footstep_time_length : float = 1.0
 # Variables for gun handling
 var aim_held : bool = false # Flag for ADS input
 var aim_toggle : bool = false # Whether or not we're using toggle-aim
@@ -154,23 +155,22 @@ func _physics_process(delta: float) -> void:
 ## Handles footstep sounds, viewbob
 func _handle_footsteps(delta) -> void:
 	var direction : Vector3 = pmove.PM_Wishdir(self)
-	
-	# On-ground footstep update
-	if(was_on_floor):
-		# TODO: keep track of movement to initiate a headbob animation
-		if direction:
-			if(footstep_timer <= 0):
-				footstep_timer = footstep_time_length
-				play_footstep_sound.rpc()
-	
-	# Update footstep timer
-	if(footstep_timer > 0.0):
+	# If we're on the ground and moving,
+	if(was_on_floor and direction):
+		# increase the timer
+		footstep_timer = min(footstep_timer + delta, footstep_time_length)
+		# If we hit the timer's top end
+		if(footstep_timer >= footstep_time_length):
+			# play a sound
+			play_footstep_sound.rpc()
+			# trigger the gun shake
+			gun_controller.start_gun_shake(footstep_time_length)
+			# reset the timer
+			footstep_timer = 0.0
+	# If we're either not grounded, or not moving
+	else:
+		# decrease the timer
 		footstep_timer = max(footstep_timer - delta, 0.0)
-	
-	# Handle movement animation based on movement direction
-	# TODO: update so that this is the camera's responsibility (?)
-	# TODO: update so that gun animation is dependent on headbob
-	gun_controller.handle_movement_anim(direction)
 
 
 ## Randomly selects and then plays a footstep sound
@@ -249,7 +249,7 @@ func _on_menu_value_update(value, parameter : String) -> void:
 		"cam_sense":
 			camera_controller.camera_sensitivity = value / 10
 		"aim_sense":
-			camera_controller.aim_sensitivity = value / 1000
+			camera_controller.aim_sensitivity = value / 500
 		"debug_box":
 			camera_controller.toggle_debug(value, "box")
 		"debug_dot":

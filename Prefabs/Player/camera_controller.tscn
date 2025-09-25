@@ -27,9 +27,9 @@ script = ExtResource("1_hitlr")
 [node name="CameraSynchronizer" type="MultiplayerSynchronizer" parent="."]
 replication_config = SubResource("SceneReplicationConfig_dtqie")
 
-[node name="GunController" parent="." node_paths=PackedStringArray("camera_controller") instance=ExtResource("2_7w2as")]
-transform = Transform3D(1, 0, 0, 0, 1.0000002, 0, 0, 0, 1.0000002, 0, 0, -0.75)
-camera_controller = NodePath("..")
+[node name="GunController" parent="." node_paths=PackedStringArray("cmk") instance=ExtResource("2_7w2as")]
+transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, 0, 0, -0.7)
+cmk = NodePath("..")
 
 [node name="PlayerCamera" type="Camera3D" parent="."]
 cull_mask = 1048573

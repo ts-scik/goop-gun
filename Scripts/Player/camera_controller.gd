@@ -6,11 +6,12 @@ extends Node3D
 # https://docs.godotengine.org/en/stable/tutorials/physics/interpolation/advanced_physics_interpolation.html
 
 @export_category("References")
-@export var player_controller : PlayerController # Node that the camera will follow
+@export var pmk : PlayerController # Node that the camera will follow
 
 @export_category("Effects")
 @export var enable_tilt : bool = false
 @export var enable_aim_zoom : bool = true
+@export var enable_viewbob : bool = true
 @export_group("Run Tilt")
 @export var run_pitch : float = 0.1 # Euler degrees
 @export var run_roll : float = 0.25 # Euler degrees
@@ -24,17 +25,18 @@ extends Node3D
 var desired_fov : float = 75.0 # TODO - this should be player-configurable
 # Child nodes
 var player_camera : Camera3D # Player camera
-var gun_controller : Node3D # Gun's container
+var qck : GunController # Gun's container
 # Mouse sensitivity variables
 var mouse_sensitivity : float = 0.005 # Mouse overall sensitivitiy
 var camera_sensitivity : float = 0.5 # Mouse camera sensitivity
-var aim_sensitivity : float = 0.005 # Mouse aim sensitivity
+var aim_sensitivity : float = 0.01 # Mouse aim sensitivity
 # Mouse input variables
 var mouse_input : Vector2 # Stores mouse input each frame
 var input_rotation : Vector3 # Stores mouse_input converted to rotation
 # Gun deadzone variables
 var mouse_position : Vector2 = Vector2.ZERO # Mouse cursor's position onscreen
-var mouse_deadzone : Vector3 = Vector3(0.15, 0.65, 0.35) # Mouse deadzone (in screen %) (x, yTop, yBottom)
+@export_group("Mouse Deadzone")
+@export var mouse_deadzone : Vector3 = Vector3(0.1, 0.65, 0.35) # Mouse deadzone (in screen %) (x, yTop, yBottom)
 var screen_size : Vector2 # Size of screen (in pixels)
 var gun_deadzone : Vector3 # Gun's deadzone size (in pixels)
 # Debug stuff
@@ -54,11 +56,11 @@ func _ready() -> void:
 	# Capture the mouse
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	# Find the target nodes
-	gun_controller = get_node("GunController")
+	qck = get_node("GunController")
 	player_camera = get_node("PlayerCamera")
 	guncanvas = get_node("GunCanvas")
 	# Set up signals, start using camera
-	gun_controller.is_aiming_update.connect(_on_is_aiming_update)
+	qck.is_aiming_update.connect(_on_is_aiming_update)
 	player_camera.current = true
 	# Update all our screen-size-related variables
 	_viewport_update()
@@ -90,17 +92,21 @@ func _process(delta: float) -> void:
 	
 	# Handle camera effects
 	var target_fov : float = _determine_zoom_fov()
-	var offset_rotation : Vector3 = _calculate_view_offset(delta)
+	var offset_transform : Transform3D = _calculate_effects(delta)
+	
+	var target_position = target_transform.origin
 	var target_rotation = target_transform.basis.get_euler()
+	var offset_position = offset_transform.origin
+	var offset_rotation = offset_transform.basis.get_euler()
 	
 	# Update camera
 	player_camera.fov = target_fov
-	global_transform = target_transform
-	rotation = target_rotation + offset_rotation
+	self.position = target_position + offset_position
+	self.rotation = target_rotation + offset_rotation
 	
 	# Update the gun's position + rotation - THIS MUST BE AFTER MOUSE/CAMERA UPDATES!!
 	# TODO: add some kind of sway to gun as mouse moves slower/faster
-	gun_controller.manage_positioning(delta)
+	qck.manage_positioning(delta)
 	
 	# Zero out our mouse input for next frame
 	mouse_input = Vector2.ZERO
@@ -112,7 +118,7 @@ func _mouse_camera_update() -> Transform3D:
 	var mouse_x_locked : bool = false
 	
 	# AIMED state
-	if(gun_controller.is_aiming):
+	if(qck.is_aiming):
 		# Update mouse position
 		var mouse_newpos : Vector2 = mouse_position - (mouse_input * aim_sensitivity * (screen_size.y) * 20)
 		var midpoint : Vector2 = screen_size/2
@@ -138,26 +144,27 @@ func _mouse_camera_update() -> Transform3D:
 	if(!mouse_y_locked):
 		input_rotation.x = clampf(input_rotation.x + (mouse_input.y * camera_sensitivity), deg_to_rad(-90), deg_to_rad(85))
 	
-	# Update the player_controller rotation
+	# Update the pmk rotation
 	# TODO -- look this over and think about it -- globals/interpolation
 	# Rotate camera controller (up/down)
-	player_controller.camera_controller_anchor.transform.basis = Basis.from_euler(Vector3(input_rotation.x, 0.0, 0.0))
+	pmk.camera_controller_anchor.transform.basis = Basis.from_euler(Vector3(input_rotation.x, 0.0, 0.0))
 	# Rotate player controller (left/right)
-	player_controller.global_transform.basis = Basis.from_euler(Vector3(0.0, input_rotation.y, 0.0))
+	pmk.global_transform.basis = Basis.from_euler(Vector3(0.0, input_rotation.y, 0.0))
 	# Move transform to player head anchor
-	return player_controller.camera_controller_anchor.get_global_transform_interpolated()
+	return pmk.camera_controller_anchor.get_global_transform_interpolated()
 
 
-## Determines how zoom-in the fov should be, given the current gun_controller ads_ratio
+## Determines how zoom-in the fov should be, given the current qck ads_ratio
 func _determine_zoom_fov() -> float:
-	if not enable_aim_zoom or gun_controller.ads_ratio() <= 0.0:
+	if not enable_aim_zoom or qck.ads_ratio() <= 0.0:
 		return desired_fov
-	return lerpf(desired_fov, desired_fov * aimed_fov_percent, gun_controller.ads_ratio())
+	return lerpf(desired_fov, desired_fov * aimed_fov_percent, qck.ads_ratio())
 
 
 ## Returns offset angle based on camera effects
-func _calculate_view_offset(delta) -> Vector3:
-	var velocity = player_controller.velocity
+func _calculate_effects(delta) -> Transform3D:
+	var velocity = pmk.velocity
+	var pos = Vector3.ZERO
 	var angles = Vector3.ZERO
 	
 	# Camera Tilt
@@ -174,7 +181,24 @@ func _calculate_view_offset(delta) -> Vector3:
 		angles.x -= forward_tilt
 		angles.z -= side_tilt
 	
-	return angles
+	# Viewbob
+	if enable_viewbob:
+		# get 0.0 - 1.0 float for how far into footstep we are
+		var foot_time_ratio : float = pmk.footstep_timer/pmk.footstep_time_length
+		# TODO - develop some kind of viewbob curve
+		# temp solution -- symmetrical arc peaking at 0.5
+		var max_bob_height : float = 0.3 # TODO make this an export var
+		var bob_amount : float
+		if(foot_time_ratio <= 0.5):
+			bob_amount = foot_time_ratio
+		else:
+			bob_amount = 1.0 - foot_time_ratio
+		pos.y += max_bob_height * bob_amount
+	
+	var out_tf : Transform3D
+	out_tf.origin = pos # TODO
+	out_tf.basis = Basis.from_euler(angles)
+	return out_tf
 
 
 ## Shoots
@@ -184,7 +208,7 @@ func camera_shoot():
 	# TODO - make this a lerp rather than an instantaneous snap
 	var kick_store = kick_amount
 	kick_store.x *= ((randi() & 2) - 1)
-	if(gun_controller.is_aiming):
+	if(qck.is_aiming):
 		mouse_input += (kick_store * screen_size/1000)
 
 

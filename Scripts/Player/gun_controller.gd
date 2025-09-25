@@ -5,19 +5,24 @@ extends Node3D
 signal is_aiming_update(bool)
 
 @export_category("References")
-@export var camera_controller : CameraController
+@export var cmk : CameraController
 
-@onready var player_controller : PlayerController = camera_controller.player_controller # bad??
+@onready var pmk : PlayerController = cmk.pmk # TODO - bad!!! bad!!!
+
 @onready var anim_tree : AnimationTree = get_node("GunAnimationTree")
 @onready var anim_player : AnimationPlayer = get_node("GunAnimator")
 @onready var gun_sound : AudioStreamPlayer3D = get_node("GunSound")
 @onready var ray : RayCast3D = get_node("GunRaycast")
-@onready var last_cc_rot : Vector3 = self.global_rotation
+@onready var last_cc_rot : Vector3 = cmk.rotation
 
 @export_category("Animating")
 @export var gun_sway_max : Vector3 = Vector3(deg_to_rad(3.5), deg_to_rad(5), deg_to_rad(5))
+@export var gun_shake_angle_max : Vector3 = Vector3(deg_to_rad(5),deg_to_rad(5),deg_to_rad(5))
+@export var gun_shake_time_percent : float = 0.8
+var gun_shake_timer : float = 0.0
+var gun_shake_time_length : float = 0.0
 @export_category("Aiming")
-@export var gun_hold_distance : float = 0.75 # How far gun is held out from player
+@export var gun_hold_distance : float = 0.7 # How far gun is held out from player
 @export var ads_time : float = 0.25 # ADS time (in seconds)
 var ads_timer : float = 0.0 # Timer for ADS lerp
 var is_aiming : bool = false # Flag for ADS completed
@@ -25,7 +30,7 @@ var is_aiming : bool = false # Flag for ADS completed
 var last_aimed_target_pos : Vector3 = Vector3.ZERO # stores last position when aimed
 var last_aimed_target_rot : Vector3 = Vector3.ZERO # stores last rotation when aimed
 @export_category("Holstering")
-@export var holstered_pos = Vector3(0, 1.0, -0.5) # configurable variable for where gun should go when holstered
+@export var holstered_pos = Vector3(0, 1.0, -0.4) # configurable variable for where gun should go when holstered
 @export var holstered_rot = Vector3(deg_to_rad(-45.0), 0.0, 0.0) # configurable variable for gun's rotation when holstered
 
 
@@ -34,7 +39,7 @@ func manage_positioning(delta) -> void:
 	var target_transform : Transform3D
 	
 	# Do our standard gun position/rotation
-	if(player_controller.aim_held and is_aiming):
+	if(pmk.aim_held and is_aiming):
 		# Fully aimed
 		target_transform = _manage_gun_aimed()
 	else:
@@ -43,12 +48,13 @@ func manage_positioning(delta) -> void:
 	var target_position := target_transform.origin
 	var target_rotation := target_transform.basis.get_euler()
 	
-	self.position = target_position
-	self.rotation = target_rotation
-	
-	# apply sway -- needs to be AFTER we do everything else
+	# apply sway
 	var sway_amount : Vector3 = _determine_sway(delta)
-	self.rotation += sway_amount
+	# do shake
+	var shake_amount : Vector3 = _determine_shake(delta)
+	
+	self.position = target_position
+	self.rotation = target_rotation + sway_amount + shake_amount
 
 
 ## Returns how far into ads we are, from (0.0, 1.0)
@@ -59,11 +65,11 @@ func ads_ratio() -> float:
 ## Animates gun in/out of aiming position
 func _manage_gun_unaimed(delta) -> Transform3D:
 	# get target pos/rot
-	var player_interp := player_controller.get_global_transform_interpolated()
-	#var player_interp = player_controller.global_transform # TODO -- why does this get weird??
-	var unaimed_target_pos : Vector3 = camera_controller.to_local(player_interp.origin + (player_interp.basis * holstered_pos))
-	var unaimed_target_rot : Vector3 = holstered_rot - Vector3(camera_controller.rotation.x,0,0)
-	var aim_held : bool = player_controller.aim_held
+	var player_interp := pmk.get_global_transform_interpolated()
+	#var player_interp = pmk.global_transform # TODO -- why does this get weird??
+	var unaimed_target_pos : Vector3 = cmk.to_local(player_interp.origin + (player_interp.basis * holstered_pos))
+	var unaimed_target_rot : Vector3 = holstered_rot - Vector3(cmk.rotation.x,0,0)
+	var aim_held : bool = pmk.aim_held
 	
 	# Starting an aim
 	if(aim_held):
@@ -99,9 +105,9 @@ func _manage_gun_unaimed(delta) -> Transform3D:
 func _manage_gun_aimed() -> Transform3D:
 	var out_tf : Transform3D
 	# Get vector from player camera to gun_controller
-	var fw_dir = camera_controller.to_local(global_position) - camera_controller.to_local(camera_controller.player_camera.global_position) 
+	var fw_dir = cmk.to_local(global_position) - cmk.to_local(cmk.player_camera.global_position) 
 	# Update the gun's position
-	out_tf.origin = camera_controller.to_local(camera_controller.player_camera.project_position(camera_controller.mouse_position,gun_hold_distance))
+	out_tf.origin = cmk.to_local(cmk.player_camera.project_position(cmk.mouse_position,gun_hold_distance))
 	# Update the gun's rotation (relative to camera)
 	out_tf.basis = Basis.looking_at(fw_dir, Vector3.UP, false)
 	return out_tf
@@ -112,11 +118,11 @@ var camera_sway : Vector3 = Vector3.ZERO
 func _determine_sway(delta) -> Vector3:
 	
 	# store post-update, pre-sway basis
-	var cc_rot := camera_controller.rotation
+	var cc_rot := cmk.rotation
 	var rot_change : Vector3 = Vector3.ZERO
 	
 	# Rotation change -- only calculated if not holstered
-	if(is_aiming or player_controller.aim_held or ads_timer > 0.0):
+	if(is_aiming or pmk.aim_held or ads_timer > 0.0):
 		rot_change = cc_rot - last_cc_rot
 	
 		# Keep rot_change inbounds
@@ -141,6 +147,31 @@ func _determine_sway(delta) -> Vector3:
 	return camera_sway * gun_sway_max
 
 
+## Handles gun shake animation
+func _determine_shake(delta) -> Vector3:
+	#Early return if not shaking
+	if gun_shake_timer <= 0.0:
+		return Vector3.ZERO
+		
+	var shake_angle : Vector3 = Vector3.ZERO
+	
+	var gun_shake_ratio : float = gun_shake_timer / gun_shake_time_length
+	var randomized_shake : Vector3
+	randomized_shake.x = randf_range(-gun_shake_ratio, gun_shake_ratio)
+	randomized_shake.y = randf_range(-gun_shake_ratio, gun_shake_ratio)
+	randomized_shake.z = randf_range(-gun_shake_ratio, gun_shake_ratio)
+	
+	shake_angle = gun_shake_angle_max * randomized_shake
+	
+	gun_shake_timer = max(gun_shake_timer-delta, 0)
+	
+	return shake_angle
+	
+	# TODO - shake should be most aggressive right after this function is called, then weaken
+	# TODO - shake should be randomized
+	# TODO - shake's most aggressive amount should be gun_shake_angle_max
+
+
 ## Shoots
 @rpc("authority","call_local","unreliable")
 func shoot() -> void:
@@ -153,7 +184,7 @@ func shoot() -> void:
 	anim_player.play("shoot")
 
 
-## Handles animations
-#TODO: i hate this
-func handle_movement_anim(direction : Vector3) -> void:
-	return # TODO - temp early return
+## Handles end-of-footstep gun shake
+func start_gun_shake(footstep_time_length : float) -> void:
+	gun_shake_time_length = footstep_time_length * gun_shake_time_percent
+	gun_shake_timer = gun_shake_time_length
