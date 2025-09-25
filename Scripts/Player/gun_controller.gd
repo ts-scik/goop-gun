@@ -10,15 +10,15 @@ signal is_aiming_update(bool)
 @onready var pmk : PlayerController = cmk.pmk # TODO - bad!!! bad!!!
 
 @onready var gun_sound : AudioStreamPlayer3D = get_node("GunSound")
-@onready var gun_model : Node3D = get_node("GunModelHolder")
+@onready var gun_model_holder : Node3D = get_node("GunModelHolder")
 @onready var ray : RayCast3D = get_node("GunModelHolder/GunRaycast")
-@onready var last_cc_rot : Vector3 = cmk.rotation
+@onready var last_cmk_rot : Vector3 = cmk.rotation
 
 @export_category("Animating")
 @export_group("Sway")
 @export var gun_sway_max : Vector3 = Vector3(deg_to_rad(3.5), deg_to_rad(5), deg_to_rad(5))
 @export_group("Shaking")
-@export var gun_shake_angle_max : Vector3 = Vector3(deg_to_rad(5),deg_to_rad(5),deg_to_rad(5))
+@export var gun_shake_angle_max : Vector3 = Vector3(deg_to_rad(4),deg_to_rad(1),deg_to_rad(1))
 @export var gun_shake_time_percent : float = 0.8
 var gun_shake_stored : Vector3 = Vector3.ZERO
 var _gun_shake_tween : Tween
@@ -45,15 +45,21 @@ func manage_positioning(delta) -> void:
 	var target_transform : Transform3D
 	
 	# Do our standard gun position/rotation
-	if(pmk.aim_held and is_aiming):
+	if(pmk.aim_held and is_aiming and !pmk.is_running):
 		# Fully aimed
 		target_transform = _manage_gun_aimed()
 	else:
 		# Fully unaimed OR in aim transition
 		target_transform = _manage_gun_unaimed(delta)
-		
+	
+	# snap to target tf
+	if(is_aiming):
+		var snapspeed = 5 # TODO - make this an export if we're keeping it
+		self.rotation = lerp(self.rotation, target_transform.basis.get_euler(), delta * snapspeed)
+		#self.position = lerp(self.position, target_transform.origin, delta * snapspeed)
+	else:
+		self.rotation = target_transform.basis.get_euler() # rotation rather than basis, so we maintain scale
 	self.position = target_transform.origin
-	self.rotation = target_transform.basis.get_euler() # rotation rather than basis, so we maintain scale
 	
 	# apply sway
 	var sway_amount : Vector3 = _determine_sway(delta)
@@ -63,7 +69,7 @@ func manage_positioning(delta) -> void:
 	var shoot_amount : Vector3 = _determine_shooting()
 	
 	# apply gun model effects
-	gun_model.rotation = Vector3.ZERO + sway_amount + shake_amount + shoot_amount
+	gun_model_holder.rotation = Vector3.ZERO + sway_amount + shake_amount + shoot_amount
 
 
 ## Returns how far into ads we are, from (0.0, 1.0)
@@ -75,13 +81,16 @@ func ads_ratio() -> float:
 func _manage_gun_unaimed(delta) -> Transform3D:
 	# get target pos/rot
 	var player_interp := pmk.get_global_transform_interpolated()
-	#var player_interp = pmk.global_transform # TODO -- why does this get weird??
-	var unaimed_target_pos : Vector3 = cmk.to_local(player_interp.origin + (player_interp.basis * holstered_pos))
+	var unaimed_target_pos : Vector3 = cmk.to_local(
+		player_interp.origin + # player origin
+		(player_interp.basis * holstered_pos) + # holstered position (relative to player
+		cmk.bob_vec # camera viewbob # TODO kinda hate that we have to do this
+	)
 	var unaimed_target_rot : Vector3 = holstered_rot - Vector3(cmk.rotation.x,0,0)
 	var aim_held : bool = pmk.aim_held
 	
 	# Starting an aim
-	if(aim_held):
+	if(aim_held and !pmk.is_running):
 		ads_timer = min(ads_timer + delta, 1.0) # update the aim timer
 		if(ads_ratio() >= 1.0): # if we're there, update the aim variable
 			ads_timer = ads_time
@@ -126,12 +135,12 @@ func _manage_gun_aimed() -> Transform3D:
 var camera_sway : Vector3 = Vector3.ZERO
 func _determine_sway(delta) -> Vector3:
 	# store post-update, pre-sway basis
-	var cc_rot := cmk.rotation
+	var cmk_rot := cmk.rotation
 	var rot_change : Vector3 = Vector3.ZERO
 	
 	# Rotation change -- only calculated if not holstered
 	if(is_aiming or pmk.aim_held or ads_timer > 0.0):
-		rot_change = cc_rot - last_cc_rot
+		rot_change = cmk_rot - last_cmk_rot
 	
 		# Keep rot_change inbounds
 		for idx in 3:
@@ -150,15 +159,14 @@ func _determine_sway(delta) -> Vector3:
 	camera_sway = lerp(camera_sway, Vector3.ZERO, delta*RECENTER)
 
 	# Store this frame's pre-sway basis for next frame
-	last_cc_rot = cc_rot
+	last_cmk_rot = cmk_rot
 
 	return camera_sway * gun_sway_max
 
 
 ## Handles gun shake animation
 func _determine_shake() -> Vector3:
-	if(v_offset == 0 and h_offset == 0): return Vector3.ZERO
-	return Vector3(v_offset, h_offset, 0)
+	return shake_angle
 
 
 func _determine_shooting() -> Vector3:
@@ -198,20 +206,18 @@ func start_gun_shake(footstep_time_length : float) -> void:
 	if _gun_shake_tween:
 		_gun_shake_tween.kill()
 	
-	var amount = 0.5
+	var random_shake := Vector3.ZERO
+	for idx in 3:
+		random_shake[idx] = randf_range(gun_shake_angle_max[idx] * 0.25, gun_shake_angle_max[idx])
+		
 	_gun_shake_tween = create_tween()
-	_gun_shake_tween.tween_method(update_gun_shake.bind(amount), 0.0, 1.0, gun_shake_time_length).set_ease(Tween.EASE_OUT)
+	_gun_shake_tween.tween_method(update_gun_shake.bind(random_shake), 0.0, 1.0, gun_shake_time_length).set_ease(Tween.EASE_OUT)
 
 
 ## Handles end-of-footstep gun shake
-var h_offset : float = 0.0
-var v_offset : float = 0.0
-func update_gun_shake(alpha: float, amount: float) -> void:
-	var MIN_GUN_SHAKE = 0.01
-	var MAX_GUN_SHAKE = 0.05
+var shake_angle := Vector3.ZERO
+func update_gun_shake(alpha: float, random_shake: Vector3) -> void:
+	var shake_frequency = 20
+	var amt = sin(alpha * shake_frequency) * (1 - alpha)
 	
-	amount = remap(amount, 0.0, 1.0 , MIN_GUN_SHAKE, MAX_GUN_SHAKE)
-	
-	var current_shake_amount = amount * (1.0 - alpha)
-	h_offset = randf_range(-current_shake_amount, current_shake_amount)
-	v_offset = randf_range(-current_shake_amount, current_shake_amount)
+	shake_angle = random_shake * amt

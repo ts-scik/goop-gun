@@ -9,8 +9,8 @@ extends CharacterBody3D
 @export var PM_JUMP_VELOCITY : float = 4.5 # jump velocity
 @export_group("Movement")
 @export var PM_WALKSPEED : float = 2.5 # move velocity
-@export var PM_RUNSPEED : float = 7.0 # run velocity
-@export var PM_CROUCHSPEED : float = 2.0 # crouch velocity
+@export var PM_RUNSPEED : float = 5 # run velocity
+@export var PM_CROUCHSPEED : float = 1.5 # crouch velocity
 @export var PM_ACCELERATE : float = 8.0 # Acceleration factor on ground
 @export var PM_AIRACCELERATE : float = 1.0 # Acceleration factor in air
 @export_group("Friction")
@@ -79,26 +79,46 @@ func _HUD_setup() -> void:
 
 ## Handle instantaneous inputs (pausing, scoreboard, jump, mouse)
 func _input(event) -> void:
+	#TODO - DEBUG
+	#if event is not InputEventMouseMotion: print(event)
+	
 	# If we're using Network -- early return if not authority
 	if NetworkManager.early_return(self): return
 	
 	# Mouse
 	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-		# Handle shooting
-		if event.is_action_pressed("shoot"):
+		if event.is_action_pressed("shoot_btn"):
 			input_buffer.buffer_input(SHOOT_INPUT)
-		# Handle aim press
-		elif event.is_action_pressed("aim"):
-			# Hold-to-aim -> enable aiming
-			if(!aim_toggle): aim_held = true
-			# Toggle-aim -> toggle aiming
-			else: aim_held = !aim_held
-		# Handle aim release (only for hold-to-aim)
-		elif !aim_toggle and event.is_action_released("aim"):
-			# Hold-to-aim -> disable aiming
+		elif event.is_action_pressed("aim_btn"):
+			# Toggle-aim
+			if(aim_toggle):
+				aim_held = !aim_held
+			# Hold-to-aim (press)
+			else:
+				aim_held = true
+		elif event.is_action_released("aim_btn") and !aim_toggle:
+			# Hold-to-aim (release)
 			aim_held = false
 
-	# Crouching/running
+	# Crouching/running/jumping
+	if event.is_action_pressed("jump"):
+		input_buffer.buffer_input(JUMP_INPUT)
+	elif event.is_action_pressed("run"):
+		# runninng - TODO -- should we be doing this here? should there be a "can run"?
+		is_running = true
+	elif event.is_action_released("run"):
+		is_running = false
+	elif event.is_action_pressed("crouch"):
+		# TODO - should there be a "can crouch" type deal??
+		# toggle crouch
+		if crouch_toggle:
+			is_crouching = !is_crouching
+		# hold to crouch (press)
+		else:
+			is_crouching = true
+	elif event.is_action_released("crouch") and !crouch_toggle:
+		# hold to crouch (release)
+		is_crouching = false
 	# TODO !!
 
 	# Pause menu
@@ -113,14 +133,47 @@ func _input(event) -> void:
 	# Die
 	elif event.is_action_pressed("kill"):
 		die.rpc()
-	elif event.is_action_pressed("jump"):
-		input_buffer.buffer_input(JUMP_INPUT)
+
+
+## Handles gamepad aiming/shooting
+## Effectively converts LT/RT into buttons
+# TODO - there must be a better way of doing this
+var recent_gamepad_shoot := false
+var recent_gamepad_aim := false
+func _input_shoot_ads_gamepad() -> void:
+	var shoot_amount = Input.get_action_strength("shoot_axis")
+	var aim_amount = Input.get_action_strength("aim_axis")
+	
+	var shoot_threshold = 0.25
+	var aim_threshold = 0.1
+	
+	# Release -- reset flags
+	if(recent_gamepad_shoot and shoot_amount < shoot_threshold):
+		recent_gamepad_shoot = false
+	if(recent_gamepad_aim and aim_amount < aim_threshold):
+		if(!aim_toggle):
+			aim_held = false
+		recent_gamepad_aim = false
+	
+	# Press -- set flags
+	if(!recent_gamepad_shoot and shoot_amount > shoot_threshold):
+		input_buffer.buffer_input(SHOOT_INPUT)
+		recent_gamepad_shoot = true
+	if(!recent_gamepad_aim and aim_amount > aim_threshold):
+		if(aim_toggle):
+			aim_held = !aim_held
+		else:
+			aim_held = true
+		recent_gamepad_aim = true
 
 
 ## Handle buffered inputs
 func _process(delta: float) -> void:
 	# If we're using Network -- early return if not authority
 	if NetworkManager.early_return(self): return
+	
+	# Handle gamepad shoot/ads
+	_input_shoot_ads_gamepad()
 	
 	# Try to shoot
 	var can_shoot : bool = true #TODO
@@ -151,27 +204,35 @@ func _physics_process(delta: float) -> void:
 	
 	# Actually do our movement
 	move_and_slide()
-
-
+	
+	# If we just landed,
+	if(is_on_floor() != was_on_floor):
+		gun_controller.start_gun_shake(footstep_time_length)
+		
 ## Handles footstep sounds, viewbob
+# footstep_timer goes from (0 -> footstep_time_length)
+# timer increments while user is on ground and pressing input directions
+# at the peak of our bob, we trigger a sound + gun_shake, but only if user
+# is pressing a movement direction and is grounded *at that moment*
 var dip_passed : bool = false
 func _handle_footsteps(delta) -> void:
 	var direction : Vector3 = pmove.PM_Wishdir(self)
-	
 	var peak_threshold = footstep_peak_pct * footstep_time_length
+	var rate : float = 1.0
+	if(is_running):
+		rate *= PM_RUNSPEED / PM_WALKSPEED
+	if(is_crouching):
+		rate *= PM_CROUCHSPEED / PM_WALKSPEED
 	
-	# If we're on the ground and moving,
+	# If we're on the ground and moving, move the timer forward
 	if(was_on_floor and direction):
-		footstep_timer = min(footstep_timer + delta, footstep_time_length)
-		# trigger sound at dip
+		footstep_timer = min(footstep_timer + (delta*rate), footstep_time_length)
+		# If we *just* passed the peak, trigger our sound and gunshake
 		if(footstep_timer >= peak_threshold) and (dip_passed == false):
-			# play a sound
 			play_footstep_sound.rpc()
-			# trigger the gun shake
 			gun_controller.start_gun_shake(footstep_time_length)
-		# If we hit the timer's top end
+		# If the timer has topped out, reset the timer
 		if(footstep_timer >= footstep_time_length):
-			# reset the timer
 			footstep_timer = 0.0
 			dip_passed = false
 	# If we've stopped moving, but haven't hit the peak yet, reverse
@@ -181,6 +242,7 @@ func _handle_footsteps(delta) -> void:
 	else:
 		footstep_timer = min(footstep_timer + delta, footstep_time_length)
 	
+	# Flag if we've passed the peak
 	if(footstep_timer >= peak_threshold):
 		dip_passed = true
 

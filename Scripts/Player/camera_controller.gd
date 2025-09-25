@@ -81,10 +81,23 @@ func _input(event: InputEvent) -> void:
 			mouse_input.y += -event.screen_relative.y * mouse_sensitivity
 
 
+## Handles gamepad aiming
+func _input_aim_gamepad() -> void:
+	var y_aim : float = Input.get_axis("look_down","look_up")
+	var x_aim : float = Input.get_axis("look_right","look_left")
+	
+	var gamepad_sense_scale = 15 # TODO - this should be an export, probably
+	mouse_input.y += y_aim * mouse_sensitivity * gamepad_sense_scale
+	mouse_input.x += x_aim * mouse_sensitivity * gamepad_sense_scale
+
+
 ## Handles camera rotation / gun positioning
 func _process(delta: float) -> void:
 	# If we're using Network -- early return if not authority
 	if NetworkManager.early_return(self): return
+	
+	# Handle gamepad aiming
+	_input_aim_gamepad()
 	
 	# If the window has been resized, do some viewport updates
 	if(screen_size != Vector2(get_viewport().size)):
@@ -95,20 +108,14 @@ func _process(delta: float) -> void:
 	
 	# Handle camera effects
 	var target_fov : float = _determine_zoom_fov()
-	var offset_transform : Transform3D = _calculate_effects(delta)
-	
-	var target_position = target_transform.origin
-	var target_rotation = target_transform.basis.get_euler()
-	var offset_position = offset_transform.origin
-	var offset_rotation = offset_transform.basis.get_euler()
+	var offset_transform : Transform3D = _calculate_effects()
 	
 	# Update camera
 	player_camera.fov = target_fov
-	self.position = target_position + offset_position
-	self.rotation = target_rotation + offset_rotation
+	self.position = target_transform.origin + offset_transform.origin
+	self.rotation = target_transform.basis.get_euler() + offset_transform.basis.get_euler()
 	
 	# Update the gun's position + rotation - THIS MUST BE AFTER MOUSE/CAMERA UPDATES!!
-	# TODO: add some kind of sway to gun as mouse moves slower/faster
 	qck.manage_positioning(delta)
 	
 	# Zero out our mouse input for next frame
@@ -148,7 +155,6 @@ func _mouse_camera_update() -> Transform3D:
 		input_rotation.x = clampf(input_rotation.x + (mouse_input.y * camera_sensitivity), deg_to_rad(-90), deg_to_rad(85))
 	
 	# Update the pmk rotation
-	# TODO -- look this over and think about it -- globals/interpolation
 	# Rotate camera controller (up/down)
 	pmk.camera_controller_anchor.transform.basis = Basis.from_euler(Vector3(input_rotation.x, 0.0, 0.0))
 	# Rotate player controller (left/right)
@@ -165,8 +171,9 @@ func _determine_zoom_fov() -> float:
 
 
 ## Returns offset angle based on camera effects
-func _calculate_effects(delta) -> Transform3D:
-	var velocity = pmk.velocity
+var bob_vec : Vector3 = Vector3.ZERO
+func _calculate_effects() -> Transform3D:
+	var velocity= pmk.velocity
 	var pos = Vector3.ZERO
 	var angles = Vector3.ZERO
 	
@@ -192,7 +199,8 @@ func _calculate_effects(delta) -> Transform3D:
 		# temp solution -- symmetrical arc peaking at 0.5
 		var bob_amount : float
 		bob_amount = viewbob_curve.sample_baked(foot_time_ratio)
-		pos.y += max_bob_height * bob_amount
+		bob_vec = Vector3(0, max_bob_height * bob_amount, 0)
+		pos.y += bob_vec.y
 	
 	var out_tf : Transform3D
 	out_tf.origin = pos # TODO
