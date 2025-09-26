@@ -255,14 +255,23 @@ func start_camera_shake(amount : float, duration : float) -> void:
 
 
 ## Handles camera shake
-func _update_camera_shake(alpha : float, amount : float) -> void:
-	var shake_frequency : float = 15
+func _update_camera_shake(alpha : float, _amount : float) -> void:
+	var shake_frequency : float = 15 * (1 - alpha)
 	var amt = sin(alpha * shake_frequency) * (1 - alpha)
 	
 	var v_offset = amt * _camera_shake_angle.y
 	var h_offset = amt * _camera_shake_angle.x
+	
+	var roll_frequency : float = 15
+	var roll_offset = -sin(alpha * roll_frequency) * (1 - alpha) * 0.009
+	var pitch_offset = sin(alpha * 8) * (1 - alpha) * 0.007
+	var yaw_offset = sin(alpha * 12) * (1 - alpha) * 0.008
+	
 	player_camera.v_offset = v_offset
 	player_camera.h_offset = h_offset
+	player_camera.rotation.z = roll_offset
+	player_camera.rotation.x = pitch_offset
+	player_camera.rotation.y = yaw_offset
 
 
 ## Handle update to is_aiming state

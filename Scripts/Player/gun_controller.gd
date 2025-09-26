@@ -223,7 +223,7 @@ func start_gun_shake(footstep_time_length : float) -> void:
 ## Handles end-of-footstep gun shake
 var shake_angle := Vector3.ZERO
 func _update_gun_shake(alpha: float, random_shake: Vector3) -> void:
-	var shake_frequency = 20
+	var shake_frequency = 20 * (1-alpha)
 	var amt = sin(alpha * shake_frequency) * (1 - alpha)
 	
 	shake_angle = random_shake * amt
