@@ -89,9 +89,15 @@ func _manage_gun_unaimed(delta) -> Transform3D:
 	var unaimed_target_rot : Vector3 = holstered_rot - Vector3(cmk.rotation.x,0,0)
 	var aim_held : bool = pmk.aim_held
 	
+	# cap our max aim amount if the player is running
+	var max_aim_amt : float = 1.0
+	if(pmk.is_running):
+		max_aim_amt = 0.1
+	
 	# Starting an aim
-	if(aim_held and !pmk.is_running):
-		ads_timer = min(ads_timer + delta, 1.0) # update the aim timer
+	if(aim_held and ads_timer <= max_aim_amt):
+		# update the aim timer
+		ads_timer = min(ads_timer + delta, max_aim_amt)
 		if(ads_ratio() >= 1.0): # if we're there, update the aim variable
 			ads_timer = ads_time
 			is_aiming = true
@@ -190,33 +196,33 @@ func start_gun_shoot_tilt() -> void:
 		_gun_shoot_tween.kill()
 		
 	_gun_shoot_tween = create_tween()
-	_gun_shoot_tween.tween_method(update_gun_shoot, 0.0, 1.0, gun_shoot_time).set_ease(Tween.EASE_OUT)
+	_gun_shoot_tween.tween_method(_update_gun_shoot, 0.0, 1.0, gun_shoot_time).set_ease(Tween.EASE_OUT)
 
 
 ## Handles gun shoot animation
 var current_shoot_angle : Vector3 = Vector3.ZERO
-func update_gun_shoot(alpha : float) -> void:
+func _update_gun_shoot(alpha : float) -> void:
 	current_shoot_angle = lerp(shoot_angle_max, Vector3.ZERO, alpha)
 
 
 ## Starts end-of-footstep gun shake
 func start_gun_shake(footstep_time_length : float) -> void:
-	var gun_shake_time_length = footstep_time_length * gun_shake_time_percent
-	
 	if _gun_shake_tween:
 		_gun_shake_tween.kill()
+	
+	var gun_shake_time_length = footstep_time_length * gun_shake_time_percent
 	
 	var random_shake := Vector3.ZERO
 	for idx in 3:
 		random_shake[idx] = randf_range(gun_shake_angle_max[idx] * 0.25, gun_shake_angle_max[idx])
 		
 	_gun_shake_tween = create_tween()
-	_gun_shake_tween.tween_method(update_gun_shake.bind(random_shake), 0.0, 1.0, gun_shake_time_length).set_ease(Tween.EASE_OUT)
+	_gun_shake_tween.tween_method(_update_gun_shake.bind(random_shake), 0.0, 1.0, gun_shake_time_length).set_ease(Tween.EASE_OUT)
 
 
 ## Handles end-of-footstep gun shake
 var shake_angle := Vector3.ZERO
-func update_gun_shake(alpha: float, random_shake: Vector3) -> void:
+func _update_gun_shake(alpha: float, random_shake: Vector3) -> void:
 	var shake_frequency = 20
 	var amt = sin(alpha * shake_frequency) * (1 - alpha)
 	

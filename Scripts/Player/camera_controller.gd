@@ -216,6 +216,7 @@ func camera_shoot():
 	var kick_store = kick_amount
 	kick_store.x *= ((randi() & 2) - 1)
 	if(qck.is_aiming):
+		start_camera_shake(6, 0.5)
 		mouse_input += kick_store # TODO scale with screen size
 
 
@@ -235,6 +236,33 @@ func _viewport_update():
 	)
 	# Update our deadzone debug rectangle
 	guncanvas.viewport_update(screen_size, gun_deadzone) # TODO - not our job
+
+
+## Starts a camera shake, with aggressiveness [amount] and duration [duration]
+var _camera_shake_tween : Tween
+var _camera_shake_angle : Vector2 = Vector2.ZERO
+func start_camera_shake(amount : float, duration : float) -> void:
+	if _camera_shake_tween:
+		_camera_shake_tween.kill()
+	
+	var MAX_SHAKE_AMT = 0.005 * amount
+	var MIN_SHAKE_AMT = MAX_SHAKE_AMT * 0.5
+	_camera_shake_angle.x = randf_range(MIN_SHAKE_AMT, MAX_SHAKE_AMT)
+	_camera_shake_angle.y = randf_range(MIN_SHAKE_AMT, MAX_SHAKE_AMT)
+	
+	_camera_shake_tween = create_tween()
+	_camera_shake_tween.tween_method(_update_camera_shake.bind(amount), 0.0, 1.0, duration).set_ease(Tween.EASE_OUT)
+
+
+## Handles camera shake
+func _update_camera_shake(alpha : float, amount : float) -> void:
+	var shake_frequency : float = 15
+	var amt = sin(alpha * shake_frequency) * (1 - alpha)
+	
+	var v_offset = amt * _camera_shake_angle.y
+	var h_offset = amt * _camera_shake_angle.x
+	player_camera.v_offset = v_offset
+	player_camera.h_offset = h_offset
 
 
 ## Handle update to is_aiming state
