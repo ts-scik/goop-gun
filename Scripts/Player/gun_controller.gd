@@ -23,7 +23,7 @@ signal is_aiming_update(bool)
 var gun_shake_stored : Vector3 = Vector3.ZERO
 var _gun_shake_tween : Tween
 @export_group("Shooting")
-@export var shoot_angle_max : Vector3 = Vector3(deg_to_rad(10), 0, 0)
+@export var shoot_angle_max : Vector3 = Vector3(deg_to_rad(20), deg_to_rad(1.7), deg_to_rad(4))
 @export var gun_shoot_time : float = 0.25
 var _gun_shoot_tween : Tween
 
@@ -41,6 +41,7 @@ var last_aimed_target_rot : Vector3 = Vector3.ZERO # stores last rotation when a
 
 
 ## Updates the gun
+@onready var gun_model_holder_basepos = gun_model_holder.position
 func manage_positioning(delta) -> void:
 	var target_transform : Transform3D
 	
@@ -63,13 +64,10 @@ func manage_positioning(delta) -> void:
 	
 	# apply sway
 	var sway_amount : Vector3 = _determine_sway(delta)
-	# do shake
-	var shake_amount : Vector3 = _determine_shake()
-	# do shoot anim
-	var shoot_amount : Vector3 = _determine_shooting()
 	
 	# apply gun model effects
-	gun_model_holder.rotation = Vector3.ZERO + sway_amount + shake_amount + shoot_amount
+	gun_model_holder.rotation = Vector3.ZERO + sway_amount + shake_angle + current_shoot_angle
+	gun_model_holder.position = gun_model_holder_basepos + current_shoot_offset
 
 
 ## Returns how far into ads we are, from (0.0, 1.0)
@@ -170,15 +168,6 @@ func _determine_sway(delta) -> Vector3:
 	return camera_sway * gun_sway_max
 
 
-## Handles gun shake animation
-func _determine_shake() -> Vector3:
-	return shake_angle
-
-
-func _determine_shooting() -> Vector3:
-	return current_shoot_angle
-
-
 ## Shoots
 @rpc("authority","call_local","unreliable")
 func shoot() -> void:
@@ -187,11 +176,11 @@ func shoot() -> void:
 	# handle sound
 	gun_sound.play()
 	# handle anim
-	start_gun_shoot_tilt()
+	start_gun_shoot_anim()
 
 
 ## Starts gun shoot animation
-func start_gun_shoot_tilt() -> void:
+func start_gun_shoot_anim() -> void:
 	if _gun_shoot_tween:
 		_gun_shoot_tween.kill()
 		
@@ -201,8 +190,14 @@ func start_gun_shoot_tilt() -> void:
 
 ## Handles gun shoot animation
 var current_shoot_angle : Vector3 = Vector3.ZERO
+var current_shoot_offset : Vector3 = Vector3.ZERO
 func _update_gun_shoot(alpha : float) -> void:
-	current_shoot_angle = lerp(shoot_angle_max, Vector3.ZERO, alpha)
+	var amt = (sin(alpha * TAU/2))
+	var shoot_offset_max = Vector3(0, 0.02, 0.08) # TODO make this an export
+	current_shoot_offset = Vector3(0, amt * shoot_offset_max.y, amt * shoot_offset_max.z)
+	current_shoot_angle.x = lerpf(shoot_angle_max.x, 0, alpha)
+	current_shoot_angle.y = sin(alpha * TAU * 2) * shoot_angle_max.y * (1-alpha)
+	current_shoot_angle.z = sin(alpha * TAU * 2) * shoot_angle_max.z * (1-alpha)
 
 
 ## Starts end-of-footstep gun shake
@@ -214,6 +209,7 @@ func start_gun_shake(footstep_time_length : float) -> void:
 	
 	var random_shake := Vector3.ZERO
 	for idx in 3:
+		# TODO make the 0.25 exportable
 		random_shake[idx] = randf_range(gun_shake_angle_max[idx] * 0.25, gun_shake_angle_max[idx])
 		
 	_gun_shake_tween = create_tween()
@@ -223,7 +219,7 @@ func start_gun_shake(footstep_time_length : float) -> void:
 ## Handles end-of-footstep gun shake
 var shake_angle := Vector3.ZERO
 func _update_gun_shake(alpha: float, random_shake: Vector3) -> void:
-	var shake_frequency = 20 * (1-alpha)
-	var amt = sin(alpha * shake_frequency) * (1 - alpha)
+	var shake_frequency = 5 * (1-alpha) # TODO make this export effected
+	var amt = sin(alpha * shake_frequency * TAU) * (1 - alpha)
 	
 	shake_angle = random_shake * amt

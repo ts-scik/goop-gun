@@ -207,6 +207,7 @@ func _physics_process(delta: float) -> void:
 	
 	# If we just landed,
 	if(is_on_floor() != was_on_floor):
+		play_footstep_sound.rpc()
 		gun_controller.start_gun_shake(footstep_time_length)
 		
 ## Handles footstep sounds, viewbob
