@@ -176,8 +176,8 @@ func _process(delta: float) -> void:
 	_input_shoot_ads_gamepad()
 	
 	# Try to shoot
-	var can_shoot : bool = true #TODO
-	can_shoot = aim_held # TODO
+	var reshoot_cutoff : float = 0.75 # TODO export
+	var can_shoot : bool = (gun_controller.shoot_time_remaining() >= reshoot_cutoff and gun_controller.is_aiming)
 	if(can_shoot):
 		var buffered_shoot = input_buffer.buffer_retrieve(SHOOT_INPUT) # check for buffered shoot input
 		if(buffered_shoot):

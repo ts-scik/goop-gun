@@ -16,19 +16,25 @@ extends Node3D
 @export var max_pitch : float = 1.0 # Euler degrees
 @export var max_roll : float = 2.5 # Euler degrees
 @export_group("Gun Kick")
-@export var kick_amount = Vector2(0.1,0.2) # Cursor's x/y screen kick amount
+@export var kick_amount = Vector2(0.025,0.05) # Cursor's x/y screen kick amount
+@export_group("Camera Shake")
+@export var camera_shake_enabled = true
+@export var camera_roll_enabled = true
+var _camera_shake_tween : Tween
+var _camera_shake_angle : Vector2 = Vector2.ZERO
 @export_group("Aim FOV")
 @export var enable_aim_zoom : bool = true
-@export var aimed_fov_percent : float = 0.9
+@export var aimed_fov_percent : float = 0.875
 @export_group("Viewbob")
 @export var enable_viewbob : bool = true
 @export var viewbob_curve : Curve
 @export var max_bob_height : float = 0.06
+var bob_vec : Vector3 = Vector3.ZERO
 
 var desired_fov : float = 75.0 # TODO - this should be player-configurable
 # Child nodes
 var player_camera : Camera3D # Player camera
-var qck : GunController # Gun's container
+var gck : GunController # Gun's container
 # Mouse sensitivity variables
 var mouse_sensitivity : float = 0.005 # Mouse overall sensitivitiy
 var camera_sensitivity : float = 0.5 # Mouse camera sensitivity
@@ -59,11 +65,11 @@ func _ready() -> void:
 	# Capture the mouse
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	# Find the target nodes
-	qck = get_node("GunController")
+	gck = get_node("GunController")
 	player_camera = get_node("PlayerCamera")
 	guncanvas = get_node("GunCanvas")
 	# Set up signals, start using camera
-	qck.is_aiming_update.connect(_on_is_aiming_update)
+	gck.is_aiming_update.connect(_on_is_aiming_update)
 	player_camera.current = true
 	# Update all our screen-size-related variables
 	_viewport_update()
@@ -116,7 +122,7 @@ func _process(delta: float) -> void:
 	self.rotation = target_transform.basis.get_euler() + offset_transform.basis.get_euler()
 	
 	# Update the gun's position + rotation - THIS MUST BE AFTER MOUSE/CAMERA UPDATES!!
-	qck.manage_positioning(delta)
+	gck.manage_positioning(delta)
 	
 	# Zero out our mouse input for next frame
 	mouse_input = Vector2.ZERO
@@ -128,7 +134,7 @@ func _mouse_camera_update() -> Transform3D:
 	var mouse_x_locked : bool = false
 	
 	# AIMED state
-	if(qck.is_aiming):
+	if(gck.is_aiming):
 		# Update mouse position
 		var mouse_newpos : Vector2 = mouse_position - (mouse_input * aim_sensitivity * (screen_size.y) * 20)
 		var midpoint : Vector2 = screen_size/2
@@ -163,15 +169,14 @@ func _mouse_camera_update() -> Transform3D:
 	return pmk.camera_controller_anchor.get_global_transform_interpolated()
 
 
-## Determines how zoom-in the fov should be, given the current qck ads_ratio
+## Determines how zoom-in the fov should be, given the current gck ads_ratio
 func _determine_zoom_fov() -> float:
-	if not enable_aim_zoom or qck.ads_ratio() <= 0.0:
+	if not enable_aim_zoom or gck.ads_ratio() <= 0.0:
 		return desired_fov
-	return lerpf(desired_fov, desired_fov * aimed_fov_percent, qck.ads_ratio())
+	return lerpf(desired_fov, desired_fov * aimed_fov_percent, gck.ads_ratio())
 
 
 ## Returns offset angle based on camera effects
-var bob_vec : Vector3 = Vector3.ZERO
 func _calculate_effects() -> Transform3D:
 	var velocity= pmk.velocity
 	var pos = Vector3.ZERO
@@ -195,15 +200,13 @@ func _calculate_effects() -> Transform3D:
 	if enable_viewbob:
 		# get 0.0 - 1.0 float for how far into footstep we are
 		var foot_time_ratio : float = pmk.footstep_timer/pmk.footstep_time_length
-		# TODO - develop some kind of viewbob curve
-		# temp solution -- symmetrical arc peaking at 0.5
 		var bob_amount : float
 		bob_amount = viewbob_curve.sample_baked(foot_time_ratio)
 		bob_vec = Vector3(0, max_bob_height * bob_amount, 0)
 		pos.y += bob_vec.y
 	
 	var out_tf : Transform3D
-	out_tf.origin = pos # TODO
+	out_tf.origin = pos
 	out_tf.basis = Basis.from_euler(angles)
 	return out_tf
 
@@ -215,8 +218,8 @@ func camera_shoot():
 	# TODO - make this a lerp rather than an instantaneous snap
 	var kick_store = kick_amount
 	kick_store.x *= ((randi() & 2) - 1)
-	if(qck.is_aiming):
-		start_camera_shake(6, 0.5)
+	if(gck.is_aiming):
+		start_camera_shake(6, gck.gun_shoot_time)
 		mouse_input += kick_store # TODO scale with screen size
 
 
@@ -235,17 +238,18 @@ func _viewport_update():
 		screen_size.y/2 * mouse_deadzone.z
 	)
 	# Update our deadzone debug rectangle
-	guncanvas.viewport_update(screen_size, gun_deadzone) # TODO - not our job
+	guncanvas.viewport_update(screen_size, gun_deadzone) # TODO - not our job?
 
 
 ## Starts a camera shake, with aggressiveness [amount] and duration [duration]
-var _camera_shake_tween : Tween
-var _camera_shake_angle : Vector2 = Vector2.ZERO
 func start_camera_shake(amount : float, duration : float) -> void:
+	if(!camera_shake_enabled and !camera_roll_enabled):
+		return
+	
 	if _camera_shake_tween:
 		_camera_shake_tween.kill()
 	
-	var MAX_SHAKE_AMT = 0.005 * amount # TODO export
+	var MAX_SHAKE_AMT = 0.002 * amount # TODO export
 	var MIN_SHAKE_AMT = MAX_SHAKE_AMT * 0.5 # TODO export
 	_camera_shake_angle.x = randf_range(MIN_SHAKE_AMT, MAX_SHAKE_AMT)
 	_camera_shake_angle.y = randf_range(MIN_SHAKE_AMT, MAX_SHAKE_AMT)
@@ -256,22 +260,25 @@ func start_camera_shake(amount : float, duration : float) -> void:
 
 ## Handles camera shake
 func _update_camera_shake(alpha : float, _amount : float) -> void:
-	var shake_frequency : float = 4 * (1 - alpha)
-	var amt = sin(alpha * shake_frequency * TAU) * (1 - alpha)
+	if(camera_shake_enabled):
+		var shake_frequency : float = 2 # TODO export this 4? make it amount-dependent?
+		var amt = sin(alpha * shake_frequency * TAU) * (1 - alpha)
 	
-	var v_offset = amt * _camera_shake_angle.y
-	var h_offset = amt * _camera_shake_angle.x
+		var v_offset = amt * _camera_shake_angle.y
+		var h_offset = amt * _camera_shake_angle.x
 	
-	var roll_frequency : float = 4 # TODO export this and below multipliers
-	var roll_offset = -sin(alpha * roll_frequency * TAU) * (1 - alpha) * 0.009
-	var pitch_offset = sin(alpha * 2 * TAU) * (1 - alpha) * 0.007
-	var yaw_offset = sin(alpha * 2 * TAU) * (1 - alpha) * 0.008
+		player_camera.v_offset = v_offset
+		player_camera.h_offset = h_offset
 	
-	player_camera.v_offset = v_offset
-	player_camera.h_offset = h_offset
-	player_camera.rotation.z = roll_offset
-	player_camera.rotation.x = pitch_offset
-	player_camera.rotation.y = yaw_offset
+	if(camera_roll_enabled):
+		var roll_frequency : float = 3 # TODO export this and below multipliers, make effected by amount
+		var roll_offset = -sin(alpha * roll_frequency * TAU) * (1 - alpha) * 0.01
+		var pitch_offset = sin(alpha * 2 * TAU) * (1 - alpha) * 0.008
+		var yaw_offset = sin(alpha * 2 * TAU) * (1 - alpha) * 0.002
+	
+		player_camera.rotation.z = roll_offset
+		player_camera.rotation.x = pitch_offset
+		player_camera.rotation.y = yaw_offset
 
 
 ## Handle update to is_aiming state
@@ -289,4 +296,4 @@ func toggle_debug(is_debug : bool, parameter : String):
 	match(parameter):
 		"box": debug_box = is_debug
 		"dot": debug_dot = is_debug
-	guncanvas.display_toggle(debug_box, debug_dot) # TODO - not our job
+	guncanvas.display_toggle(debug_box, debug_dot) # TODO - not our job ?

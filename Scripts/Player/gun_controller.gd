@@ -17,25 +17,28 @@ signal is_aiming_update(bool)
 @export_category("Animating")
 @export_group("Sway")
 @export var gun_sway_max : Vector3 = Vector3(deg_to_rad(3.5), deg_to_rad(5), deg_to_rad(5))
+var camera_sway : Vector3 = Vector3.ZERO
 @export_group("Shaking")
 @export var gun_shake_angle_max : Vector3 = Vector3(deg_to_rad(4),deg_to_rad(1),deg_to_rad(1))
 @export var gun_shake_time_percent : float = 0.8
-var gun_shake_stored : Vector3 = Vector3.ZERO
+var shake_angle := Vector3.ZERO
 var _gun_shake_tween : Tween
 @export_group("Shooting")
-@export var shoot_angle_max : Vector3 = Vector3(deg_to_rad(20), deg_to_rad(1.7), deg_to_rad(4))
+@export var shoot_angle_max : Vector3 = Vector3(deg_to_rad(20), deg_to_rad(3), deg_to_rad(4))
+@export var shoot_offset_max = Vector3(0, 0.04, 0.16)
 @export var gun_shoot_time : float = 0.25
+@export var kick_peak_pct : float = 0.1
 var _gun_shoot_tween : Tween
-
-@export_category("Aiming")
+var current_shoot_angle : Vector3 = Vector3.ZERO
+var current_shoot_offset : Vector3 = Vector3.ZERO
+@export_group("Aiming")
 @export var gun_hold_distance : float = 0.7 # How far gun is held out from player
 @export var ads_time : float = 0.25 # ADS time (in seconds)
 var ads_timer : float = 0.0 # Timer for ADS lerp
 var is_aiming : bool = false # Flag for ADS completed
-# Aiming position variables
 var last_aimed_target_pos : Vector3 = Vector3.ZERO # stores last position when aimed
 var last_aimed_target_rot : Vector3 = Vector3.ZERO # stores last rotation when aimed
-@export_category("Holstering")
+@export_group("Holstering")
 @export var holstered_pos = Vector3(0, 1.0, -0.4) # configurable variable for where gun should go when holstered
 @export var holstered_rot = Vector3(deg_to_rad(-45.0), 0.0, 0.0) # configurable variable for gun's rotation when holstered
 
@@ -55,7 +58,7 @@ func manage_positioning(delta) -> void:
 	
 	# snap to target tf
 	if(is_aiming):
-		var snapspeed = 5 # TODO - make this an export if we're keeping it
+		var snapspeed = 10 # TODO - make this an export if we're keeping it
 		self.rotation = lerp(self.rotation, target_transform.basis.get_euler(), delta * snapspeed)
 		#self.position = lerp(self.position, target_transform.origin, delta * snapspeed)
 	else:
@@ -88,9 +91,9 @@ func _manage_gun_unaimed(delta) -> Transform3D:
 	var aim_held : bool = pmk.aim_held
 	
 	# cap our max aim amount if the player is running
-	var max_aim_amt : float = 1.0
+	var max_aim_amt : float = ads_time
 	if(pmk.is_running):
-		max_aim_amt = 0.1
+		max_aim_amt = ads_time * 0.4 # TODO pct export
 	
 	# Starting an aim
 	if(aim_held and ads_timer <= max_aim_amt):
@@ -136,7 +139,6 @@ func _manage_gun_aimed() -> Transform3D:
 
 
 ## Returns Vector3 angle for how much gun should sway, given camera velocity
-var camera_sway : Vector3 = Vector3.ZERO
 func _determine_sway(delta) -> Vector3:
 	# store post-update, pre-sway basis
 	var cmk_rot := cmk.rotation
@@ -179,6 +181,14 @@ func shoot() -> void:
 	start_gun_shoot_anim()
 
 
+## Returns 0.0 -> 1.0 value for how long is left in our shooting animation
+## Value of [1.0] means that we're not currently in a shooting animation
+func shoot_time_remaining() -> float:
+	if(!_gun_shoot_tween or !_gun_shoot_tween.is_running()):
+		return 1.0
+	return clampf(_gun_shoot_tween.get_total_elapsed_time() / gun_shoot_time, 0.0, 1.0)
+
+
 ## Starts gun shoot animation
 func start_gun_shoot_anim() -> void:
 	if _gun_shoot_tween:
@@ -189,15 +199,21 @@ func start_gun_shoot_anim() -> void:
 
 
 ## Handles gun shoot animation
-var current_shoot_angle : Vector3 = Vector3.ZERO
-var current_shoot_offset : Vector3 = Vector3.ZERO
 func _update_gun_shoot(alpha : float) -> void:
-	var amt = (sin(alpha * TAU/2))
-	var shoot_offset_max = Vector3(0, 0.02, 0.08) # TODO make this an export
-	current_shoot_offset = Vector3(0, amt * shoot_offset_max.y, amt * shoot_offset_max.z)
-	current_shoot_angle.x = lerpf(shoot_angle_max.x, 0, alpha)
-	current_shoot_angle.y = sin(alpha * TAU * 2) * shoot_angle_max.y * (1-alpha)
-	current_shoot_angle.z = sin(alpha * TAU * 2) * shoot_angle_max.z * (1-alpha)
+	var wght : float
+	if(alpha < kick_peak_pct):
+		wght = alpha / kick_peak_pct
+	else:
+		wght = 1 - ((alpha - kick_peak_pct) / (1 - kick_peak_pct))
+	
+	# variables that peak at kick_peak_pct, then linearly taper
+	current_shoot_offset.z = wght * shoot_offset_max.z
+	current_shoot_offset.y = wght * shoot_offset_max.y
+	current_shoot_angle.x = lerpf(0, shoot_angle_max.x, wght)
+	# variables that follow a sin wave of frequency 2
+	var amt = (sin(alpha * TAU * 2))
+	current_shoot_angle.y = amt * shoot_angle_max.y * (1-alpha)
+	current_shoot_angle.z = amt * shoot_angle_max.z * (1-alpha)
 
 
 ## Starts end-of-footstep gun shake
@@ -217,7 +233,6 @@ func start_gun_shake(footstep_time_length : float) -> void:
 
 
 ## Handles end-of-footstep gun shake
-var shake_angle := Vector3.ZERO
 func _update_gun_shake(alpha: float, random_shake: Vector3) -> void:
 	var shake_frequency = 5 * (1-alpha) # TODO make this export effected
 	var amt = sin(alpha * shake_frequency * TAU) * (1 - alpha)

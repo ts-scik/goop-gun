@@ -24,7 +24,6 @@ properties/2/replication_mode = 1
 
 [node name="CameraController" type="Node3D"]
 script = ExtResource("1_hitlr")
-kick_amount = Vector2(0.01, 0.05)
 viewbob_curve = SubResource("Curve_7w2as")
 
 [node name="CameraSynchronizer" type="MultiplayerSynchronizer" parent="."]
