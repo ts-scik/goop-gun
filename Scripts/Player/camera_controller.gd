@@ -219,7 +219,7 @@ func camera_shoot():
 	var kick_store = kick_amount
 	kick_store.x *= ((randi() & 2) - 1)
 	if(gck.is_aiming):
-		start_camera_shake(6, gck.gun_shoot_time)
+		start_camera_shake(1, gck.gun_shoot_time)
 		mouse_input += kick_store # TODO scale with screen size
 
 
@@ -249,7 +249,7 @@ func start_camera_shake(amount : float, duration : float) -> void:
 	if _camera_shake_tween:
 		_camera_shake_tween.kill()
 	
-	var MAX_SHAKE_AMT = 0.002 * amount # TODO export
+	var MAX_SHAKE_AMT = 0.025 # TODO export, amount-dependent
 	var MIN_SHAKE_AMT = MAX_SHAKE_AMT * 0.5 # TODO export
 	_camera_shake_angle.x = randf_range(MIN_SHAKE_AMT, MAX_SHAKE_AMT)
 	_camera_shake_angle.y = randf_range(MIN_SHAKE_AMT, MAX_SHAKE_AMT)
@@ -272,9 +272,9 @@ func _update_camera_shake(alpha : float, _amount : float) -> void:
 	
 	if(camera_roll_enabled):
 		var roll_frequency : float = 3 # TODO export this and below multipliers, make effected by amount
-		var roll_offset = -sin(alpha * roll_frequency * TAU) * (1 - alpha) * 0.01
-		var pitch_offset = sin(alpha * 2 * TAU) * (1 - alpha) * 0.008
-		var yaw_offset = sin(alpha * 2 * TAU) * (1 - alpha) * 0.002
+		var roll_offset = -sin(alpha * roll_frequency * TAU) * (1 - alpha) * 0.002
+		var pitch_offset = sin(alpha * 2 * TAU) * (1 - alpha) * 0.002
+		var yaw_offset = sin(alpha * roll_frequency * TAU) * (1 - alpha) * 0.002
 	
 		player_camera.rotation.z = roll_offset
 		player_camera.rotation.x = pitch_offset

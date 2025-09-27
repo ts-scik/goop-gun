@@ -24,7 +24,7 @@ var camera_sway : Vector3 = Vector3.ZERO
 var shake_angle := Vector3.ZERO
 var _gun_shake_tween : Tween
 @export_group("Shooting")
-@export var shoot_angle_max : Vector3 = Vector3(deg_to_rad(20), deg_to_rad(3), deg_to_rad(4))
+@export var shoot_angle_max : Vector3 = Vector3(deg_to_rad(20), deg_to_rad(1.7), deg_to_rad(2))
 @export var shoot_offset_max = Vector3(0, 0.04, 0.16)
 @export var gun_shoot_time : float = 0.25
 @export var kick_peak_pct : float = 0.1
