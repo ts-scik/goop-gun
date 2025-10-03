@@ -17,7 +17,6 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-NetworkManager="*res://Scripts/Globals/network_manager.gd"
 GameManager="*res://Scripts/Globals/game_manager.gd"
 
 [debug_draw_3d]
@@ -33,8 +32,9 @@ project/assembly_name="receiver-proto"
 folder_colors={
 "res://Models/": "orange",
 "res://Prefabs/": "purple",
-"res://Prefabs/Level/Rooms/": "green",
-"res://Scripts/": "blue"
+"res://Prefabs/Unused/Rooms/": "green",
+"res://Scripts/": "blue",
+"res://Scripts/Unused/Level/": "green"
 }
 
 [input]

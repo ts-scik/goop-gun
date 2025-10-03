@@ -19,7 +19,7 @@ func _on_slider_update(value, parameter : String):
 
 ## Handles quit/leave button
 func _on_quit_button_pressed() -> void:
-	NetworkManager.leave_game()
+	get_tree().quit()
 
 
 ## Handles debug checkbox

@@ -48,19 +48,8 @@ var input_buffer : InputBuffer
 enum {JUMP_INPUT = 0, SHOOT_INPUT = 1,}
 
 
-## Set multiplayer auth
-func _enter_tree() -> void:
-	set_multiplayer_authority(name.to_int())
-
-
 ## Connect signals, display HUD
-func _ready() -> void:
-	# If we're using Network -- early return if not authority
-	if NetworkManager.early_return(self): return
-	
-	# Store ourselves in the gamemanager
-	GameManager.local_player = self
-	
+func _ready() -> void:	
 	# Buffer setup
 	input_buffer = InputBuffer.new()
 	
@@ -78,13 +67,7 @@ func _HUD_setup() -> void:
 
 
 ## Handle instantaneous inputs (pausing, scoreboard, jump, mouse)
-func _input(event) -> void:
-	#TODO - DEBUG
-	#if event is not InputEventMouseMotion: print(event)
-	
-	# If we're using Network -- early return if not authority
-	if NetworkManager.early_return(self): return
-	
+func _input(event) -> void:	
 	# Mouse
 	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		if event.is_action_pressed("shoot_btn"):
@@ -124,15 +107,9 @@ func _input(event) -> void:
 	# Pause menu
 	if event.is_action_pressed("pause"):
 		_on_menu_key()
-	# Scoreboard
-	elif event.is_action_pressed("scoreboard"):
-		HUD.update_scores()
-		HUD.scoreboard.show()
-	elif event.is_action_released("scoreboard"):
-		HUD.scoreboard.hide()
 	# Die
 	elif event.is_action_pressed("kill"):
-		die.rpc()
+		die()
 
 
 ## Handles gamepad aiming/shooting
@@ -168,10 +145,7 @@ func _input_shoot_ads_gamepad() -> void:
 
 
 ## Handle buffered inputs
-func _process(delta: float) -> void:
-	# If we're using Network -- early return if not authority
-	if NetworkManager.early_return(self): return
-	
+func _process(delta: float) -> void:	
 	# Handle gamepad shoot/ads
 	_input_shoot_ads_gamepad()
 	
@@ -182,18 +156,14 @@ func _process(delta: float) -> void:
 		var buffered_shoot = input_buffer.buffer_retrieve(SHOOT_INPUT) # check for buffered shoot input
 		if(buffered_shoot):
 			camera_controller.camera_shoot()
-			gun_controller.shoot.rpc()
+			gun_controller.shoot()
 	
 	# Update the input buffer -- do this at the *end* of the frame
 	input_buffer.buffer_update(delta)
 
 
 ## Handle player movement
-func _physics_process(delta: float) -> void:
-	# TODO: adjust this so players don't have *total* authority ??
-	# If we're using Network -- early return if not authority
-	if NetworkManager.early_return(self): return
-	
+func _physics_process(delta: float) -> void:	
 	# Set walking/on_ground flag
 	was_on_floor = is_on_floor()
 
@@ -207,7 +177,7 @@ func _physics_process(delta: float) -> void:
 	
 	# If we just landed,
 	if(is_on_floor() != was_on_floor):
-		play_footstep_sound.rpc()
+		play_footstep_sound()
 		gun_controller.start_gun_shake(footstep_time_length)
 		
 ## Handles footstep sounds, viewbob
@@ -230,7 +200,7 @@ func _handle_footsteps(delta) -> void:
 		footstep_timer = min(footstep_timer + (delta*rate), footstep_time_length)
 		# If we *just* passed the peak, trigger our sound and gunshake
 		if(footstep_timer >= peak_threshold) and (dip_passed == false):
-			play_footstep_sound.rpc()
+			play_footstep_sound()
 			gun_controller.start_gun_shake(footstep_time_length)
 		# If the timer has topped out, reset the timer
 		if(footstep_timer >= footstep_time_length):
@@ -261,13 +231,11 @@ func play_footstep_sound() -> void:
 ## Take damage when hit
 # TODO - we should be able to shoot ourselves, and take damage from enemies
 # TODO - we should get as parameter where the shot came from (as a vector)
-@rpc("any_peer","reliable") # Any peer can tell us we've been shot
 func receive_damage(dmg : int = 1, shooter : String = ""):
-	print("ack!! i, ", multiplayer.get_unique_id(),", was shot by ", NetworkManager.players_dict[int(shooter)]["name"] + "\t" + shooter)
 	health -= dmg
 	HUD.update_health(health)
 	if health <= 0:
-		die.rpc(shooter)
+		die(shooter)
 
 
 ## Die if out of health
@@ -278,22 +246,18 @@ func receive_damage(dmg : int = 1, shooter : String = ""):
 @rpc("any_peer","call_local","reliable")
 func die(shooter : String = ""):
 	reset_physics_interpolation()
-	if(is_multiplayer_authority()):
-		health = 3
-		# TODO: this whole chunk should be moved into a spawn function
-		if(!has_node("/root/MainScene/World")):
-			position = Vector3.ZERO
-			print("zeroed")
-		else:
-			var spawns : Array = get_node("/root/MainScene/World").player_spawn_positions
-			var selection = randi_range(0, spawns.size()-1)
-			var chosen_spawn : Marker3D = spawns[selection]
-			self.position = chosen_spawn.global_position
-			self.rotation.y = chosen_spawn.global_rotation.y
-		HUD.update_health(health)
-	if(NetworkManager.players_dict.has(int(shooter))):
-		NetworkManager.players_dict[int(shooter)]["score"]+=1
-	HUD.update_scores()
+	health = 3
+	# TODO: this whole chunk should be moved into a spawn function
+	if(!has_node("/root/MainScene/World")):
+		position = Vector3.ZERO
+		print("zeroed")
+	else:
+		var spawns : Array = get_node("/root/MainScene/World").player_spawn_positions
+		var selection = randi_range(0, spawns.size()-1)
+		var chosen_spawn : Marker3D = spawns[selection]
+		self.position = chosen_spawn.global_position
+		self.rotation.y = chosen_spawn.global_rotation.y
+	HUD.update_health(health)
 
 
 ## Handle showing/hiding the menu

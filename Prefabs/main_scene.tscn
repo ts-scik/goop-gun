@@ -1,11 +1,10 @@
-[gd_scene load_steps=2 format=3 uid="uid://dk1pnqsqbyrb2"]
+[gd_scene load_steps=3 format=3 uid="uid://dk1pnqsqbyrb2"]
 
-[ext_resource type="PackedScene" uid="uid://c70yb0bub5udh" path="res://Prefabs/UI/multiplayer_UI.tscn" id="1_dhxai"]
+[ext_resource type="PackedScene" uid="uid://dtfa0wus6t07h" path="res://Prefabs/world.tscn" id="1_dhxai"]
+[ext_resource type="PackedScene" uid="uid://dpkim8cla8dii" path="res://Prefabs/Player/player.tscn" id="2_kuxum"]
 
 [node name="MainScene" type="Node"]
 
-[node name="MultiplayerUI" parent="." instance=ExtResource("1_dhxai")]
+[node name="World" parent="." instance=ExtResource("1_dhxai")]
 
-[node name="MP_WorldSpawner" type="MultiplayerSpawner" parent="."]
-_spawnable_scenes = PackedStringArray("uid://dtfa0wus6t07h")
-spawn_path = NodePath("..")
+[node name="Player" parent="." instance=ExtResource("2_kuxum")]

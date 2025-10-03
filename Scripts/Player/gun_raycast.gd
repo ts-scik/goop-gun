@@ -13,7 +13,8 @@ func shoot():
 			var hit_player : PlayerController = get_collider()
 			var dmg = 1
 			#print("i am ", multiplayer.get_unique_id(), " shooting ", hit_player)
-			hit_player.receive_damage.rpc_id(hit_player.get_multiplayer_authority(), dmg, str(multiplayer.get_unique_id()))
+			#TODO: actually do something on hit
+			#hit_player.receive_damage(hit_player.get_multiplayer_authority(), dmg, str(multiplayer.get_unique_id()))
 		elif get_collider() is RigidBody3D:
 			var rb : RigidBody3D = get_collider()
 			var hit_pos_offset = get_collision_point() - rb.global_position

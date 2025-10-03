@@ -58,8 +58,6 @@ var debug_box : bool = false # Flag for if we want to show the boundary_rect
 func _ready() -> void:
 	# Turn off automatic physics interpolation for the Camera3D
 	set_physics_interpolation_mode(Node.PHYSICS_INTERPOLATION_MODE_OFF)
-	# Early return if not multiplayer authority - clients own their cameras
-	if NetworkManager.early_return(self): return
 	# Disable transform inheritance from parent
 	top_level = true
 	# Capture the mouse
@@ -77,9 +75,6 @@ func _ready() -> void:
 
 ## Handles input [event]s for mouse whenever they arrive
 func _input(event: InputEvent) -> void:
-	# If we're using Network -- early return if not authority
-	if NetworkManager.early_return(self): return
-	
 	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		# Handle mouse movement
 		if event is InputEventMouseMotion:
@@ -99,9 +94,6 @@ func _input_aim_gamepad() -> void:
 
 ## Handles camera rotation / gun positioning
 func _process(delta: float) -> void:
-	# If we're using Network -- early return if not authority
-	if NetworkManager.early_return(self): return
-	
 	# Handle gamepad aiming
 	_input_aim_gamepad()
 	
