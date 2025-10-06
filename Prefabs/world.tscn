@@ -1,8 +1,6 @@
-[gd_scene load_steps=11 format=3 uid="uid://dtfa0wus6t07h"]
+[gd_scene load_steps=9 format=3 uid="uid://dtfa0wus6t07h"]
 
-[ext_resource type="Script" uid="uid://by5yaq3ckogg2" path="res://Scripts/world.gd" id="1_pceh6"]
 [ext_resource type="PackedScene" uid="uid://doh2j3xdg7bo8" path="res://Prefabs/Level/geometry.tscn" id="3_p054e"]
-[ext_resource type="PackedScene" uid="uid://dpkim8cla8dii" path="res://Prefabs/Player/player.tscn" id="6_rqu7v"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_p054e"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
@@ -29,8 +27,6 @@ albedo_color = Color(0, 0, 1, 1)
 material = SubResource("StandardMaterial3D_p054e")
 
 [node name="World" type="Node3D"]
-script = ExtResource("1_pceh6")
-player_scene = ExtResource("6_rqu7v")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_7wtak")

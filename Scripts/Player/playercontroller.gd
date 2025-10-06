@@ -167,7 +167,7 @@ func _physics_process(delta: float) -> void:
 	# Set walking/on_ground flag
 	was_on_floor = is_on_floor()
 
-	pmove.movement_update(self, delta)
+	#pmove.movement_update(self, delta)
 	
 	# Foostep management
 	_handle_footsteps(delta)
@@ -179,7 +179,8 @@ func _physics_process(delta: float) -> void:
 	if(is_on_floor() != was_on_floor):
 		play_footstep_sound()
 		gun_controller.start_gun_shake(footstep_time_length)
-		
+
+
 ## Handles footstep sounds, viewbob
 # footstep_timer goes from (0 -> footstep_time_length)
 # timer increments while user is on ground and pressing input directions

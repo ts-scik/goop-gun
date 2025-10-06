@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3 uid="uid://w5yidi6yqanc"]
+[gd_scene load_steps=5 format=3 uid="uid://w5yidi6yqanc"]
 
 [ext_resource type="Script" uid="uid://tp34olvhc8jf" path="res://Scripts/Player/camera_controller.gd" id="1_hitlr"]
 [ext_resource type="PackedScene" uid="uid://c37slaodjgit6" path="res://Prefabs/Player/gun_controller.tscn" id="2_7w2as"]
@@ -11,23 +11,9 @@ point_count = 4
 metadata/_snap_enabled = true
 metadata/_snap_count = 20
 
-[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_dtqie"]
-properties/0/path = NodePath(".:position")
-properties/0/spawn = true
-properties/0/replication_mode = 1
-properties/1/path = NodePath(".:rotation")
-properties/1/spawn = true
-properties/1/replication_mode = 1
-properties/2/path = NodePath(".:top_level")
-properties/2/spawn = true
-properties/2/replication_mode = 1
-
 [node name="CameraController" type="Node3D"]
 script = ExtResource("1_hitlr")
 viewbob_curve = SubResource("Curve_7w2as")
-
-[node name="CameraSynchronizer" type="MultiplayerSynchronizer" parent="."]
-replication_config = SubResource("SceneReplicationConfig_dtqie")
 
 [node name="GunController" parent="." node_paths=PackedStringArray("cmk") instance=ExtResource("2_7w2as")]
 transform = Transform3D(0.8, 0, 0, 0, 0.56568545, 0.56568545, 0, -0.56568545, 0.56568545, 0, -0.5, -0.4)

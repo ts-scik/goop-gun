@@ -370,9 +370,9 @@ func end_game() -> void:
 ## Takes a [node] -- returns true if the node is not it's own network authority
 func early_return(node) -> bool:
 	# Check if we're using networking
-	if NetworkManager.peer != null:
+	if self.peer != null:
 		# return true if we have no peers
-		if NetworkManager.peer.get_connection_status() == 0 :
+		if self.peer.get_connection_status() == 0 :
 			return true
 		# return true if we're not the multiplayer authority
 		if not node.is_multiplayer_authority():
