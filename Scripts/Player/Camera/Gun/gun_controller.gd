@@ -2,17 +2,17 @@
 class_name GunController
 extends Node3D
 
+# Parent nodes
 var cmk : CameraController # Node for camera that this gun inherits from
 var pmk : PlayerController # Node that the camera will follow - grabbed in _ready()
 
 # Holders for animation transforms
-@onready var gun_model_holder_basepos = gun_model_holder.position
-@onready var target_transform : Transform3D = self.transform
+var gun_model_holder_basepos
+var last_cmk_rot : Vector3 # grab this in _ready()
 
 @onready var gun_sound : AudioStreamPlayer3D = get_node("GunSound")
 @onready var gun_model_holder : Node3D = get_node("GunModelHolder")
 @onready var ray : RayCast3D = get_node("GunModelHolder/GunRaycast")
-var last_cmk_rot : Vector3 # grab this in _ready()
 
 @export_category("Animating")
 @export_group("Sway")
@@ -20,7 +20,7 @@ var last_cmk_rot : Vector3 # grab this in _ready()
 var camera_sway : Vector3 = Vector3.ZERO
 @export_group("Shaking")
 @export var gun_shake_angle_max : Vector3 = Vector3(deg_to_rad(4),deg_to_rad(1),deg_to_rad(1))
-@export var gun_shake_time_percent : float = 0.8
+@export var gun_shake_time_percent : float = 0.8 # what % of foostep time gun should shake for
 var shake_angle := Vector3.ZERO
 var _gun_shake_tween : Tween
 @export_group("Shooting")
@@ -33,9 +33,6 @@ var current_shoot_angle : Vector3 = Vector3.ZERO
 var current_shoot_offset : Vector3 = Vector3.ZERO
 @export_group("Aiming")
 @export var gun_hold_distance : float = 0.7 # How far gun is held out from player
-@export var ads_time : float = 0.25 # ADS time (in seconds)
-var ads_timer : float = 0.0 # Timer for ADS lerp
-var is_aiming : bool = false # Flag for ADS completed
 var last_aimed_target_pos : Vector3 = Vector3.ZERO # stores last position when aimed
 var last_aimed_target_rot : Vector3 = Vector3.ZERO # stores last rotation when aimed
 @export_group("Holstering")
@@ -50,63 +47,21 @@ func _ready() -> void:
 	cmk = owner as CameraController
 	assert(cmk != null, "The GunController node requires a CameraController node as owner.")
 	pmk = cmk.pmk # is this bad?
-	last_cmk_rot = cmk.rotation
-
-
-## Updates the gun
-func manage_positioning(delta) -> void:
-	# snap to target tf
-	if(is_aiming):
-		var snapspeed = 10 # TODO - make this an export if we're keeping it
-		self.rotation = lerp(self.rotation, target_transform.basis.get_euler(), delta * snapspeed)
-		#self.position = lerp(self.position, target_transform.origin, delta * snapspeed)
-	else:
-		self.rotation = target_transform.basis.get_euler() # rotation rather than basis, so we maintain scale
-	self.position = target_transform.origin
+	assert(pmk != null, "The GunController node must be child of a CameraController with PlayerController as owner.")
 	
+	# Store transform variables
+	last_cmk_rot = cmk.rotation
+	gun_model_holder_basepos = gun_model_holder.position
+
+
+## Updates the gun's model_holder child
+func _process(_delta) -> void:
 	# apply sway
-	var sway_amount : Vector3 = _determine_sway(delta)
+	var sway_amount : Vector3 = camera_sway * gun_sway_max
 	
 	# apply gun model effects
 	gun_model_holder.rotation = Vector3.ZERO + sway_amount + shake_angle + current_shoot_angle
 	gun_model_holder.position = gun_model_holder_basepos + current_shoot_offset
-
-
-## Returns how far into ads we are, from (0.0, 1.0)
-func ads_ratio() -> float:
-	return ads_timer/ads_time
-
-
-## Returns Vector3 angle for how much gun should sway, given camera velocity
-func _determine_sway(delta) -> Vector3:
-	# store post-update, pre-sway basis
-	var cmk_rot := cmk.rotation
-	var rot_change : Vector3 = Vector3.ZERO
-	
-	# Rotation change -- only calculated if not holstered
-	if(is_aiming or pmk.aim_held or ads_timer > 0.0):
-		rot_change = cmk_rot - last_cmk_rot
-	
-		# Keep rot_change inbounds
-		for idx in 3:
-			if(abs(rot_change[idx]) > PI):
-				rot_change[idx] -= TAU * sign(rot_change[idx])
-	
-		rot_change.z = rot_change.y # TODO - are you sure?
-	
-		# Apply rot_change to camera_sway
-		var CHANGESCALE = 1
-		camera_sway += (rot_change * CHANGESCALE)
-		camera_sway.clampf(-1.0, 1.0)
-	
-	# Recenter
-	var RECENTER = 7
-	camera_sway = lerp(camera_sway, Vector3.ZERO, delta*RECENTER)
-
-	# Store this frame's pre-sway basis for next frame
-	last_cmk_rot = cmk_rot
-
-	return camera_sway * gun_sway_max
 
 
 ## Shoots
@@ -136,7 +91,7 @@ func start_gun_shoot_anim() -> void:
 	_gun_shoot_tween.tween_method(_update_gun_shoot, 0.0, 1.0, gun_shoot_time).set_ease(Tween.EASE_OUT)
 
 
-## Handles gun shoot animation
+## [Tween method] - Handles gun shoot animation
 func _update_gun_shoot(alpha : float) -> void:
 	var wght : float
 	if(alpha < kick_peak_pct):
@@ -155,6 +110,7 @@ func _update_gun_shoot(alpha : float) -> void:
 
 
 ## Starts end-of-footstep gun shake
+# TODO - should make this just take a time, so it's not specifically for footsteps
 func start_gun_shake(footstep_time_length : float) -> void:
 	if _gun_shake_tween:
 		_gun_shake_tween.kill()
@@ -170,7 +126,7 @@ func start_gun_shake(footstep_time_length : float) -> void:
 	_gun_shake_tween.tween_method(_update_gun_shake.bind(random_shake), 0.0, 1.0, gun_shake_time_length).set_ease(Tween.EASE_OUT)
 
 
-## Handles end-of-footstep gun shake
+## [Tween method] - Handles end-of-footstep gun shake
 func _update_gun_shake(alpha: float, random_shake: Vector3) -> void:
 	var shake_frequency = 5 * (1-alpha) # TODO make this export effected
 	var amt = sin(alpha * shake_frequency * TAU) * (1 - alpha)

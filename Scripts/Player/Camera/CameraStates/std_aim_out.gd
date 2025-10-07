@@ -1,9 +1,15 @@
+## State for camera+gun management when transitioning from Aimed -> Unaimed
 extends CameraState
+# TODO - implement HSM to move a lot of this elsewhere
 
 
 ## Called by the state machine when receiving unhandled input events.
-func handle_input(_event: InputEvent) -> void:
-	pass
+func handle_input(event: InputEvent) -> void:
+	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		# Handle mouse movement
+		if event is InputEventMouseMotion:
+			cmk.mouse_input.x += -event.screen_relative.x * cmk.mouse_sensitivity
+			cmk.mouse_input.y += -event.screen_relative.y * cmk.mouse_sensitivity
 
 
 ## Called by the state machine on the engine's main loop tick.
@@ -26,19 +32,19 @@ func update(delta: float) -> void:
 	
 	# Update the gun's position + rotation - THIS MUST BE AFTER MOUSE/CAMERA UPDATES!!
 	# TODO - is that true??
-	cmk.gck.target_transform = _get_aimout_gun_transform(delta)
-	cmk.gck.manage_positioning(delta)
+	_aimout_gun_target_transform(delta)
+	_determine_gun_sway(delta)
 	
 	# Zero out our mouse input for next frame
 	cmk.mouse_input = Vector2.ZERO
 	
 	# If we're no longer trying to aim out, aim in
 	# ... unless we're trying to aim while sprinting, and still above the sprint aim cap
-	var max_aim_amt = cmk.gck.ads_time * 0.4 if cmk.pmk.is_running else cmk.gck.ads_time 
-	if cmk.pmk.aim_held and cmk.gck.ads_timer < max_aim_amt:
+	var max_aim_amt = cmk.ads_time * 0.4 if cmk.pmk.is_running else cmk.ads_time 
+	if cmk.pmk.aim_held and cmk.ads_timer < max_aim_amt:
 		finished.emit("AimIn")
 	# If we've fully aimed out, transition to Unaimed
-	if cmk.gck.ads_ratio() <= 0.0:
+	if cmk.ads_ratio() <= 0.0:
 		finished.emit("Unaimed")
 
 
@@ -67,13 +73,13 @@ func _unaimed_mouse_camera_update() -> Transform3D:
 
 ## Determines how zoom-in the fov should be, given the current gck ads_ratio
 func _aim_trans_determine_zoom_fov() -> float:
-	if not cmk.enable_aim_zoom or cmk.gck.ads_ratio() <= 0.0:
+	if not cmk.enable_aim_zoom or cmk.ads_ratio() <= 0.0:
 		return cmk.desired_fov
-	return lerpf(cmk.desired_fov, cmk.desired_fov * cmk.aimed_fov_percent, cmk.gck.ads_ratio())
+	return lerpf(cmk.desired_fov, cmk.desired_fov * cmk.aimed_fov_percent, cmk.ads_ratio())
 
 
 ## Animates gun in/out of aiming position
-func _get_aimout_gun_transform(delta) -> Transform3D:
+func _aimout_gun_target_transform(delta) -> Transform3D:
 	# get target pos/rot
 	var player_interp := cmk.pmk.get_global_transform_interpolated()
 	var unaimed_target_pos : Vector3 = cmk.to_local(
@@ -84,17 +90,50 @@ func _get_aimout_gun_transform(delta) -> Transform3D:
 	var unaimed_target_rot : Vector3 = cmk.gck.holstered_rot - Vector3(cmk.rotation.x,0,0)
 	
 	# Ending an aim
-	cmk.gck.ads_timer = max(cmk.gck.ads_timer - delta, 0.0) # update the aim timer
-	if(cmk.gck.is_aiming): # update is_aiming, last_aimed stuff
-		cmk.gck.is_aiming = false
-		cmk.gck.last_aimed_target_pos = cmk.gck.position
-		cmk.gck.last_aimed_target_rot = cmk.gck.rotation
+	cmk.ads_timer = max(cmk.ads_timer - delta, 0.0) # update the aim timer
 	
 	# Aim transition lerp
 	var out_tf : Transform3D
-	out_tf.origin = lerp(unaimed_target_pos, cmk.gck.last_aimed_target_pos, cmk.gck.ads_ratio())
-	out_tf.basis = Basis.from_euler(lerp(unaimed_target_rot, cmk.gck.last_aimed_target_rot, cmk.gck.ads_ratio()))
+	out_tf.origin = lerp(unaimed_target_pos, cmk.gck.last_aimed_target_pos, cmk.ads_ratio())
+	out_tf.basis = Basis.from_euler(lerp(unaimed_target_rot, cmk.gck.last_aimed_target_rot, cmk.ads_ratio()))
+	
+	# snap to target tf
+	cmk.gck.rotation = out_tf.basis.get_euler() # rotation rather than basis, so we maintain scale
+	cmk.gck.position = out_tf.origin
+	
 	return out_tf
+
+
+## Returns Vector3 angle for how much gun should sway, given camera velocity
+func _determine_gun_sway(delta) -> Vector3:
+	# store post-update, pre-sway basis
+	var cmk_rot := cmk.rotation
+	var rot_change : Vector3 = Vector3.ZERO
+	
+	# Rotation change -- only calculated if not holstered
+	if(cmk.is_aiming or cmk.pmk.aim_held or cmk.ads_timer > 0.0):
+		rot_change = cmk_rot - cmk.gck.last_cmk_rot
+	
+		# Keep rot_change inbounds
+		for idx in 3:
+			if(abs(rot_change[idx]) > PI):
+				rot_change[idx] -= TAU * sign(rot_change[idx])
+	
+		rot_change.z = rot_change.y # TODO - are you sure?
+	
+		# Apply rot_change to camera_sway
+		var CHANGESCALE = 1
+		cmk.gck.camera_sway += (rot_change * CHANGESCALE)
+		cmk.gck.camera_sway.clampf(-1.0, 1.0)
+	
+	# Recenter
+	var RECENTER = 7
+	cmk.gck.camera_sway = lerp(cmk.gck.camera_sway, Vector3.ZERO, delta*RECENTER)
+
+	# Store this frame's pre-sway basis for next frame
+	cmk.gck.last_cmk_rot = cmk_rot
+
+	return cmk.gck.camera_sway * cmk.gck.gun_sway_max
 
 
 ## Called by the state machine on the engine's physics update tick.

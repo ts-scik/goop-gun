@@ -1,13 +1,21 @@
+## State for camera+gun management when completely Unaimed
 extends CameraState
+# TODO - implement HSM to move a lot of this elsewhere
 
 
 ## Called by the state machine when receiving unhandled input events.
-func handle_input(_event: InputEvent) -> void:
-	pass
+func handle_input(event: InputEvent) -> void:
+	if event.is_action_pressed("reload"):
+		finished.emit("Reload")
+	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		# Handle mouse movement
+		if event is InputEventMouseMotion:
+			cmk.mouse_input.x += -event.screen_relative.x * cmk.mouse_sensitivity
+			cmk.mouse_input.y += -event.screen_relative.y * cmk.mouse_sensitivity
 
 
 ## Called by the state machine on the engine's main loop tick.
-func update(delta: float) -> void:
+func update(_delta: float) -> void:
 	# If the window has been resized, do some viewport updates
 	if(cmk.screen_size != Vector2(get_viewport().size)):
 		cmk._viewport_update()
@@ -26,8 +34,7 @@ func update(delta: float) -> void:
 	
 	# Update the gun's position + rotation - THIS MUST BE AFTER MOUSE/CAMERA UPDATES!!
 	# TODO - is that true??
-	cmk.gck.target_transform = _get_unaimed_gun_transform()
-	cmk.gck.manage_positioning(delta)
+	_unaimed_gun_target_transform()
 	
 	# Zero out our mouse input for next frame
 	cmk.mouse_input = Vector2.ZERO
@@ -61,7 +68,7 @@ func _unaimed_mouse_camera_update() -> Transform3D:
 
 
 ## Animates gun in/out of aiming position
-func _get_unaimed_gun_transform() -> Transform3D:
+func _unaimed_gun_target_transform() -> Transform3D:
 	# get target pos/rot
 	var player_interp := cmk.pmk.get_global_transform_interpolated()
 	var unaimed_target_pos : Vector3 = cmk.to_local(
@@ -71,11 +78,17 @@ func _get_unaimed_gun_transform() -> Transform3D:
 	)
 	var unaimed_target_rot : Vector3 = cmk.gck.holstered_rot - Vector3(cmk.rotation.x,0,0)
 	
-	# Return unaimed TF
-	return Transform3D(
+	# Determine unaimed TF
+	var out_tf : Transform3D = Transform3D(
 		Basis.from_euler(unaimed_target_rot),
 		unaimed_target_pos
 	)
+	
+	# snap to target tf
+	cmk.gck.rotation = out_tf.basis.get_euler() # rotation rather than basis, so we maintain scale
+	cmk.gck.position = out_tf.origin
+	
+	return out_tf
 
 
 ## Called by the state machine on the engine's physics update tick.

@@ -56,7 +56,7 @@ const input_timers : Dictionary = {
 
 
 ## Set up input buffer
-func _ready() -> void:	
+func _enter_tree() -> void:
 	# Buffer setup
 	input_buffer = InputBuffer.new(input_timers)
 
@@ -117,8 +117,8 @@ func _input_shoot_ads_gamepad() -> void:
 	var shoot_amount = Input.get_action_strength("shoot_axis")
 	var aim_amount = Input.get_action_strength("aim_axis")
 	
-	var shoot_threshold = 0.25
-	var aim_threshold = 0.1
+	var shoot_threshold = 0.25 # TODO - export
+	var aim_threshold = 0.1 # TODO - export
 	
 	# Release -- reset flags
 	if(recent_gamepad_shoot and shoot_amount < shoot_threshold):
@@ -146,9 +146,9 @@ func _process(_delta: float) -> void:
 	_input_shoot_ads_gamepad()
 	
 	# Try to shoot
-	# TODO - should this be here?
+	# TODO - should this be here? probably not!!
 	var reshoot_cutoff : float = 0.75 # TODO export
-	var can_shoot : bool = (gun_controller.shoot_time_remaining() >= reshoot_cutoff and gun_controller.is_aiming)
+	var can_shoot : bool = (gun_controller.shoot_time_remaining() >= reshoot_cutoff and camera_controller.is_aiming)
 	if(can_shoot):
 		var buffered_shoot = input_buffer.buffer_retrieve(SHOOT_INPUT) # check for buffered shoot input
 		if(buffered_shoot):
@@ -157,7 +157,8 @@ func _process(_delta: float) -> void:
 
 
 ## Handle player movement
-func _physics_process(delta: float) -> void:	
+func _physics_process(delta: float) -> void:
+	# TODO - should any of this be here?
 	# Set walking/on_ground flag
 	was_on_floor = is_on_floor()
 	

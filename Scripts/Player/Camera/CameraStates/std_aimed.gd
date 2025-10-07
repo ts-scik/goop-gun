@@ -1,9 +1,14 @@
+## State for camera+gun management when completely Aimed
 extends CameraState
-
+# TODO - implement HSM to move a lot of this elsewhere
 
 ## Called by the state machine when receiving unhandled input events.
-func handle_input(_event: InputEvent) -> void:
-	pass
+func handle_input(event: InputEvent) -> void:
+	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		# Handle mouse movement
+		if event is InputEventMouseMotion:
+			cmk.mouse_input.x += -event.screen_relative.x * cmk.mouse_sensitivity
+			cmk.mouse_input.y += -event.screen_relative.y * cmk.mouse_sensitivity
 
 
 ## Called by the state machine on the engine's main loop tick.
@@ -26,14 +31,17 @@ func update(delta: float) -> void:
 	
 	# Update the gun's position + rotation - THIS MUST BE AFTER MOUSE/CAMERA UPDATES!!
 	# TODO - is that true??
-	cmk.gck.target_transform = _get_aimed_gun_transform()
-	cmk.gck.manage_positioning(delta)
+	var gun_target_tf := _aimed_gun_target_transform(delta)
+	_determine_gun_sway(delta)
+	
+	var snapspeed = 10 # TODO - make this an export if we're keeping it
+	cmk.gck.rotation = lerp(cmk.gck.rotation, gun_target_tf.basis.get_euler(), delta * snapspeed)
 	
 	# Zero out our mouse input for next frame
 	cmk.mouse_input = Vector2.ZERO
 	
 	# If we're no longer in an aiming state, transition out
-	if !(cmk.pmk.aim_held and cmk.gck.is_aiming and !cmk.pmk.is_running):
+	if !(cmk.pmk.aim_held and cmk.is_aiming and !cmk.pmk.is_running):
 		finished.emit("AimOut")
 
 
@@ -43,7 +51,7 @@ func _aimed_mouse_camera_update() -> Transform3D:
 	var mouse_x_locked : bool = false
 	
 	# AIMED state
-	if(cmk.gck.is_aiming):
+	if(cmk.is_aiming):
 		# Update mouse position
 		# TODO -- why only screen_size.y? why * 20?
 		var midpoint : Vector2 = cmk.screen_size/2
@@ -95,7 +103,7 @@ func _aimed_mouse_camera_update() -> Transform3D:
 
 
 ## Updates the gun's position+rotation (for if gun exists in local space)
-func _get_aimed_gun_transform() -> Transform3D:
+func _aimed_gun_target_transform(delta) -> Transform3D:
 	# Create temp output transform
 	var out_tf : Transform3D
 	# Get vector from player camera to gun_controller
@@ -111,7 +119,45 @@ func _get_aimed_gun_transform() -> Transform3D:
 	)
 	# Update the gun's rotation (relative to camera)
 	out_tf.basis = Basis.looking_at(fw_dir, Vector3.UP, false)
+	
+	# snap to target tf
+	var snapspeed = 10 # TODO - make this an export if we're keeping it
+	cmk.gck.rotation = lerp(cmk.gck.rotation, out_tf.basis.get_euler(), delta * snapspeed)
+	cmk.gck.position = out_tf.origin
+	
 	return out_tf
+
+
+## Returns Vector3 angle for how much gun should sway, given camera velocity
+func _determine_gun_sway(delta) -> Vector3:
+	# store post-update, pre-sway basis
+	var cmk_rot := cmk.rotation
+	var rot_change : Vector3 = Vector3.ZERO
+	
+	# Rotation change -- only calculated if not holstered
+	if(cmk.is_aiming or cmk.pmk.aim_held or cmk.ads_timer > 0.0):
+		rot_change = cmk_rot - cmk.gck.last_cmk_rot
+	
+		# Keep rot_change inbounds
+		for idx in 3:
+			if(abs(rot_change[idx]) > PI):
+				rot_change[idx] -= TAU * sign(rot_change[idx])
+	
+		rot_change.z = rot_change.y # TODO - are you sure?
+	
+		# Apply rot_change to camera_sway
+		var CHANGESCALE = 1
+		cmk.gck.camera_sway += (rot_change * CHANGESCALE)
+		cmk.gck.camera_sway.clampf(-1.0, 1.0)
+	
+	# Recenter
+	var RECENTER = 7
+	cmk.gck.camera_sway = lerp(cmk.gck.camera_sway, Vector3.ZERO, delta*RECENTER)
+
+	# Store this frame's pre-sway basis for next frame
+	cmk.gck.last_cmk_rot = cmk_rot
+
+	return cmk.gck.camera_sway * cmk.gck.gun_sway_max
 
 
 ## Called by the state machine on the engine's physics update tick.
@@ -122,6 +168,7 @@ func physics_update(_delta: float) -> void:
 ## Called by the state machine upon changing the active state. The `data` parameter
 ## is a dictionary with arbitrary data the state can use to initialize itself.
 func enter(_previous_state_path: String, _data := {}) -> void:
+	cmk.is_aiming = true
 	# Debug - update our debug red-dot color
 	if(cmk.debug_dot):
 		cmk.guncanvas.update_dot_color(Color.RED)
@@ -130,6 +177,9 @@ func enter(_previous_state_path: String, _data := {}) -> void:
 ## Called by the state machine before changing the active state. Use this function
 ## to clean up the state.
 func exit() -> void:
+	cmk.is_aiming = false
+	cmk.gck.last_aimed_target_pos = cmk.gck.position
+	cmk.gck.last_aimed_target_rot = cmk.gck.rotation
 	# Debug - update our debug red-dot color
 	if(cmk.debug_dot):
 		cmk.guncanvas.update_dot_pos(cmk.screen_size/2)

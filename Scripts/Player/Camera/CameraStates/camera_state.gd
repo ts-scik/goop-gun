@@ -7,6 +7,8 @@ enum cameraStates{
 	STD_AIMIN,
 	STD_AIMOUT,
 	RELOAD,
+	RELOAD_IN,
+	RELOAD_OUT,
 }
 
 var cmk: CameraController

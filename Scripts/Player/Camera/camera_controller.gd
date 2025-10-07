@@ -5,7 +5,12 @@ extends Node3D
 # Written using the following godot documentation:
 # https://docs.godotengine.org/en/stable/tutorials/physics/interpolation/advanced_physics_interpolation.html
 
+# Parent node
 var pmk : PlayerController # Node that the camera will follow - grabbed in ready()
+
+# Child nodes
+var player_camera : Camera3D # Player camera
+var gck : GunController # Gun's container
 
 @export_category("Effects")
 @export_group("Run Tilt")
@@ -30,21 +35,25 @@ var _camera_shake_angle : Vector2 = Vector2.ZERO
 @export var max_bob_height : float = 0.06
 var bob_vec : Vector3 = Vector3.ZERO
 
-var desired_fov : float = 75.0 # TODO - this should be player-configurable
-# Child nodes
-var player_camera : Camera3D # Player camera
-var gck : GunController # Gun's container
-# Mouse sensitivity variables
-var mouse_sensitivity : float = 0.005 # Mouse overall sensitivitiy
-var camera_sensitivity : float = 0.5 # Mouse camera sensitivity
-var aim_sensitivity : float = 0.01 # Mouse aim sensitivity
+@export_category("Interactions")
+@export_group("Aiming")
+@export var ads_time : float = 0.25 # ADS time (in seconds)
+var ads_timer : float = 0.0 # Timer for ADS lerp
+var is_aiming : bool = false # Flag for ADS completed
+@export_group("Mouse Deadzone")
+@export var mouse_deadzone : Vector3 = Vector3(0.1, 0.65, 0.35) # Mouse deadzone (in screen %) (x, yTop, yBottom)
+
+@export_category("Player Configurables")
+@export var desired_fov : float = 75.0 # TODO - this should be player-configurable
+@export var mouse_sensitivity : float = 0.005 # Mouse overall sensitivitiy
+@export var camera_sensitivity : float = 0.5 # Mouse camera sensitivity
+@export var aim_sensitivity : float = 0.01 # Mouse aim sensitivity
+
 # Mouse input variables
 var mouse_input : Vector2 # Stores mouse input each frame
 var input_rotation : Vector3 # Stores mouse_input converted to rotation
 # Gun deadzone variables
 var mouse_position : Vector2 = Vector2.ZERO # Mouse cursor's position onscreen
-@export_group("Mouse Deadzone")
-@export var mouse_deadzone : Vector3 = Vector3(0.1, 0.65, 0.35) # Mouse deadzone (in screen %) (x, yTop, yBottom)
 var screen_size : Vector2 # Size of screen (in pixels)
 var gun_deadzone : Vector3 # Gun's deadzone size (in pixels)
 # Debug stuff
@@ -56,32 +65,25 @@ var debug_box : bool = false # Flag for if we want to show the boundary_rect
 ## Get our camera
 func _ready() -> void:
 	# Find our PlayerController owner
-	await owner.ready
+	#await owner.ready
 	pmk = owner as PlayerController
 	assert(pmk != null, "The CameraController node requires a PlayerController node as owner.")
-	# Turn off automatic physics interpolation for the Camera3D
+	
+	# Handle independent camera setup
 	set_physics_interpolation_mode(Node.PHYSICS_INTERPOLATION_MODE_OFF)
-	# Disable transform inheritance from parent
 	top_level = true
-	# Capture the mouse
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	# Find the target nodes
+	
+	# Find target child nodes
 	gck = get_node("GunController")
 	player_camera = get_node("PlayerCamera")
 	guncanvas = get_node("GunCanvas")
-	# Start using camera
+	
+	# Set camera up
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	player_camera.current = true
+	
 	# Update all our screen-size-related variables
 	_viewport_update()
-
-
-## Handles input [event]s for mouse whenever they arrive
-func _input(event: InputEvent) -> void:
-	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-		# Handle mouse movement
-		if event is InputEventMouseMotion:
-			mouse_input.x += -event.screen_relative.x * mouse_sensitivity
-			mouse_input.y += -event.screen_relative.y * mouse_sensitivity
 
 
 ## Handles gamepad aiming
@@ -96,8 +98,13 @@ func _input_aim_gamepad() -> void:
 
 ## Handles camera rotation / gun positioning
 func _process(_delta: float) -> void:
-	# Handle gamepad aiming
+	# Handle gamepad aiming -- #TODO move this into states
 	_input_aim_gamepad()
+
+
+## Returns how far into ads we are, from (0.0, 1.0)
+func ads_ratio() -> float:
+	return ads_timer/ads_time
 
 
 ## Returns offset angle based on camera effects
@@ -140,11 +147,15 @@ func camera_shoot():
 	# Handle mouse kick
 	# TODO - make it so that this doesn't cause horizontal rotation, and minimize vertical camera rotation
 	# TODO - make this a lerp rather than an instantaneous snap
+	
+	if !is_aiming:
+		return
+	
 	var kick_store = kick_amount
 	kick_store.x *= ((randi() & 2) - 1)
-	if(gck.is_aiming):
-		start_camera_shake(1, gck.gun_shoot_time)
-		mouse_input += kick_store # TODO scale with screen size
+	
+	start_camera_shake(1, gck.gun_shoot_time)
+	mouse_input += kick_store # TODO scale with screen size
 
 
 ## Centers the gun camera, and updates the gun deadzone to match
@@ -167,6 +178,7 @@ func _viewport_update():
 
 ## Starts a camera shake, with aggressiveness [amount] and duration [duration]
 func start_camera_shake(amount : float, duration : float) -> void:
+	# Early return if we've fully disabled camera shake
 	if(!camera_shake_enabled and !camera_roll_enabled):
 		return
 	
@@ -182,10 +194,11 @@ func start_camera_shake(amount : float, duration : float) -> void:
 	_camera_shake_tween.tween_method(_update_camera_shake.bind(amount), 0.0, 1.0, duration).set_ease(Tween.EASE_OUT)
 
 
-## Handles camera shake
+## [Tween method] - Handles camera shake 
 func _update_camera_shake(alpha : float, _amount : float) -> void:
+	# Camera x/y shake
 	if(camera_shake_enabled):
-		var shake_frequency : float = 2 # TODO export this 4? make it amount-dependent?
+		var shake_frequency : float = 2 # TODO export this? make it amount-dependent?
 		var amt = sin(alpha * shake_frequency * TAU) * (1 - alpha)
 	
 		var v_offset = amt * _camera_shake_angle.y
@@ -194,6 +207,7 @@ func _update_camera_shake(alpha : float, _amount : float) -> void:
 		player_camera.v_offset = v_offset
 		player_camera.h_offset = h_offset
 	
+	# Camera roll shake
 	if(camera_roll_enabled):
 		var roll_frequency : float = 3 # TODO export this and below multipliers, make effected by amount
 		var roll_offset = -sin(alpha * roll_frequency * TAU) * (1 - alpha) * 0.002
