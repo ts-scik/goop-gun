@@ -10,8 +10,9 @@ func update(_delta: float) -> void:
 
 ## Called by the state machine on the engine's physics update tick.
 func physics_update(delta: float) -> void:
-	pmove.movement_update(player, delta)
-	pass
+	if pmove.PM_CheckJump(player):
+		finished.emit("Air")
+	pmove.PM_WalkMove(player, delta)
 
 ## Called by the state machine upon changing the active state. The `data` parameter
 ## is a dictionary with arbitrary data the state can use to initialize itself.

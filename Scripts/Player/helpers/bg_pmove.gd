@@ -98,9 +98,9 @@ static func PM_CheckJump(pmk : PlayerController) -> bool:
 ## Grounded movement
 static func PM_WalkMove(pmk : PlayerController, delta) -> void:
 	# Check/Perform jump
-	if PM_CheckJump(pmk):
-		PM_AirMove(pmk, delta)
-		return
+	#if PM_CheckJump(pmk):
+	#	PM_AirMove(pmk, delta)
+	#	return
 
 	PM_Friction(pmk, delta)
 	var wishdir : Vector3 = PM_Wishdir(pmk)

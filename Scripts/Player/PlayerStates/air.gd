@@ -9,12 +9,16 @@ func update(_delta: float) -> void:
 	pass
 
 ## Called by the state machine on the engine's physics update tick.
-func physics_update(_delta: float) -> void:
-	pass
+func physics_update(delta: float) -> void:
+	pmove.PM_AirMove(player, delta)
+	if player.is_on_floor():
+		print("landed!")
+		finished.emit("Walk")
 
 ## Called by the state machine upon changing the active state. The `data` parameter
 ## is a dictionary with arbitrary data the state can use to initialize itself.
 func enter(previous_state_path: String, data := {}) -> void:
+	print("entered airstate!")
 	pass
 
 ## Called by the state machine before changing the active state. Use this function

@@ -1,8 +1,8 @@
 [gd_scene load_steps=10 format=4 uid="uid://c37slaodjgit6"]
 
-[ext_resource type="Script" uid="uid://clf1pp0ppnwps" path="res://Scripts/Player/gun_controller.gd" id="1_vdk2e"]
+[ext_resource type="Script" uid="uid://clf1pp0ppnwps" path="res://Scripts/Player/Gun/gun_controller.gd" id="1_vdk2e"]
 [ext_resource type="Texture2D" uid="uid://dq874bc21aslj" path="res://Models/kenney_blaster-kit_2.1/Textures/colormap.png" id="2_vdk2e"]
-[ext_resource type="Script" uid="uid://b8b2ltlkdgkp2" path="res://Scripts/Player/gun_raycast.gd" id="3_uilo2"]
+[ext_resource type="Script" uid="uid://b8b2ltlkdgkp2" path="res://Scripts/Player/Gun/gun_raycast.gd" id="3_uilo2"]
 [ext_resource type="AudioStream" uid="uid://ro6npthlf24i" path="res://Sounds/gunshots/gunshot_cg1.wav" id="4_8ii4o"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_08u7w"]
