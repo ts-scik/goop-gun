@@ -1,0 +1,114 @@
+extends CameraState
+
+
+## Called by the state machine when receiving unhandled input events.
+func handle_input(_event: InputEvent) -> void:
+	pass
+
+
+## Called by the state machine on the engine's main loop tick.
+func update(delta: float) -> void:
+	# If the window has been resized, do some viewport updates
+	if(cmk.screen_size != Vector2(get_viewport().size)):
+		cmk._viewport_update()
+	
+	# Handle mouse input
+	var target_fov : float = (cmk.desired_fov * cmk.aimed_fov_percent)
+	var target_transform : Transform3D = _aimed_mouse_camera_update()
+	
+	# Handle camera effects
+	var offset_transform : Transform3D = cmk._calculate_effects()
+	
+	# Update camera
+	cmk.player_camera.fov = target_fov
+	cmk.position = target_transform.origin + offset_transform.origin
+	cmk.rotation = target_transform.basis.get_euler() + offset_transform.basis.get_euler()
+	
+	# Update the gun's position + rotation - THIS MUST BE AFTER MOUSE/CAMERA UPDATES!!
+	# TODO - is that true??
+	cmk.gck.manage_positioning(delta)
+	
+	# Zero out our mouse input for next frame
+	cmk.mouse_input = Vector2.ZERO
+	
+	if (!cmk.gck.is_aiming):
+		finished.emit("AimOut")
+
+
+## Handle mouse input event on camera
+func _aimed_mouse_camera_update() -> Transform3D:
+	var mouse_y_locked : bool = false
+	var mouse_x_locked : bool = false
+	
+	# AIMED state
+	if(cmk.gck.is_aiming):
+		# Update mouse position
+		# TODO -- why only screen_size.y? why * 20?
+		var midpoint : Vector2 = cmk.screen_size/2
+		var mouse_newpos : Vector2 = cmk.mouse_position - (
+			cmk.mouse_input * cmk.aim_sensitivity * cmk.screen_size.y * 20
+		)
+		cmk.mouse_position.x = clampf(
+			mouse_newpos.x,
+			midpoint.x - cmk.gun_deadzone.x,
+			midpoint.x + cmk.gun_deadzone.x
+		)
+		cmk.mouse_position.y = clampf(
+			mouse_newpos.y,
+			midpoint.y - cmk.gun_deadzone.y,
+			midpoint.y + cmk.gun_deadzone.z
+		)
+
+		# If the mouse is still within the bounding box on an axis, lock that axis' camera rotation
+		if(cmk.mouse_position.x == mouse_newpos.x):
+			mouse_x_locked = true
+		if(cmk.mouse_position.y == mouse_newpos.y):
+			mouse_y_locked = true
+		
+		# Debug - Move our debug red-dot
+		#TODO - move this elsewhere
+		if(cmk.debug_dot): cmk.guncanvas.update_dot_pos(cmk.mouse_position)
+	
+	# If both axes are locked, early return
+	if mouse_x_locked and mouse_y_locked:
+		return cmk.pmk.camera_controller_anchor.get_global_transform_interpolated()
+	
+	# Rotate the camera (unless it's locked by the bounding boxes)
+	if !mouse_x_locked:
+		cmk.input_rotation.y += cmk.mouse_input.x * cmk.camera_sensitivity
+	if !mouse_y_locked:
+		cmk.input_rotation.x = clampf(
+			cmk.input_rotation.x + (cmk.mouse_input.y * cmk.camera_sensitivity),
+			deg_to_rad(-90),
+			deg_to_rad(85)
+		)
+	
+	# Update the pmk rotation
+	# Rotate camera controller (up/down)
+	cmk.pmk.camera_controller_anchor.transform.basis = Basis.from_euler(Vector3(cmk.input_rotation.x, 0.0, 0.0))
+	# Rotate player controller (left/right)
+	cmk.pmk.global_transform.basis = Basis.from_euler(Vector3(0.0, cmk.input_rotation.y, 0.0))
+	# Move transform to player head anchor
+	return cmk.pmk.camera_controller_anchor.get_global_transform_interpolated()
+
+
+## Called by the state machine on the engine's physics update tick.
+func physics_update(_delta: float) -> void:
+	pass
+
+
+## Called by the state machine upon changing the active state. The `data` parameter
+## is a dictionary with arbitrary data the state can use to initialize itself.
+func enter(previous_state_path: String, data := {}) -> void:
+	# Debug - update our debug red-dot color
+	if(cmk.debug_dot):
+		cmk.guncanvas.update_dot_color(Color.RED)
+
+
+## Called by the state machine before changing the active state. Use this function
+## to clean up the state.
+func exit() -> void:
+	# Debug - update our debug red-dot color
+	if(cmk.debug_dot):
+		cmk.guncanvas.update_dot_pos(cmk.screen_size/2)
+		cmk.guncanvas.update_dot_color(Color.BLUE)

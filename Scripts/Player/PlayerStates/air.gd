@@ -10,8 +10,12 @@ func update(_delta: float) -> void:
 
 ## Called by the state machine on the engine's physics update tick.
 func physics_update(delta: float) -> void:
-	pmove.PM_AirMove(player, delta)
-	if player.is_on_floor():
+	pmove.PM_AirMove(pmk, delta)
+	pmk.move_and_slide()
+	# If we just landed,
+	if pmk.is_on_floor():
+		pmk.play_footstep_sound()
+		pmk.gun_controller.start_gun_shake(pmk.footstep_time_length)
 		print("landed!")
 		finished.emit("Walk")
 

@@ -52,5 +52,7 @@ script = ExtResource("6_ucnkw")
 [node name="Walk" type="Node" parent="StateMachine"]
 script = ExtResource("7_m5xj4")
 
+[node name="Slide" type="Node" parent="StateMachine"]
+
 [node name="Air" type="Node" parent="StateMachine"]
 script = ExtResource("8_a00l3")

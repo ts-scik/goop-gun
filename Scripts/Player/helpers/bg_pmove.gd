@@ -69,16 +69,17 @@ static func PM_InputScale(pmk : PlayerController) -> float:
 		return 0
 	
 	# Crouchrunning
-	if(pmk.is_running and pmk.is_crouching):
+	if (pmk.is_running and pmk.is_crouching):
 		return (pmk.PM_RUNSPEED / pmk.PM_CROUCHSPEED) * maxmove # TODO - jank?
 	# Running
-	if(pmk.is_running):
+	elif (pmk.is_running):
 		return pmk.PM_RUNSPEED * maxmove
 	# Crouching
-	if(pmk.is_crouching):
+	elif (pmk.is_crouching):
 		return pmk.PM_CROUCHSPEED * maxmove
 	# Walking
-	return pmk.PM_WALKSPEED * maxmove
+	else:
+		return pmk.PM_WALKSPEED * maxmove
 
 
 ## Jumping
@@ -98,9 +99,9 @@ static func PM_CheckJump(pmk : PlayerController) -> bool:
 ## Grounded movement
 static func PM_WalkMove(pmk : PlayerController, delta) -> void:
 	# Check/Perform jump
-	#if PM_CheckJump(pmk):
-	#	PM_AirMove(pmk, delta)
-	#	return
+	if PM_CheckJump(pmk):
+		PM_AirMove(pmk, delta)
+		return
 
 	PM_Friction(pmk, delta)
 	var wishdir : Vector3 = PM_Wishdir(pmk)
@@ -108,6 +109,7 @@ static func PM_WalkMove(pmk : PlayerController, delta) -> void:
 	
 	var accelerate : float
 	if !pmk.was_on_floor: # this is really for knockback, slippery surfaces, etc
+		print("i am here -- this seems wrong")
 		accelerate = pmk.PM_AIRACCELERATE
 	else:
 		accelerate = pmk.PM_ACCELERATE

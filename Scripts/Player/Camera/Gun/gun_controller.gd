@@ -171,7 +171,6 @@ func _determine_sway(delta) -> Vector3:
 
 
 ## Shoots
-@rpc("authority","call_local","unreliable")
 func shoot() -> void:
 	# handle raycast
 	ray.shoot()

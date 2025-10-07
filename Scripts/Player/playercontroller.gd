@@ -16,6 +16,11 @@ extends CharacterBody3D
 @export_group("Friction")
 @export var PM_FRICTION : float = 6.0 # Friction factor when on ground TODO - tweak
 @export var PM_STOPSPEED : float = 0.75 # Minimum speed factor for friction calculation
+# Variables for foosteps
+var footstep_timer : float = 0.0
+@export_group("Footsteps")
+@export var footstep_time_length : float = 0.75
+@export var footstep_peak_pct : float = 0.65
 
 # Child nodes
 @onready var camera_controller_anchor : Marker3D = $HeadPos
@@ -34,11 +39,6 @@ var fly_enabled : bool = false # debug for fly movement
 var is_crouching : bool = false # Flag for crouching
 var is_running : bool = false # Flag for running
 var crouch_toggle : bool = false # Whether we're using toggle-crouch
-# Variables for foosteps
-var footstep_timer : float = 0.0
-@export_group("Footsteps")
-@export var footstep_time_length : float = 0.75
-@export var footstep_peak_pct : float = 0.65
 # Variables for gun handling
 var aim_held : bool = false # Flag for ADS input
 var aim_toggle : bool = false # Whether or not we're using toggle-aim
@@ -55,15 +55,6 @@ func _ready() -> void:
 	
 	# UI Setup
 	pause_menu.value_update.connect(_on_menu_value_update)
-	_HUD_setup()
-
-
-## Setup HUD
-# Called during _ready()
-func _HUD_setup() -> void:
-	HUD.show()
-	HUD.update_health(health)
-	HUD.get_node("SpeedContainer/Speed").set_tracked_node(self)
 
 
 ## Handle instantaneous inputs (pausing, scoreboard, jump, mouse)
@@ -166,19 +157,9 @@ func _process(delta: float) -> void:
 func _physics_process(delta: float) -> void:	
 	# Set walking/on_ground flag
 	was_on_floor = is_on_floor()
-
-	#pmove.movement_update(self, delta)
 	
 	# Foostep management
 	_handle_footsteps(delta)
-	
-	# Actually do our movement
-	move_and_slide()
-	
-	# If we just landed,
-	if(is_on_floor() != was_on_floor):
-		play_footstep_sound()
-		gun_controller.start_gun_shake(footstep_time_length)
 
 
 ## Handles footstep sounds, viewbob
@@ -221,7 +202,6 @@ func _handle_footsteps(delta) -> void:
 
 ## Randomly selects and then plays a footstep sound
 # TODO -- this is really bad -- we're loading the file in every time
-@rpc("authority","call_local","unreliable") # It's okay if a footstep sound is dropped
 func play_footstep_sound() -> void:
 	if($FootstepSound.playing): return
 	var selection :int = randi_range(0,8)
@@ -244,7 +224,6 @@ func receive_damage(dmg : int = 1, shooter : String = ""):
 # TODO: we should tell the server we've died, and ask it to handle the respawning
 # TODO: add some kind of death animation / respawn time
 # TODO: add better respawn logic
-@rpc("any_peer","call_local","reliable")
 func die(shooter : String = ""):
 	reset_physics_interpolation()
 	health = 3

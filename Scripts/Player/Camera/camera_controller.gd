@@ -97,80 +97,35 @@ func _process(delta: float) -> void:
 	# Handle gamepad aiming
 	_input_aim_gamepad()
 	
-	# If the window has been resized, do some viewport updates
-	if(screen_size != Vector2(get_viewport().size)):
-		_viewport_update()
-
-	# Handle mouse input
-	var target_transform : Transform3D = _mouse_camera_update()
-	
-	# Handle camera effects
-	var target_fov : float = _determine_zoom_fov()
-	var offset_transform : Transform3D = _calculate_effects()
-	
-	# Update camera
-	player_camera.fov = target_fov
-	self.position = target_transform.origin + offset_transform.origin
-	self.rotation = target_transform.basis.get_euler() + offset_transform.basis.get_euler()
-	
-	# Update the gun's position + rotation - THIS MUST BE AFTER MOUSE/CAMERA UPDATES!!
-	gck.manage_positioning(delta)
-	
-	# Zero out our mouse input for next frame
-	mouse_input = Vector2.ZERO
-
-
-## Handle mouse input event on camera
-func _mouse_camera_update() -> Transform3D:
-	var mouse_y_locked : bool = false
-	var mouse_x_locked : bool = false
-	
-	# AIMED state
-	if(gck.is_aiming):
-		# Update mouse position
-		var mouse_newpos : Vector2 = mouse_position - (mouse_input * aim_sensitivity * (screen_size.y) * 20)
-		var midpoint : Vector2 = screen_size/2
-		mouse_position.x = clampf(mouse_newpos.x, midpoint.x - gun_deadzone.x, midpoint.x + gun_deadzone.x)
-		mouse_position.y = clampf(mouse_newpos.y, midpoint.y - gun_deadzone.y, midpoint.y + gun_deadzone.z)
-
-		# If the mouse is still within the bounding box on an axis, lock that axis' camera rotation
-		if(mouse_position.x == mouse_newpos.x):
-			mouse_x_locked = true
-		if(mouse_position.y == mouse_newpos.y):
-			mouse_y_locked = true
-		
-		# Debug - Move our debug red-dot
-		if(debug_dot): guncanvas.update_dot_pos(mouse_position)
-	# UNAIMED state
-	else:
-		# Reset mouse position to screen center
-		mouse_position = screen_size/2
-	
-	# Rotate the camera (unless it's locked by the bounding boxes)
-	if(!mouse_x_locked):
-		input_rotation.y += mouse_input.x * camera_sensitivity
-	if(!mouse_y_locked):
-		input_rotation.x = clampf(input_rotation.x + (mouse_input.y * camera_sensitivity), deg_to_rad(-90), deg_to_rad(85))
-	
-	# Update the pmk rotation
-	# Rotate camera controller (up/down)
-	pmk.camera_controller_anchor.transform.basis = Basis.from_euler(Vector3(input_rotation.x, 0.0, 0.0))
-	# Rotate player controller (left/right)
-	pmk.global_transform.basis = Basis.from_euler(Vector3(0.0, input_rotation.y, 0.0))
-	# Move transform to player head anchor
-	return pmk.camera_controller_anchor.get_global_transform_interpolated()
+	## If the window has been resized, do some viewport updates
+	#if(screen_size != Vector2(get_viewport().size)):
+		#_viewport_update()
+#
+	## Handle mouse input
+	#var target_transform : Transform3D = _mouse_camera_update()
+	#
+	## Handle camera effects
+	#var target_fov : float = _determine_zoom_fov()
+	#var offset_transform : Transform3D = _calculate_effects()
+	#
+	## Update camera
+	#player_camera.fov = target_fov
+	#self.position = target_transform.origin + offset_transform.origin
+	#self.rotation = target_transform.basis.get_euler() + offset_transform.basis.get_euler()
+	#
+	## Update the gun's position + rotation - THIS MUST BE AFTER MOUSE/CAMERA UPDATES!!
+	#gck.manage_positioning(delta)
+	#
+	## Zero out our mouse input for next frame
+	#mouse_input = Vector2.ZERO
 
 
-## Determines how zoom-in the fov should be, given the current gck ads_ratio
-func _determine_zoom_fov() -> float:
-	if not enable_aim_zoom or gck.ads_ratio() <= 0.0:
-		return desired_fov
-	return lerpf(desired_fov, desired_fov * aimed_fov_percent, gck.ads_ratio())
+
 
 
 ## Returns offset angle based on camera effects
 func _calculate_effects() -> Transform3D:
-	var velocity= pmk.velocity
+	var velocity = pmk.velocity
 	var pos = Vector3.ZERO
 	var angles = Vector3.ZERO
 	
@@ -274,17 +229,12 @@ func _update_camera_shake(alpha : float, _amount : float) -> void:
 
 
 ## Handle update to is_aiming state
-func _on_is_aiming_update(n_is_aiming : bool):
-	# Debug - update our debug red-dot color
-	if(debug_dot and n_is_aiming):
-		guncanvas.update_dot_color(Color.RED)
-	if(debug_dot and !n_is_aiming):
-		guncanvas.update_dot_pos(screen_size/2)
-		guncanvas.update_dot_color(Color.BLUE)
+func _on_is_aiming_update(n_is_aiming : bool) -> void:
+	return
 
 
 ## Toggles debug UI
-func toggle_debug(is_debug : bool, parameter : String):
+func toggle_debug(is_debug : bool, parameter : String) -> void:
 	match(parameter):
 		"box": debug_box = is_debug
 		"dot": debug_dot = is_debug
