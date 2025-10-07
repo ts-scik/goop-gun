@@ -14,24 +14,26 @@ func update(delta: float) -> void:
 	
 	# Handle mouse input
 	var target_fov : float = (cmk.desired_fov * cmk.aimed_fov_percent)
-	var target_transform : Transform3D = _aimed_mouse_camera_update()
+	var cam_target_transform : Transform3D = _aimed_mouse_camera_update()
 	
 	# Handle camera effects
-	var offset_transform : Transform3D = cmk._calculate_effects()
+	var cam_offset_transform : Transform3D = cmk._calculate_effects()
 	
 	# Update camera
 	cmk.player_camera.fov = target_fov
-	cmk.position = target_transform.origin + offset_transform.origin
-	cmk.rotation = target_transform.basis.get_euler() + offset_transform.basis.get_euler()
+	cmk.position = cam_target_transform.origin + cam_offset_transform.origin
+	cmk.rotation = cam_target_transform.basis.get_euler() + cam_offset_transform.basis.get_euler()
 	
 	# Update the gun's position + rotation - THIS MUST BE AFTER MOUSE/CAMERA UPDATES!!
 	# TODO - is that true??
+	cmk.gck.target_transform = _get_aimed_gun_transform()
 	cmk.gck.manage_positioning(delta)
 	
 	# Zero out our mouse input for next frame
 	cmk.mouse_input = Vector2.ZERO
 	
-	if (!cmk.gck.is_aiming):
+	# If we're no longer in an aiming state, transition out
+	if !(cmk.pmk.aim_held and cmk.gck.is_aiming and !cmk.pmk.is_running):
 		finished.emit("AimOut")
 
 
@@ -92,6 +94,26 @@ func _aimed_mouse_camera_update() -> Transform3D:
 	return cmk.pmk.camera_controller_anchor.get_global_transform_interpolated()
 
 
+## Updates the gun's position+rotation (for if gun exists in local space)
+func _get_aimed_gun_transform() -> Transform3D:
+	# Create temp output transform
+	var out_tf : Transform3D
+	# Get vector from player camera to gun_controller
+	var fw_dir : Vector3 = (
+		cmk.to_local(cmk.gck.global_position) - 
+		cmk.to_local(cmk.player_camera.global_position) 
+	)
+	# Determine point where gun should be held
+	out_tf.origin = cmk.to_local( 
+		cmk.player_camera.project_position(
+			cmk.mouse_position, cmk.gck.gun_hold_distance
+		)
+	)
+	# Update the gun's rotation (relative to camera)
+	out_tf.basis = Basis.looking_at(fw_dir, Vector3.UP, false)
+	return out_tf
+
+
 ## Called by the state machine on the engine's physics update tick.
 func physics_update(_delta: float) -> void:
 	pass
@@ -99,7 +121,7 @@ func physics_update(_delta: float) -> void:
 
 ## Called by the state machine upon changing the active state. The `data` parameter
 ## is a dictionary with arbitrary data the state can use to initialize itself.
-func enter(previous_state_path: String, data := {}) -> void:
+func enter(_previous_state_path: String, _data := {}) -> void:
 	# Debug - update our debug red-dot color
 	if(cmk.debug_dot):
 		cmk.guncanvas.update_dot_color(Color.RED)

@@ -10,8 +10,9 @@ func shoot():
 	force_raycast_update()
 	if is_colliding():
 		if get_collider() is PlayerController and is_multiplayer_authority():
-			var hit_player : PlayerController = get_collider()
-			var dmg = 1
+			pass
+			#var hit_player : PlayerController = get_collider()
+			#var dmg = 1
 			#print("i am ", multiplayer.get_unique_id(), " shooting ", hit_player)
 			#TODO: actually do something on hit
 			#hit_player.receive_damage(hit_player.get_multiplayer_authority(), dmg, str(multiplayer.get_unique_id()))

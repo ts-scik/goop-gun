@@ -1,18 +1,18 @@
+## Manages a player's gun animations/sounds/shooting
 class_name GunController
 extends Node3D
-## Manages a player's gun animations/sounds/shooting
 
-signal is_aiming_update(bool)
+var cmk : CameraController # Node for camera that this gun inherits from
+var pmk : PlayerController # Node that the camera will follow - grabbed in _ready()
 
-@export_category("References")
-@export var cmk : CameraController
-
-@onready var pmk : PlayerController = cmk.pmk # TODO - bad!!! bad!!!
+# Holders for animation transforms
+@onready var gun_model_holder_basepos = gun_model_holder.position
+@onready var target_transform : Transform3D = self.transform
 
 @onready var gun_sound : AudioStreamPlayer3D = get_node("GunSound")
 @onready var gun_model_holder : Node3D = get_node("GunModelHolder")
 @onready var ray : RayCast3D = get_node("GunModelHolder/GunRaycast")
-@onready var last_cmk_rot : Vector3 = cmk.rotation
+var last_cmk_rot : Vector3 # grab this in _ready()
 
 @export_category("Animating")
 @export_group("Sway")
@@ -43,19 +43,18 @@ var last_aimed_target_rot : Vector3 = Vector3.ZERO # stores last rotation when a
 @export var holstered_rot = Vector3(deg_to_rad(-45.0), 0.0, 0.0) # configurable variable for gun's rotation when holstered
 
 
+## Find our owners
+func _ready() -> void:
+	# Find our PlayerController owner
+	await owner.ready
+	cmk = owner as CameraController
+	assert(cmk != null, "The GunController node requires a CameraController node as owner.")
+	pmk = cmk.pmk # is this bad?
+	last_cmk_rot = cmk.rotation
+
+
 ## Updates the gun
-@onready var gun_model_holder_basepos = gun_model_holder.position
 func manage_positioning(delta) -> void:
-	var target_transform : Transform3D
-	
-	# Do our standard gun position/rotation
-	if(pmk.aim_held and is_aiming and !pmk.is_running):
-		# Fully aimed
-		target_transform = _manage_gun_aimed()
-	else:
-		# Fully unaimed OR in aim transition
-		target_transform = _manage_gun_unaimed(delta)
-	
 	# snap to target tf
 	if(is_aiming):
 		var snapspeed = 10 # TODO - make this an export if we're keeping it
@@ -76,66 +75,6 @@ func manage_positioning(delta) -> void:
 ## Returns how far into ads we are, from (0.0, 1.0)
 func ads_ratio() -> float:
 	return ads_timer/ads_time
-
-
-## Animates gun in/out of aiming position
-func _manage_gun_unaimed(delta) -> Transform3D:
-	# get target pos/rot
-	var player_interp := pmk.get_global_transform_interpolated()
-	var unaimed_target_pos : Vector3 = cmk.to_local(
-		player_interp.origin + # player origin
-		(player_interp.basis * holstered_pos) + # holstered position (relative to player
-		cmk.bob_vec # camera viewbob # TODO kinda hate that we have to do this
-	)
-	var unaimed_target_rot : Vector3 = holstered_rot - Vector3(cmk.rotation.x,0,0)
-	var aim_held : bool = pmk.aim_held
-	
-	# cap our max aim amount if the player is running
-	var max_aim_amt : float = ads_time
-	if(pmk.is_running):
-		max_aim_amt = ads_time * 0.4 # TODO pct export
-	
-	# Starting an aim
-	if(aim_held and ads_timer <= max_aim_amt):
-		# update the aim timer
-		ads_timer = min(ads_timer + delta, max_aim_amt)
-		if(ads_ratio() >= 1.0): # if we're there, update the aim variable
-			ads_timer = ads_time
-			is_aiming = true
-			is_aiming_update.emit(is_aiming)
-		last_aimed_target_pos = Vector3(0,0,-gun_hold_distance)
-		last_aimed_target_rot = Vector3.ZERO
-	# Ending an aim
-	elif(ads_timer > 0.0):
-		ads_timer = max(ads_timer - delta, 0.0) # update the aim timer
-		if(is_aiming): # update is_aiming, last_aimed stuff
-			is_aiming = false
-			is_aiming_update.emit(is_aiming)
-			last_aimed_target_pos = position
-			last_aimed_target_rot = rotation
-	
-	# Aim transition lerp
-	var out_tf : Transform3D
-	if(ads_timer > 0.0):
-		out_tf.origin = lerp(unaimed_target_pos, last_aimed_target_pos, ads_ratio())
-		out_tf.basis = Basis.from_euler(lerp(unaimed_target_rot, last_aimed_target_rot, ads_ratio()))
-	# Not aiming
-	else:
-		out_tf.origin = unaimed_target_pos
-		out_tf.basis = Basis.from_euler(unaimed_target_rot)
-	return out_tf
-
-
-## Updates the gun's position+rotation (for if gun exists in local space)
-func _manage_gun_aimed() -> Transform3D:
-	var out_tf : Transform3D
-	# Get vector from player camera to gun_controller
-	var fw_dir = cmk.to_local(global_position) - cmk.to_local(cmk.player_camera.global_position) 
-	# Update the gun's position
-	out_tf.origin = cmk.to_local(cmk.player_camera.project_position(cmk.mouse_position,gun_hold_distance))
-	# Update the gun's rotation (relative to camera)
-	out_tf.basis = Basis.looking_at(fw_dir, Vector3.UP, false)
-	return out_tf
 
 
 ## Returns Vector3 angle for how much gun should sway, given camera velocity

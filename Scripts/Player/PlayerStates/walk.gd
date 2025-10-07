@@ -9,6 +9,7 @@ func update(_delta: float) -> void:
 	pass
 
 ## Called by the state machine on the engine's physics update tick.
+# TODO - this should contain more actual code
 func physics_update(delta: float) -> void:
 	if pmk.was_on_floor:
 		pmove.PM_WalkMove(pmk, delta)
@@ -19,7 +20,7 @@ func physics_update(delta: float) -> void:
 
 ## Called by the state machine upon changing the active state. The `data` parameter
 ## is a dictionary with arbitrary data the state can use to initialize itself.
-func enter(previous_state_path: String, data := {}) -> void:
+func enter(_previous_state_path: String, _data := {}) -> void:
 	pass
 
 ## Called by the state machine before changing the active state. Use this function

@@ -26,6 +26,7 @@ func update(delta: float) -> void:
 	
 	# Update the gun's position + rotation - THIS MUST BE AFTER MOUSE/CAMERA UPDATES!!
 	# TODO - is that true??
+	cmk.gck.target_transform = _get_unaimed_gun_transform()
 	cmk.gck.manage_positioning(delta)
 	
 	# Zero out our mouse input for next frame
@@ -59,6 +60,24 @@ func _unaimed_mouse_camera_update() -> Transform3D:
 	return cmk.pmk.camera_controller_anchor.get_global_transform_interpolated()
 
 
+## Animates gun in/out of aiming position
+func _get_unaimed_gun_transform() -> Transform3D:
+	# get target pos/rot
+	var player_interp := cmk.pmk.get_global_transform_interpolated()
+	var unaimed_target_pos : Vector3 = cmk.to_local(
+		player_interp.origin + # player origin
+		(player_interp.basis * cmk.gck.holstered_pos) + # holstered position (relative to player)
+		cmk.bob_vec # camera viewbob # TODO kinda hate that we have to do this -- # TODO -- why??
+	)
+	var unaimed_target_rot : Vector3 = cmk.gck.holstered_rot - Vector3(cmk.rotation.x,0,0)
+	
+	# Return unaimed TF
+	return Transform3D(
+		Basis.from_euler(unaimed_target_rot),
+		unaimed_target_pos
+	)
+
+
 ## Called by the state machine on the engine's physics update tick.
 func physics_update(_delta: float) -> void:
 	pass
@@ -66,7 +85,7 @@ func physics_update(_delta: float) -> void:
 
 ## Called by the state machine upon changing the active state. The `data` parameter
 ## is a dictionary with arbitrary data the state can use to initialize itself.
-func enter(previous_state_path: String, data := {}) -> void:
+func enter(_previous_state_path: String, _data := {}) -> void:
 	pass
 
 

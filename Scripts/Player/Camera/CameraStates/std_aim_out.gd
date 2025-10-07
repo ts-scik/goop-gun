@@ -26,13 +26,16 @@ func update(delta: float) -> void:
 	
 	# Update the gun's position + rotation - THIS MUST BE AFTER MOUSE/CAMERA UPDATES!!
 	# TODO - is that true??
+	cmk.gck.target_transform = _get_aimout_gun_transform(delta)
 	cmk.gck.manage_positioning(delta)
 	
 	# Zero out our mouse input for next frame
 	cmk.mouse_input = Vector2.ZERO
 	
 	# If we're no longer trying to aim out, aim in
-	if cmk.pmk.aim_held:
+	# ... unless we're trying to aim while sprinting, and still above the sprint aim cap
+	var max_aim_amt = cmk.gck.ads_time * 0.4 if cmk.pmk.is_running else cmk.gck.ads_time 
+	if cmk.pmk.aim_held and cmk.gck.ads_timer < max_aim_amt:
 		finished.emit("AimIn")
 	# If we've fully aimed out, transition to Unaimed
 	if cmk.gck.ads_ratio() <= 0.0:
@@ -69,6 +72,31 @@ func _aim_trans_determine_zoom_fov() -> float:
 	return lerpf(cmk.desired_fov, cmk.desired_fov * cmk.aimed_fov_percent, cmk.gck.ads_ratio())
 
 
+## Animates gun in/out of aiming position
+func _get_aimout_gun_transform(delta) -> Transform3D:
+	# get target pos/rot
+	var player_interp := cmk.pmk.get_global_transform_interpolated()
+	var unaimed_target_pos : Vector3 = cmk.to_local(
+		player_interp.origin + # player origin
+		(player_interp.basis * cmk.gck.holstered_pos) + # holstered position (relative to player
+		cmk.bob_vec # camera viewbob # TODO kinda hate that we have to do this
+	)
+	var unaimed_target_rot : Vector3 = cmk.gck.holstered_rot - Vector3(cmk.rotation.x,0,0)
+	
+	# Ending an aim
+	cmk.gck.ads_timer = max(cmk.gck.ads_timer - delta, 0.0) # update the aim timer
+	if(cmk.gck.is_aiming): # update is_aiming, last_aimed stuff
+		cmk.gck.is_aiming = false
+		cmk.gck.last_aimed_target_pos = cmk.gck.position
+		cmk.gck.last_aimed_target_rot = cmk.gck.rotation
+	
+	# Aim transition lerp
+	var out_tf : Transform3D
+	out_tf.origin = lerp(unaimed_target_pos, cmk.gck.last_aimed_target_pos, cmk.gck.ads_ratio())
+	out_tf.basis = Basis.from_euler(lerp(unaimed_target_rot, cmk.gck.last_aimed_target_rot, cmk.gck.ads_ratio()))
+	return out_tf
+
+
 ## Called by the state machine on the engine's physics update tick.
 func physics_update(_delta: float) -> void:
 	pass
@@ -76,7 +104,7 @@ func physics_update(_delta: float) -> void:
 
 ## Called by the state machine upon changing the active state. The `data` parameter
 ## is a dictionary with arbitrary data the state can use to initialize itself.
-func enter(previous_state_path: String, data := {}) -> void:
+func enter(_previous_state_path: String, _data := {}) -> void:
 	pass
 
 

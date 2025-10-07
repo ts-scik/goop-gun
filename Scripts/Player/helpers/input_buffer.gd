@@ -1,25 +1,38 @@
+## Buffers inputs for player use.
+## Each input type is buffered for a configurable amount of time in seconds.
+## The buffer can be paused with a flag.
+## Buffered inputs can be checked at any time, with optional removal.
 class_name InputBuffer
-## Buffers inputs for player use
 
 # Variables for input buffering
 var buffer : Array[float] = []
-# Enum for bufferable inputs
-enum {
-	JUMP_INPUT = 0,
-	SHOOT_INPUT = 1,
-}
 # Dictionary reference for how long to buffer any given bufferable input type
-const input_timers : Dictionary = {
-	JUMP_INPUT : 0.07,
-	SHOOT_INPUT : 0.2,
-}
+var input_timers : Dictionary
+# Whether buffer should be currently updating its timers
+var buffer_active : bool
 
 
 ## Set up the buffer
-func _init() -> void:
+## Requires dictionary of format {TIMER_ENUM : BUFFERTIME, ...}
+## Said dictionary configures buffer time per input type
+## e.g. {JUMP_INPUT : 0.07, SHOOT_INPUT : 0.2,}
+func _init(passed_input_timers : Dictionary) -> void:
+	# Store input timers
+	self.input_timers = passed_input_timers
 	# Input buffer Setup
-	buffer.resize(input_timers.size())
-	buffer.fill(0.0)
+	self.buffer.resize(self.input_timers.size())
+	self.buffer.fill(0.0)
+	# Set buffer to Active
+	self.buffer_active = true
+
+
+## Updates input timers in buffer (if buffer is active)
+func _process(delta) -> void:
+	# early return if buffer is inactive
+	if !buffer_active:
+		return
+	# update all timers in the buffer
+	buffer_update.call_deferred(delta)
 
 
 ## Takes an [action] and attempts to buffer it
@@ -61,11 +74,8 @@ func buffer_check(action_idx : int) -> bool:
 ## If we have [action] buffered, zero it and return {true}
 ## Else, return {false}
 func buffer_retrieve(action_idx : int) -> bool:
-	# Assert to avoid index OOB
-	assert(buffer.get(action_idx) != null)
-	
 	# If action is buffered, zero it and return true
-	if (buffer[action_idx] > 0.0):
+	if (buffer_check(action_idx)):
 		buffer[action_idx] = 0.0
 		return true
 	return false

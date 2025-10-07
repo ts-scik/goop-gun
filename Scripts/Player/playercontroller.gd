@@ -1,6 +1,6 @@
+## Manages all player input + movement (except for the camera)
 class_name PlayerController
 extends CharacterBody3D
-## Manages all player input + movement (except for the camera)
 
 # Movement constants
 @export_category("Movement Variables")
@@ -24,7 +24,7 @@ var footstep_timer : float = 0.0
 
 # Child nodes
 @onready var camera_controller_anchor : Marker3D = $HeadPos
-@onready var camera_controller : CameraController= get_node("CameraController")
+@onready var camera_controller : CameraController = get_node("CameraController")
 @onready var gun_controller : GunController = get_node("CameraController/GunController")
 @onready var pause_menu : CanvasLayer = get_node("PauseMenu")
 @onready var HUD : CanvasLayer = get_node("HUD")
@@ -45,19 +45,24 @@ var aim_toggle : bool = false # Whether or not we're using toggle-aim
 
 # Variables for input buffering
 var input_buffer : InputBuffer
-enum {JUMP_INPUT = 0, SHOOT_INPUT = 1,}
+enum {
+	JUMP_INPUT = 0,
+	SHOOT_INPUT = 1,
+}
+const input_timers : Dictionary = {
+	JUMP_INPUT : 0.07,
+	SHOOT_INPUT : 0.2,
+}
 
 
-## Connect signals, display HUD
+## Set up input buffer
 func _ready() -> void:	
 	# Buffer setup
-	input_buffer = InputBuffer.new()
-	
-	# UI Setup
-	pause_menu.value_update.connect(_on_menu_value_update)
+	input_buffer = InputBuffer.new(input_timers)
 
 
 ## Handle instantaneous inputs (pausing, scoreboard, jump, mouse)
+# TODO - should this all be here?
 func _input(event) -> void:	
 	# Mouse
 	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
@@ -136,11 +141,12 @@ func _input_shoot_ads_gamepad() -> void:
 
 
 ## Handle buffered inputs
-func _process(delta: float) -> void:	
+func _process(_delta: float) -> void:	
 	# Handle gamepad shoot/ads
 	_input_shoot_ads_gamepad()
 	
 	# Try to shoot
+	# TODO - should this be here?
 	var reshoot_cutoff : float = 0.75 # TODO export
 	var can_shoot : bool = (gun_controller.shoot_time_remaining() >= reshoot_cutoff and gun_controller.is_aiming)
 	if(can_shoot):
@@ -148,9 +154,6 @@ func _process(delta: float) -> void:
 		if(buffered_shoot):
 			camera_controller.camera_shoot()
 			gun_controller.shoot()
-	
-	# Update the input buffer -- do this at the *end* of the frame
-	input_buffer.buffer_update(delta)
 
 
 ## Handle player movement
@@ -167,6 +170,7 @@ func _physics_process(delta: float) -> void:
 # timer increments while user is on ground and pressing input directions
 # at the peak of our bob, we trigger a sound + gun_shake, but only if user
 # is pressing a movement direction and is grounded *at that moment*
+# TODO - should this be here?
 var dip_passed : bool = false
 func _handle_footsteps(delta) -> void:
 	var direction : Vector3 = pmove.PM_Wishdir(self)
@@ -212,11 +216,11 @@ func play_footstep_sound() -> void:
 ## Take damage when hit
 # TODO - we should be able to shoot ourselves, and take damage from enemies
 # TODO - we should get as parameter where the shot came from (as a vector)
-func receive_damage(dmg : int = 1, shooter : String = ""):
+func receive_damage(dmg : int = 1):
 	health -= dmg
 	HUD.update_health(health)
 	if health <= 0:
-		die(shooter)
+		die()
 
 
 ## Die if out of health
@@ -224,19 +228,10 @@ func receive_damage(dmg : int = 1, shooter : String = ""):
 # TODO: we should tell the server we've died, and ask it to handle the respawning
 # TODO: add some kind of death animation / respawn time
 # TODO: add better respawn logic
-func die(shooter : String = ""):
+func die():
 	reset_physics_interpolation()
 	health = 3
-	# TODO: this whole chunk should be moved into a spawn function
-	if(!has_node("/root/MainScene/World")):
-		position = Vector3.ZERO
-		print("zeroed")
-	else:
-		var spawns : Array = get_node("/root/MainScene/World").player_spawn_positions
-		var selection = randi_range(0, spawns.size()-1)
-		var chosen_spawn : Marker3D = spawns[selection]
-		self.position = chosen_spawn.global_position
-		self.rotation.y = chosen_spawn.global_rotation.y
+	# TODO - actually respawn
 	HUD.update_health(health)
 
 
@@ -249,31 +244,3 @@ func _on_menu_key() -> void:
 	else:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 		pause_menu.hide()
-
-
-## Handle main menu value updates
-# TODO - hate that this is here
-func _on_menu_value_update(value, parameter : String) -> void:
-	match(parameter):
-		"master_vol":
-			if(value == 0.0):
-				AudioServer.set_bus_mute(AudioServer.get_bus_index("Master"), true)
-			else:
-				AudioServer.set_bus_mute(AudioServer.get_bus_index("Master"), false)
-				var new_vol = GameManager.volume_curve.sample_baked(value/100)
-				print(new_vol)
-				AudioServer.set_bus_volume_db(AudioServer.get_bus_index("Master"),(new_vol))
-		"mouse_sense":
-			camera_controller.mouse_sensitivity = value / 1000
-		"cam_sense":
-			camera_controller.camera_sensitivity = value / 10
-		"aim_sense":
-			camera_controller.aim_sensitivity = value / 500
-		"debug_box":
-			camera_controller.toggle_debug(value, "box")
-		"debug_dot":
-			camera_controller.toggle_debug(value, "dot")
-		"aim_toggle":
-			aim_toggle = value
-		"crouch_toggle":
-			crouch_toggle = value

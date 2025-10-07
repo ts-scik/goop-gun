@@ -1,12 +1,11 @@
+## Manages all player camera input / aiming
 class_name CameraController
 extends Node3D
-## Manages all player camera input / aiming
 
 # Written using the following godot documentation:
 # https://docs.godotengine.org/en/stable/tutorials/physics/interpolation/advanced_physics_interpolation.html
 
-@export_category("References")
-@export var pmk : PlayerController # Node that the camera will follow
+var pmk : PlayerController # Node that the camera will follow - grabbed in ready()
 
 @export_category("Effects")
 @export_group("Run Tilt")
@@ -56,6 +55,10 @@ var debug_box : bool = false # Flag for if we want to show the boundary_rect
 
 ## Get our camera
 func _ready() -> void:
+	# Find our PlayerController owner
+	await owner.ready
+	pmk = owner as PlayerController
+	assert(pmk != null, "The CameraController node requires a PlayerController node as owner.")
 	# Turn off automatic physics interpolation for the Camera3D
 	set_physics_interpolation_mode(Node.PHYSICS_INTERPOLATION_MODE_OFF)
 	# Disable transform inheritance from parent
@@ -66,8 +69,7 @@ func _ready() -> void:
 	gck = get_node("GunController")
 	player_camera = get_node("PlayerCamera")
 	guncanvas = get_node("GunCanvas")
-	# Set up signals, start using camera
-	gck.is_aiming_update.connect(_on_is_aiming_update)
+	# Start using camera
 	player_camera.current = true
 	# Update all our screen-size-related variables
 	_viewport_update()
@@ -93,34 +95,9 @@ func _input_aim_gamepad() -> void:
 
 
 ## Handles camera rotation / gun positioning
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	# Handle gamepad aiming
 	_input_aim_gamepad()
-	
-	## If the window has been resized, do some viewport updates
-	#if(screen_size != Vector2(get_viewport().size)):
-		#_viewport_update()
-#
-	## Handle mouse input
-	#var target_transform : Transform3D = _mouse_camera_update()
-	#
-	## Handle camera effects
-	#var target_fov : float = _determine_zoom_fov()
-	#var offset_transform : Transform3D = _calculate_effects()
-	#
-	## Update camera
-	#player_camera.fov = target_fov
-	#self.position = target_transform.origin + offset_transform.origin
-	#self.rotation = target_transform.basis.get_euler() + offset_transform.basis.get_euler()
-	#
-	## Update the gun's position + rotation - THIS MUST BE AFTER MOUSE/CAMERA UPDATES!!
-	#gck.manage_positioning(delta)
-	#
-	## Zero out our mouse input for next frame
-	#mouse_input = Vector2.ZERO
-
-
-
 
 
 ## Returns offset angle based on camera effects
@@ -226,11 +203,6 @@ func _update_camera_shake(alpha : float, _amount : float) -> void:
 		player_camera.rotation.z = roll_offset
 		player_camera.rotation.x = pitch_offset
 		player_camera.rotation.y = yaw_offset
-
-
-## Handle update to is_aiming state
-func _on_is_aiming_update(n_is_aiming : bool) -> void:
-	return
 
 
 ## Toggles debug UI
