@@ -14,7 +14,7 @@ extends CharacterBody3D
 @export var PM_ACCELERATE : float = 8.0 # Acceleration factor on ground
 @export var PM_AIRACCELERATE : float = 1.0 # Acceleration factor in air
 @export_group("Friction")
-@export var PM_FRICTION : float = 6.0 # Friction factor when on ground TODO - tweak
+@export var PM_FRICTION : float = 6.0 # Friction factor when on ground
 @export var PM_STOPSPEED : float = 0.75 # Minimum speed factor for friction calculation
 # Variables for foosteps
 var footstep_timer : float = 0.0
@@ -225,10 +225,6 @@ func receive_damage(dmg : int = 1):
 
 
 ## Die if out of health
-# TODO TODO: is borken
-# TODO: we should tell the server we've died, and ask it to handle the respawning
-# TODO: add some kind of death animation / respawn time
-# TODO: add better respawn logic
 func die():
 	reset_physics_interpolation()
 	health = 3

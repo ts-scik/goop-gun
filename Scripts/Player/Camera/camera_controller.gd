@@ -48,6 +48,7 @@ var is_aiming : bool = false # Flag for ADS completed
 @export var mouse_sensitivity : float = 0.005 # Mouse overall sensitivitiy
 @export var camera_sensitivity : float = 0.5 # Mouse camera sensitivity
 @export var aim_sensitivity : float = 0.01 # Mouse aim sensitivity
+@export var gamepad_sense_scale = 15 # Gamepad sensitivity multiplier
 
 # Mouse input variables
 var mouse_input : Vector2 # Stores mouse input each frame
@@ -84,22 +85,6 @@ func _ready() -> void:
 	
 	# Update all our screen-size-related variables
 	_viewport_update()
-
-
-## Handles gamepad aiming
-func _input_aim_gamepad() -> void:
-	var y_aim : float = Input.get_axis("look_down","look_up")
-	var x_aim : float = Input.get_axis("look_right","look_left")
-	
-	var gamepad_sense_scale = 15 # TODO - this should be an export, probably
-	mouse_input.y += y_aim * mouse_sensitivity * gamepad_sense_scale
-	mouse_input.x += x_aim * mouse_sensitivity * gamepad_sense_scale
-
-
-## Handles camera rotation / gun positioning
-func _process(_delta: float) -> void:
-	# Handle gamepad aiming -- #TODO move this into states
-	_input_aim_gamepad()
 
 
 ## Returns how far into ads we are, from (0.0, 1.0)
