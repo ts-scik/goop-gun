@@ -1,5 +1,5 @@
 ## State for camera+gun management when transitioning from Unaimed -> Aimed
-extends CameraState
+extends StandardCameraState
 # TODO - implement HSM to move a lot of this elsewhere
 
 

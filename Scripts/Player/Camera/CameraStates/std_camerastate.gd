@@ -1,0 +1,2 @@
+@abstract
+class_name StandardCameraState extends CameraState

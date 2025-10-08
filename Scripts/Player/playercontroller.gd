@@ -141,7 +141,7 @@ func _input_shoot_ads_gamepad() -> void:
 
 
 ## Handle buffered inputs
-func _process(_delta: float) -> void:	
+func _process(_delta: float) -> void:
 	# Handle gamepad shoot/ads
 	_input_shoot_ads_gamepad()
 	

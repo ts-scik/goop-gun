@@ -1,5 +1,5 @@
 ## State for camera+gun management when completely Aimed
-extends CameraState
+extends StandardCameraState
 # TODO - implement HSM to move a lot of this elsewhere
 
 ## Called by the state machine when receiving unhandled input events.
