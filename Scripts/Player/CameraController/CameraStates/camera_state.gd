@@ -16,4 +16,4 @@ var cmk: CameraController
 func _ready() -> void:
 	await owner.ready
 	cmk = owner as CameraController
-	assert(cmk != null, "The CameraState state type must be used only in the camera scene. It needs the owner to be a CameraController node.")
+	assert(cmk != null, "The CameraState state-type requires CameraController owner.")

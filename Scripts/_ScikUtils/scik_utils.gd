@@ -37,3 +37,8 @@ static func get_volume_curve(min_vol : float, max_vol: float) -> Curve:
 	volume_curve.add_point(Vector2(0.5,0))
 	volume_curve.add_point(Vector2(1.0,max_vol))
 	return volume_curve
+
+
+## Returns a random value -1 or 1
+static func rand_sign() -> int:
+	return int(pow(-1,randi_range(1,2) % 2))

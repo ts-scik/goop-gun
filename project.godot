@@ -34,6 +34,7 @@ folder_colors={
 "res://Prefabs/": "purple",
 "res://Prefabs/Unused/Rooms/": "green",
 "res://Scripts/": "blue",
+"res://Scripts/Player/": "yellow",
 "res://Scripts/Unused/Level/": "green"
 }
 

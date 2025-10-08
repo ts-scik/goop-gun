@@ -17,27 +17,31 @@ func _determine_zoom_fov() -> float:
 ## [ABSTRACT IMPL]
 ## Animates gun in/out of aiming position
 func _get_gun_target_transform(delta) -> Transform3D:
-	# get target pos/rot
-	var player_interp := cmk.pmk.get_global_transform_interpolated()
-	var unaimed_target_pos : Vector3 = cmk.to_local(
-		player_interp.origin + # player origin
-		(player_interp.basis * cmk.gck.holstered_pos) + # holstered position (relative to player
-		cmk.bob_vec # camera viewbob # TODO kinda hate that we have to do this
-	)
-	var unaimed_target_rot : Vector3 = cmk.gck.holstered_rot - Vector3(cmk.rotation.x,0,0)
+	# --- Ending an aim --- #
+	# get unaimed target pos/rot
+	var unaimed_tf = _get_gun_unaimed_tf()
 	
-	# Ending an aim
-	cmk.ads_timer = max(cmk.ads_timer - delta, 0.0) # update the aim timer
+	# update the aim timer
+	cmk.ads_timer = max(cmk.ads_timer - delta, 0.0)
 	
 	# Aim transition lerp
 	var out_tf : Transform3D
-	out_tf.origin = lerp(unaimed_target_pos, cmk.gck.last_aimed_target_pos, cmk.ads_ratio())
-	out_tf.basis = Basis.from_euler(lerp(unaimed_target_rot, cmk.gck.last_aimed_target_rot, cmk.ads_ratio()))
+	out_tf.origin = lerp(
+		unaimed_tf.origin,
+		cmk.gck.last_aimed_target_pos,
+		cmk.ads_ratio()
+	)
+	out_tf.basis = Basis.from_euler(
+		lerp(
+			unaimed_tf.basis.get_euler(),
+			cmk.gck.last_aimed_target_rot,
+			cmk.ads_ratio()
+		)
+	)
 	
 	# snap to target tf
-	cmk.gck.rotation = out_tf.basis.get_euler() # rotation rather than basis, so we maintain scale
+	cmk.gck.rotation = out_tf.basis.get_euler() # rotation, not basis -- preserve scale
 	cmk.gck.position = out_tf.origin
-	
 	return out_tf
 
 

@@ -16,7 +16,7 @@ func physics_update(delta: float) -> void:
 	# If we just landed,
 	if pmk.is_on_floor():
 		pmk.play_footstep_sound()
-		pmk.gun_controller.start_gun_shake(pmk.footstep_time_length)
+		pmk.gun_controller.start_gun_shake(0.6, 2.0, 4)
 		#print("landed!")
 		finished.emit("Walk")
 

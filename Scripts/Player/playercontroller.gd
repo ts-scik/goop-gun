@@ -152,7 +152,7 @@ func _process(_delta: float) -> void:
 	if(can_shoot):
 		var buffered_shoot = input_buffer.buffer_retrieve(SHOOT_INPUT) # check for buffered shoot input
 		if(buffered_shoot):
-			camera_controller.camera_shoot()
+			camera_controller.camera_gun_kick()
 			gun_controller.shoot()
 
 
@@ -188,7 +188,7 @@ func _handle_footsteps(delta) -> void:
 		# If we *just* passed the peak, trigger our sound and gunshake
 		if(footstep_timer >= peak_threshold) and (dip_passed == false):
 			play_footstep_sound()
-			gun_controller.start_gun_shake(footstep_time_length)
+			gun_controller.start_gun_shake(footstep_time_length * gun_controller.footstep_gun_shake_time_pct)
 		# If the timer has topped out, reset the timer
 		if(footstep_timer >= footstep_time_length):
 			footstep_timer = 0.0

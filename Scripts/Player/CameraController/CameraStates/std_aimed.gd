@@ -13,8 +13,8 @@ func enter(_previous_state_path: String, _data := {}) -> void:
 
 
 ## [OVERRIDE]
-## Called by the state machine before changing the active state. Use this function
-## to clean up the state.
+## Called by the state machine before changing the active state.
+## Use this function to clean up the state.
 func exit() -> void:
 	cmk.is_aiming = false
 	cmk.gck.last_aimed_target_pos = cmk.gck.position
@@ -26,41 +26,39 @@ func exit() -> void:
 
 
 ## [OVERRIDE]
-## Returns target transform for CameraController -- custom aimed function
-func _get_camera_target_transform() -> Transform3D:
-	var mouse_y_locked : bool = false
-	var mouse_x_locked : bool = false
-	
-	# AIMED state
-	if(cmk.is_aiming):
-		# Update mouse position
-		# TODO -- why only screen_size.y? why * 20?
-		var midpoint : Vector2 = cmk.screen_size/2
-		var mouse_newpos : Vector2 = cmk.mouse_position - (
-			cmk.mouse_input * cmk.aim_sensitivity * cmk.screen_size.y * 20
-		)
-		cmk.mouse_position.x = clampf(
-			mouse_newpos.x,
-			midpoint.x - cmk.gun_deadzone.x,
-			midpoint.x + cmk.gun_deadzone.x
-		)
-		cmk.mouse_position.y = clampf(
-			mouse_newpos.y,
-			midpoint.y - cmk.gun_deadzone.y,
-			midpoint.y + cmk.gun_deadzone.z
-		)
+## Performs standard updates for AIMED camera, given mouse input
+## Updates are stored in [cmk.mouse_position] and [cmk.input_rotation]
+func _camera_mouse_update() -> void:
+	# Update mouse position
+	var midpoint : Vector2 = cmk.screen_size/2
+		# we scale below by screen_size.y to make it scale with resolution
+		# but we only scale by screen_size.y OR screen_size.x --
+		# otherwise you get weird behavior on diagonal mouse inputs
+	var mouse_newpos : Vector2 = cmk.mouse_position - (
+		cmk.mouse_input * cmk.aim_sensitivity * cmk.screen_size.y
+	)
+	cmk.mouse_position.x = clampf(
+		mouse_newpos.x,
+		midpoint.x - cmk.gun_deadzone.x,	# left deadzone
+		midpoint.x + cmk.gun_deadzone.x		# right deadzone
+	)
+	cmk.mouse_position.y = clampf(
+		mouse_newpos.y,
+		midpoint.y - cmk.gun_deadzone.y,	# top deadzone
+		midpoint.y + cmk.gun_deadzone.z		# bottom deadzone
+	)
 
-		# If the mouse is still within the bounding box on an axis, lock that axis' camera rotation
-		if(cmk.mouse_position.x == mouse_newpos.x):
-			mouse_x_locked = true
-		if(cmk.mouse_position.y == mouse_newpos.y):
-			mouse_y_locked = true
-		
-		# Debug - Move our debug red-dot
-		#TODO - move this elsewhere?
-		if(cmk.debug_dot): cmk.guncanvas.update_dot_pos(cmk.mouse_position)
+	# Holder booleans for checking if an axis is locked
+	# If the mouse is still within the bounding box on an axis, lock that axis.
+	var mouse_x_locked : bool = (cmk.mouse_position.x == mouse_newpos.x)
+	var mouse_y_locked : bool =  (cmk.mouse_position.y == mouse_newpos.y)
 	
-	# If both axes are locked, early return
+	# Debug - Move our debug red-dot
+	#TODO - move this elsewhere?
+	if(cmk.debug_dot):
+		cmk.guncanvas.update_dot_pos(cmk.mouse_position)
+	
+	# If both axes are rotation-locked, early return
 	if mouse_x_locked and mouse_y_locked:
 		return cmk.pmk.camera_controller_anchor.get_global_transform_interpolated()
 	
@@ -73,14 +71,6 @@ func _get_camera_target_transform() -> Transform3D:
 			deg_to_rad(-90),
 			deg_to_rad(85)
 		)
-	
-	# Update the pmk rotation
-	# Rotate camera controller (up/down)
-	cmk.pmk.camera_controller_anchor.transform.basis = Basis.from_euler(Vector3(cmk.input_rotation.x, 0.0, 0.0))
-	# Rotate player controller (left/right)
-	cmk.pmk.global_transform.basis = Basis.from_euler(Vector3(0.0, cmk.input_rotation.y, 0.0))
-	# Move transform to player head anchor
-	return cmk.pmk.camera_controller_anchor.get_global_transform_interpolated()
 
 
 ## [ABSTRACT IMPL]
@@ -99,18 +89,23 @@ func _get_gun_target_transform(delta) -> Transform3D:
 		cmk.to_local(cmk.gck.global_position) - 
 		cmk.to_local(cmk.player_camera.global_position) 
 	)
+	# Update the gun's rotation (relative to camera)
+	out_tf.basis = Basis.looking_at(fw_dir, Vector3.UP, false)
+	
 	# Determine point where gun should be held
 	out_tf.origin = cmk.to_local( 
 		cmk.player_camera.project_position(
 			cmk.mouse_position, cmk.gck.gun_hold_distance
 		)
 	)
-	# Update the gun's rotation (relative to camera)
-	out_tf.basis = Basis.looking_at(fw_dir, Vector3.UP, false)
 	
-	# snap to target tf
+	# snap (lerp, actually!) to target tf
 	var snapspeed = 10 # TODO - make this an export if we're keeping it
-	cmk.gck.rotation = lerp(cmk.gck.rotation, out_tf.basis.get_euler(), delta * snapspeed)
+	cmk.gck.rotation = lerp(
+		cmk.gck.rotation,
+		out_tf.basis.get_euler(),
+		delta * snapspeed
+	)
 	cmk.gck.position = out_tf.origin
 	
 	return out_tf
@@ -120,5 +115,6 @@ func _get_gun_target_transform(delta) -> Transform3D:
 ## Determines whether we should change state
 func _check_state_transitions() -> void:
 	# If we're no longer in an aiming state, transition out
-	if !(cmk.pmk.aim_held and cmk.is_aiming and !cmk.pmk.is_running):
+	# If we aren't holding aim, or we aren't is_aiming, or we started running
+	if (!cmk.pmk.aim_held or !cmk.is_aiming or cmk.pmk.is_running):
 		finished.emit("AimOut")

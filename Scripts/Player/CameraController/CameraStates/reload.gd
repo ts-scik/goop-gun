@@ -18,12 +18,15 @@ func update(_delta: float) -> void:
 	var cam_target_transform : Transform3D = cmk.pmk.camera_controller_anchor.get_global_transform_interpolated()
 	
 	# Handle camera effects
-	var cam_offset_transform : Transform3D = cmk._calculate_effects()
+	var cam_offset_transform : Transform3D = cmk._get_cam_effects_transform()
 	
 	# Update camera
 	cmk.player_camera.fov = cam_target_fov
 	cmk.position = cam_target_transform.origin + cam_offset_transform.origin
-	cmk.rotation = cam_target_transform.basis.get_euler() + cam_offset_transform.basis.get_euler()
+	cmk.rotation = (
+		cam_offset_transform.basis.get_euler() +
+		cam_offset_transform.basis.get_euler()
+	)
 
 
 ## Called by the state machine on the engine's physics update tick.
@@ -37,7 +40,7 @@ func enter(previous_state_path: String, data := {}) -> void:
 	pass
 
 
-## Called by the state machine before changing the active state. Use this function
-## to clean up the state.
+## Called by the state machine before changing the active state.
+## Use this function to clean up the state.
 func exit() -> void:
 	pass

@@ -12,4 +12,4 @@ var pmk: PlayerController
 func _ready() -> void:
 	await owner.ready
 	pmk = owner as PlayerController
-	assert(pmk != null, "The PlayerState state type must be used only in the player scene. It needs the owner to be a PlayerController node.")
+	assert(pmk != null, "The PlayerState state-type requires PlayerController as owner.")

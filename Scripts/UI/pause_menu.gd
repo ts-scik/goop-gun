@@ -10,7 +10,7 @@ func _ready() -> void:
 	# Find our PlayerController owner
 	await owner.ready
 	pmk = owner as PlayerController
-	assert(pmk != null, "The PauseMenu node requires a PlayerController node as owner.")
+	assert(pmk != null, "The PauseMenu node requires PlayerController as owner.")
 	# Find all our ValueSlider nodes and connect their signals
 	value_sliders = scik_utils.get_children_of_type(self, ValueSlider)
 	for slider in value_sliders: slider.value_update.connect(_on_slider_update)
@@ -32,7 +32,7 @@ func _on_slider_update(value, parameter : String):
 		"cam_sense":
 			pmk.camera_controller.camera_sensitivity = value / 10
 		"aim_sense":
-			pmk.camera_controller.aim_sensitivity = value / 500
+			pmk.camera_controller.aim_sensitivity = value / 25
 
 
 ## Handles quit/leave button

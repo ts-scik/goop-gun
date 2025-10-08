@@ -47,7 +47,7 @@ var is_aiming : bool = false # Flag for ADS completed
 @export var desired_fov : float = 75.0 # TODO - this should be player-configurable
 @export var mouse_sensitivity : float = 0.005 # Mouse overall sensitivitiy
 @export var camera_sensitivity : float = 0.5 # Mouse camera sensitivity
-@export var aim_sensitivity : float = 0.01 # Mouse aim sensitivity
+@export var aim_sensitivity : float = 0.1 # Mouse aim sensitivity
 @export var gamepad_sense_scale = 15 # Gamepad sensitivity multiplier
 
 # Mouse input variables
@@ -57,6 +57,7 @@ var input_rotation : Vector3 # Stores mouse_input converted to rotation
 var mouse_position : Vector2 = Vector2.ZERO # Mouse cursor's position onscreen
 var screen_size : Vector2 # Size of screen (in pixels)
 var gun_deadzone : Vector3 # Gun's deadzone size (in pixels)
+var last_cmk_rot : Vector3 # Camera's rotation last frame
 # Debug stuff
 var guncanvas : GunCanvas # Node for mouse_position debug display
 var debug_dot : bool = false # Flag for if we want to show the red_dot
@@ -68,7 +69,7 @@ func _ready() -> void:
 	# Find our PlayerController owner
 	#await owner.ready
 	pmk = owner as PlayerController
-	assert(pmk != null, "The CameraController node requires a PlayerController node as owner.")
+	assert(pmk != null, "The CameraController node requires PlayerController as owner.")
 	
 	# Handle independent camera setup
 	set_physics_interpolation_mode(Node.PHYSICS_INTERPOLATION_MODE_OFF)
@@ -83,6 +84,9 @@ func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	player_camera.current = true
 	
+	# Store transform variables
+	last_cmk_rot = self.rotation
+	
 	# Update all our screen-size-related variables
 	_viewport_update()
 
@@ -92,8 +96,8 @@ func ads_ratio() -> float:
 	return ads_timer/ads_time
 
 
-## Returns offset angle based on camera effects
-func _calculate_effects() -> Transform3D:
+## Returns offset transform based on camera effects
+func _get_cam_effects_transform() -> Transform3D:
 	var velocity = pmk.velocity
 	var pos = Vector3.ZERO
 	var angles = Vector3.ZERO
@@ -127,20 +131,21 @@ func _calculate_effects() -> Transform3D:
 	return out_tf
 
 
-## Shoots
-func camera_shoot():
-	# Handle mouse kick
-	# TODO - make it so that this doesn't cause horizontal rotation, and minimize vertical camera rotation
-	# TODO - make this a lerp rather than an instantaneous snap
-	
+## Handles camera shake + kickback after gunshot
+func camera_gun_kick():
+	# Early return if we're not aiming (how would we even shoot?)
 	if !is_aiming:
 		return
 	
+	# Handle mouse kick
+	# TODO - make it so that this doesn't cause horizontal rotation
+	# TODO - minimize vertical camera rotation
+	# TODO - make this a lerp rather than an instantaneous snap
 	var kick_store = kick_amount
 	kick_store.x *= ((randi() & 2) - 1)
+	mouse_input += kick_store # TODO scale with screen size
 	
 	start_camera_shake(1, gck.gun_shoot_time)
-	mouse_input += kick_store # TODO scale with screen size
 
 
 ## Centers the gun camera, and updates the gun deadzone to match
