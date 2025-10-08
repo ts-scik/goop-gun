@@ -49,7 +49,7 @@ func _on_gun_dot_debug_toggled(toggled_on: bool) -> void:
 
 ## Handles ADS toggle
 func _on_aim_toggle_button_toggled(toggled_on: bool) -> void:
-	pmk.aim_toggle = toggled_on
+	pmk.camera_controller.aim_toggle = toggled_on
 
 
 ## Handles crouch toggle

@@ -15,18 +15,19 @@ func update(_delta: float) -> void:
 	
 	# Handle mouse input
 	var cam_target_fov : float = cmk.desired_fov * cmk.aimed_fov_percent
-	var cam_target_transform : Transform3D = cmk.pmk.camera_controller_anchor.get_global_transform_interpolated()
+	var cam_target_tf : Transform3D = cmk.pmk.camera_controller_anchor.get_global_transform_interpolated()
 	
 	# Handle camera effects
-	var cam_offset_transform : Transform3D = cmk._get_cam_effects_transform()
+	var cam_offset_tf : Transform3D = cmk._get_cam_effects_transform()
 	
 	# Update camera
 	cmk.player_camera.fov = cam_target_fov
-	cmk.position = cam_target_transform.origin + cam_offset_transform.origin
-	cmk.rotation = (
-		cam_offset_transform.basis.get_euler() +
-		cam_offset_transform.basis.get_euler()
-	)
+	cmk.position = cam_target_tf.origin + cam_offset_tf.origin
+	cmk.rotation = cam_target_tf.basis.get_euler() + cam_offset_tf.basis.get_euler()
+	
+	# --- CLEANUP --- #
+	# Reset mouse input for next frame
+	cmk.mouse_input = Vector2.ZERO
 
 
 ## Called by the state machine on the engine's physics update tick.

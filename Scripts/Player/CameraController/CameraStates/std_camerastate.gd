@@ -27,16 +27,65 @@ func handle_input(event: InputEvent) -> void:
 		if event is InputEventMouseMotion:
 			cmk.mouse_input.x += -event.screen_relative.x * cmk.mouse_sensitivity
 			cmk.mouse_input.y += -event.screen_relative.y * cmk.mouse_sensitivity
+		# Handle mouse buttons
+		if event.is_action_pressed("shoot_btn"):
+			cmk.pmk.input_buffer.buffer_input(cmk.pmk.SHOOT_INPUT)
+		elif event.is_action_pressed("aim_btn"):
+			# Toggle-aim / Hold to aim
+			cmk.aim_held = !cmk.aim_held if cmk.aim_toggle else true
+		elif event.is_action_released("aim_btn") and !cmk.aim_toggle:
+			# Hold-to-aim (release)
+			cmk.aim_held = false
+
+
+## Handle gamepad aiming/shooting inputs
+func _handle_gamepad_gun_input() -> void:
+	# Early return if we're not in a captured-mouse state
+	if !Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		return
 	
-	# Handle gamepad aiming
+	# --- Handle gamepad aiming --- #
 	var y_aim : float = Input.get_axis("look_down","look_up")
 	var x_aim : float = Input.get_axis("look_right","look_left")
 	cmk.mouse_input.y += y_aim * cmk.mouse_sensitivity * cmk.gamepad_sense_scale
 	cmk.mouse_input.x += x_aim * cmk.mouse_sensitivity * cmk.gamepad_sense_scale
+	
+	# --- Handle gamepad aiming/shooting --- #
+	# Effectively converts LT/RT into buttons
+	var shoot_amount = Input.get_action_strength("shoot_axis")
+	var aim_amount = Input.get_action_strength("aim_axis")
+	
+	var shoot_threshold = 0.25 # TODO - export
+	var aim_threshold = 0.1 # TODO - export
+	
+	# --- Release Triggers --- #
+	# If we recently pulled RT, and just released it, reset shoot flag
+	if(cmk.recent_gamepad_shoot and shoot_amount < shoot_threshold):
+		cmk.recent_gamepad_shoot = false
+	# If we recently pulled LT, and just released it, reset aim flag
+	# Also - if we're not using toggle aim, we should de-aim
+	if(cmk.recent_gamepad_aim and aim_amount < aim_threshold):
+		if(!cmk.aim_toggle):
+			cmk.aim_held = false
+		cmk.recent_gamepad_aim = false
+	
+	# --- Press Triggers --- #
+	# If we haven't recently pulled RT, and just pulled it, shoot!! (and set flag)
+	if(!cmk.recent_gamepad_shoot and shoot_amount > shoot_threshold):
+		cmk.pmk.input_buffer.buffer_input(cmk.pmk.SHOOT_INPUT)
+		cmk.recent_gamepad_shoot = true
+	# If we haven't recently pulled LT, and just pulled it, update aim (and set flag)
+	if(!cmk.recent_gamepad_aim and aim_amount > aim_threshold):
+		# Toggle-aim / Hold to aim
+		cmk.aim_held = !cmk.aim_held if cmk.aim_toggle else true
+		cmk.recent_gamepad_aim = true
 
 
 ## Called by the state machine on the engine's main loop tick.
 func update(delta: float) -> void:
+	# --- GAMEPAD --- #
+	_handle_gamepad_gun_input()
+	
 	# --- CAMERACONTROLLER --- #
 	# If the window has been resized, do some viewport updates
 	if(cmk.screen_size != Vector2(get_viewport().size)):
@@ -148,7 +197,7 @@ func _determine_gun_sway(delta) -> Vector3:
 	var rot_change : Vector3 = Vector3.ZERO
 	
 	# Rotation change -- only calculated if not holstered
-	if(cmk.is_aiming or cmk.pmk.aim_held or cmk.ads_timer > 0.0):
+	if(cmk.is_aiming or cmk.aim_held or cmk.ads_timer > 0.0):
 		rot_change = cmk_rot - cmk.last_cmk_rot
 	
 		# Keep rot_change inbounds

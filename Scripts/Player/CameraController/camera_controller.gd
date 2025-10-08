@@ -14,54 +14,60 @@ var gck : GunController # Gun's container
 
 @export_category("Effects")
 @export_group("Run Tilt")
-@export var enable_tilt : bool = false
-@export var run_pitch : float = 0.1 # Euler degrees
-@export var run_roll : float = 0.25 # Euler degrees
-@export var max_pitch : float = 1.0 # Euler degrees
-@export var max_roll : float = 2.5 # Euler degrees
+@export var enable_tilt : bool = false	# Whether camera tilt angle is enabled
+@export var run_pitch : float = 0.1	# Euler degrees
+@export var run_roll : float = 0.25	# Euler degrees
+@export var max_pitch : float = 1.0	# Euler degrees
+@export var max_roll : float = 2.5	# Euler degrees
 @export_group("Gun Kick")
 @export var kick_amount = Vector2(0.025,0.05) # Cursor's x/y screen kick amount
 @export_group("Camera Shake")
-@export var camera_shake_enabled = true
-@export var camera_roll_enabled = true
-var _camera_shake_tween : Tween
-var _camera_shake_angle : Vector2 = Vector2.ZERO
+@export var camera_shake_enabled = true	# Whether camera x/y shake is enabled
+@export var camera_roll_enabled = true	# Whether camera roll shake is enabled
+var _camera_shake_tween : Tween			# Tween for camera shake
+var _camera_shake_angle := Vector2.ZERO	# Holder for camera shake
 @export_group("Aim FOV")
-@export var enable_aim_zoom : bool = true
-@export var aimed_fov_percent : float = 0.875
+@export var enable_aim_zoom : bool = true		# Whether camera FOV changes while aiming
+@export var aimed_fov_percent : float = 0.875	# % of fov when fully aimed in
 @export_group("Viewbob")
-@export var enable_viewbob : bool = true
-@export var viewbob_curve : Curve
-@export var max_bob_height : float = 0.06
-var bob_vec : Vector3 = Vector3.ZERO
+@export var enable_viewbob : bool = true	# Whether viewbob is enabled
+@export var viewbob_curve : Curve			# Configurable curve for viewbob
+@export var max_bob_height : float = 0.06	# Point where viewbob curve peaks
+var bob_vec : Vector3 = Vector3.ZERO		# Holder for viewbob offset vector
 
 @export_category("Interactions")
+@export_group("Shooting")
+@export var reshoot_cutoff : float = 0.75	# min seconds between shots
+var recent_gamepad_shoot : bool = false		# flag for if we've recently pulled RT
 @export_group("Aiming")
-@export var ads_time : float = 0.25 # ADS time (in seconds)
-var ads_timer : float = 0.0 # Timer for ADS lerp
-var is_aiming : bool = false # Flag for ADS completed
+@export var ads_time : float = 0.25	# ADS time (in seconds)
+var ads_timer : float = 0.0		# Timer for ADS lerp
+var is_aiming : bool = false	# Flag for ADS completed
+var aim_held : bool = false		# Flag for ADS input
+var aim_toggle : bool = false	# Whether or not we're using toggle-aim
+var recent_gamepad_aim : bool = false	# flag for if we've recently pulled LT
 @export_group("Mouse Deadzone")
 @export var mouse_deadzone : Vector3 = Vector3(0.1, 0.65, 0.35) # Mouse deadzone (in screen %) (x, yTop, yBottom)
 
 @export_category("Player Configurables")
-@export var desired_fov : float = 75.0 # TODO - this should be player-configurable
-@export var mouse_sensitivity : float = 0.005 # Mouse overall sensitivitiy
-@export var camera_sensitivity : float = 0.5 # Mouse camera sensitivity
-@export var aim_sensitivity : float = 0.1 # Mouse aim sensitivity
-@export var gamepad_sense_scale = 15 # Gamepad sensitivity multiplier
+@export var desired_fov : float = 75.0 		# Player default FOV (TODO - add player setting)
+@export var mouse_sensitivity : float = 0.005 	# Mouse overall sensitivitiy
+@export var camera_sensitivity : float = 0.5 	# Mouse camera sensitivity
+@export var aim_sensitivity : float = 0.1 		# Mouse aim sensitivity
+@export var gamepad_sense_scale : float = 15 	# Gamepad sensitivity multiplier
 
 # Mouse input variables
-var mouse_input : Vector2 # Stores mouse input each frame
-var input_rotation : Vector3 # Stores mouse_input converted to rotation
+var mouse_input : Vector2		# Stores mouse input (1gets reset each frame!)
+var input_rotation : Vector3 	# Stores mouse_input converted to rotation
 # Gun deadzone variables
-var mouse_position : Vector2 = Vector2.ZERO # Mouse cursor's position onscreen
-var screen_size : Vector2 # Size of screen (in pixels)
-var gun_deadzone : Vector3 # Gun's deadzone size (in pixels)
-var last_cmk_rot : Vector3 # Camera's rotation last frame
+var mouse_position := Vector2.ZERO	# Mouse cursor's position onscreen
+var screen_size : Vector2	# Size of screen (in pixels)
+var gun_deadzone : Vector3	# Gun's deadzone size (in pixels)
+var last_cmk_rot : Vector3	# Camera's rotation last frame
 # Debug stuff
-var guncanvas : GunCanvas # Node for mouse_position debug display
-var debug_dot : bool = false # Flag for if we want to show the red_dot
-var debug_box : bool = false # Flag for if we want to show the boundary_rect
+var guncanvas : GunCanvas 	# Node for mouse_position debug display
+var debug_dot :bool = false	# Flag for if we want to show the red_dot
+var debug_box :bool = false	# Flag for if we want to show the boundary_rect
 
 
 ## Get our camera
@@ -103,6 +109,7 @@ func _get_cam_effects_transform() -> Transform3D:
 	var angles = Vector3.ZERO
 	
 	# Camera Tilt
+	# TODO - can we get rid of this??
 	if enable_tilt:
 		var forward = -global_transform.basis.z
 		var right = global_transform.basis.x
@@ -143,7 +150,7 @@ func camera_gun_kick():
 	# TODO - make this a lerp rather than an instantaneous snap
 	var kick_store = kick_amount
 	kick_store.x *= ((randi() & 2) - 1)
-	mouse_input += kick_store # TODO scale with screen size
+	mouse_input += kick_store # TODO scale with screen size ?
 	
 	start_camera_shake(1, gck.gun_shoot_time)
 

@@ -31,5 +31,5 @@ func _get_gun_target_transform(_delta) -> Transform3D:
 ## Determines whether we should change state
 func _check_state_transitions() -> void:
 	# If we're trying to aim, start doing it!
-	if cmk.pmk.aim_held:
+	if cmk.aim_held:
 		finished.emit("AimIn")

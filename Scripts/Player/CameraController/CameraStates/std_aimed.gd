@@ -1,6 +1,20 @@
 ## State for camera+gun management when completely Aimed
 extends StandardCameraState
 
+## [OVERRIDE]
+## Called by the state machine on the engine's main loop tick.
+## We override this so we can handle shooting!!
+func update(delta) -> void:
+	# --- !TRY SHOOTING! --- #
+	# check if we're allowed to shoot again
+	if(cmk.gck.shoot_time_remaining() >= cmk.reshoot_cutoff):
+		# try retrieving a SHOOT_INPUT from the input buffer
+		# if there's one in there, let's shoot!!w
+		if(cmk.pmk.input_buffer.buffer_retrieve(cmk.pmk.SHOOT_INPUT)):
+			cmk.camera_gun_kick()
+			cmk.gck.shoot()
+	super(delta)
+
 
 ## [OVERRIDE]
 ## Called by the state machine upon changing the active state. The `data` parameter
@@ -116,5 +130,5 @@ func _get_gun_target_transform(delta) -> Transform3D:
 func _check_state_transitions() -> void:
 	# If we're no longer in an aiming state, transition out
 	# If we aren't holding aim, or we aren't is_aiming, or we started running
-	if (!cmk.pmk.aim_held or !cmk.is_aiming or cmk.pmk.is_running):
+	if (!cmk.aim_held or !cmk.is_aiming or cmk.pmk.is_running):
 		finished.emit("AimOut")

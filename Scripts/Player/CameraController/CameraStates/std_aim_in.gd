@@ -22,6 +22,7 @@ func _get_gun_target_transform(delta) -> Transform3D:
 	var unaimed_tf = _get_gun_unaimed_tf()
 	
 	# cap our max aim amount if the player is running
+	# TODO - something about this is borken! it snaps very suddenly
 	var max_aim_amt : float = cmk.ads_time * 0.4 if cmk.pmk.is_running else cmk.ads_time 
 	
 	# update the aim timer
@@ -57,7 +58,7 @@ func _get_gun_target_transform(delta) -> Transform3D:
 ## Determines whether we should change state
 func _check_state_transitions() -> void:
 	# If we're no longer trying to aim, aim out
-	if !cmk.pmk.aim_held:
+	if !cmk.aim_held:
 		finished.emit("AimOut")
 	# If we're finished aiming in, set to Aimed
 	elif cmk.ads_ratio() >= 1.0:

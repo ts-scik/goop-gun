@@ -51,7 +51,8 @@ func _check_state_transitions() -> void:
 	# If we're no longer trying to aim out, aim in
 	# ... unless we're trying to aim while sprinting, and still above the sprint aim cap
 	var max_aim_amt = cmk.ads_time * 0.4 if cmk.pmk.is_running else cmk.ads_time 
-	if cmk.pmk.aim_held and cmk.ads_timer < max_aim_amt:
+	# TODO - something about this is borken! it snaps very suddenly when sprinting
+	if cmk.aim_held and cmk.ads_timer < max_aim_amt:
 		finished.emit("AimIn")
 	# If we've fully aimed out, transition to Unaimed
 	if cmk.ads_ratio() <= 0.0:
