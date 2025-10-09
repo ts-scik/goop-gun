@@ -29,8 +29,9 @@ var _camera_shake_angle := Vector2.ZERO	# Holder for camera shake
 @export_group("Aim FOV")
 @export var enable_aim_zoom : bool = true		# Whether camera FOV changes while aiming
 @export var aimed_fov_percent : float = 0.875	# % of fov when fully aimed in
-@export_group("Reload FOV")
-@export var reload_fov_percent : float = 0.6	# % of fov when fully in reload state
+@export_group("Handling / Reloading FOV")
+@export var handling_fov_percent : float = 0.8	# % of fov when fully in reload state
+@export var reload_fov_percent : float = 0.6	# % of fov when fully in handling state
 @export_group("Viewbob")
 @export var enable_viewbob : bool = true	# Whether viewbob is enabled
 @export var viewbob_curve : Curve			# Configurable curve for viewbob
@@ -39,7 +40,6 @@ var bob_vec : Vector3 = Vector3.ZERO		# Holder for viewbob offset vector
 
 @export_category("Interactions")
 @export_group("Shooting")
-@export var reshoot_cutoff : float = 0.75	# min seconds between shots
 var recent_gamepad_shoot : bool = false		# flag for if we've recently pulled RT
 @export_group("Aiming")
 @export var ads_time : float = 0.25	# ADS time (in seconds)

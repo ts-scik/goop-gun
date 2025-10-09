@@ -55,6 +55,7 @@ const input_timers : Dictionary = {	# timers for bufferable inputs
 func _enter_tree() -> void:
 	# Buffer setup
 	input_buffer = InputBuffer.new(input_timers)
+	add_child(input_buffer)
 
 
 ## Handle instantaneous inputs (pausing, scoreboard, jump, mouse)

@@ -6,13 +6,23 @@ extends StandardCameraState
 ## We override this so we can handle shooting!!
 func update(delta) -> void:
 	# --- !TRY SHOOTING! --- #
-	# check if we're allowed to shoot again
-	if(cmk.gck.shoot_time_remaining() >= cmk.reshoot_cutoff):
-		# try retrieving a SHOOT_INPUT from the input buffer
-		# if there's one in there, let's shoot!!w
-		if(cmk.pmk.input_buffer.buffer_retrieve(cmk.pmk.SHOOT_INPUT)):
-			cmk.camera_gun_kick()
-			cmk.gck.shoot()
+	# check if we have a shoot input buffered
+	if(cmk.pmk.input_buffer.buffer_check(cmk.pmk.SHOOT_INPUT)):
+		
+		# check if we're allowed to shoot again
+		if(cmk.gck.can_shoot_again()):
+			# retrieve the shoot input
+			cmk.pmk.input_buffer.buffer_retrieve(cmk.pmk.SHOOT_INPUT)
+			# check if we're out of ammo
+			if(cmk.gck.has_ammo()):
+				# do the shooting!!
+				cmk.camera_gun_kick()
+				cmk.gck.shoot()
+			else:
+				# do an out-of-ammo animation + sound
+				# TODO
+				print("out of ammo!!")
+			
 	super(delta)
 
 

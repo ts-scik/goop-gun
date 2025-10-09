@@ -2,7 +2,7 @@
 ## Each input type is buffered for a configurable amount of time in seconds.
 ## The buffer can be paused with a flag.
 ## Buffered inputs can be checked at any time, with optional removal.
-class_name InputBuffer
+class_name InputBuffer extends Node
 
 # Variables for input buffering
 var buffer : Array[float] = []
@@ -50,14 +50,14 @@ func buffer_input(action_idx : int) -> bool:
 
 
 ## Updates the input buffer, zeroing out any expired inputs
-func buffer_update(delta : float) -> Array[int]:
-	var pop_array : Array[int] = []
+func buffer_update(delta : float) -> void:
+	# iterate over buffer
 	for idx in buffer.size():
-		buffer[idx] -= delta
-		if(buffer[idx] <= 0.0):
-			buffer[idx] = 0.0
-			pop_array.append(idx)
-	return pop_array
+		# decrement buffered inputs
+		if(buffer[idx] > 0.0):
+			buffer[idx] = max(buffer[idx] - delta, 0.0)
+			if(buffer[idx] <= 0.0):
+				buffer[idx] = 0.0
 
 
 ## If we have [action] buffered, return {true}. Else, return {false}.

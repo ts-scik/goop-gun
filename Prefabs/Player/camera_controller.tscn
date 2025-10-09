@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://w5yidi6yqanc"]
+[gd_scene load_steps=14 format=3 uid="uid://w5yidi6yqanc"]
 
 [ext_resource type="Script" uid="uid://tp34olvhc8jf" path="res://Scripts/Player/CameraController/camera_controller.gd" id="1_hitlr"]
 [ext_resource type="PackedScene" uid="uid://c37slaodjgit6" path="res://Prefabs/Player/gun_controller.tscn" id="2_7w2as"]
@@ -11,6 +11,7 @@
 [ext_resource type="Script" uid="uid://y7afsxon6pw3" path="res://Scripts/Player/CameraController/CameraStates/Handling/handling.gd" id="9_x1jbq"]
 [ext_resource type="Script" uid="uid://cmusqkaw0ownb" path="res://Scripts/Player/CameraController/CameraStates/Handling/handling_in.gd" id="10_qfa8c"]
 [ext_resource type="Script" uid="uid://drp6y868ldt26" path="res://Scripts/Player/CameraController/CameraStates/Handling/handling_out.gd" id="11_y6rwu"]
+[ext_resource type="Script" uid="uid://t8hhtp8bihwi" path="res://Scripts/Player/CameraController/CameraStates/Handling/reloading.gd" id="12_y6rwu"]
 
 [sub_resource type="Curve" id="Curve_7w2as"]
 _limits = [-1.0, 1.0, 0.0, 1.0]
@@ -54,3 +55,6 @@ script = ExtResource("10_qfa8c")
 
 [node name="HandlingOut" type="Node" parent="StateMachine"]
 script = ExtResource("11_y6rwu")
+
+[node name="Reloading" type="Node" parent="StateMachine"]
+script = ExtResource("12_y6rwu")

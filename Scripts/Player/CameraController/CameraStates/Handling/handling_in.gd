@@ -1,4 +1,3 @@
-## State for camera+gun management when fully in the Reload state
 extends CameraState
 
 
@@ -40,7 +39,7 @@ func _determine_zoom_fov() -> float:
 		return cmk.desired_fov
 	return lerpf(
 		cmk.desired_fov,
-		cmk.desired_fov * cmk.reload_fov_percent,
+		cmk.desired_fov * cmk.handling_fov_percent,
 		cmk.reload_timer / cmk.reload_entry_time
 	)
 
@@ -56,7 +55,7 @@ func _get_camera_target_transform() -> Transform3D:
 	# get position of gun on global coordinate
 	var gun_target_pos_glob : Vector3 = (
 		player_interp.origin + # player origin
-		(player_interp.basis * cmk.gck.gun_reload_position)# holstered position (relative to player
+		(player_interp.basis * cmk.gck.gun_handling_origin_position)# holstered position (relative to player
 	)
 	# get position of player head
 	var player_head_interp : Transform3D = (
@@ -85,10 +84,10 @@ func _get_gun_target_transform(delta) -> Transform3D:
 	# get base gun target position
 	var player_interp := cmk.pmk.get_global_transform_interpolated()
 	var gun_target_pos : Vector3 = cmk.to_local(
-		player_interp.origin + # player origin
-		(player_interp.basis * cmk.gck.gun_reload_position) + # holstered position (relative to player
-		-cmk.gck.gun_model_holder_basepos +
-		cmk.bob_vec # camera viewbob # TODO kinda hate that we have to do this
+		player_interp.origin # player origin
+		+ (player_interp.basis * (cmk.gck.gun_handling_origin_position + cmk.gck.gun_handling_offset_position)) # target position (relative to player)
+		- cmk.gck.gun_model_holder_basepos
+		+ cmk.bob_vec # camera viewbob # TODO kinda hate that we have to do this
 	)
 	# get base gun target rotation
 	var gun_target_rot : Vector3 = Vector3.ZERO
@@ -115,8 +114,9 @@ func _get_gun_target_transform(delta) -> Transform3D:
 	# --- GUNCONTROLLER --- #
 	# get angle from camera to gun target position
 	var cam_to_gun_vec : Vector3 = (
-		gun_target_pos -
-		cmk.to_local(cmk.player_camera.global_position)
+		gun_target_pos
+		- cmk.to_local(cmk.player_camera.global_position)
+		- (cmk.gck.gun_handling_offset_position * 0.5)
 	)
 	var cam_to_gun_angle = Basis.looking_at(cam_to_gun_vec, Vector3.UP, false).get_euler()
 	cmk.gck.rotation = cam_to_gun_angle
