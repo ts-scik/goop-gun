@@ -8,9 +8,9 @@
 [ext_resource type="PackedScene" uid="uid://32skufn11hat" path="res://Prefabs/UI/gun_canvas.tscn" id="6_qfa8c"]
 [ext_resource type="Script" uid="uid://dqx53eq38r370" path="res://Scripts/Player/CameraController/CameraStates/Standard/std_aim_in.gd" id="7_qflef"]
 [ext_resource type="Script" uid="uid://byl3q0kqboru2" path="res://Scripts/Player/CameraController/CameraStates/Standard/std_aim_out.gd" id="8_x1jbq"]
-[ext_resource type="Script" uid="uid://y7afsxon6pw3" path="res://Scripts/Player/CameraController/CameraStates/Reload/reload.gd" id="9_x1jbq"]
-[ext_resource type="Script" uid="uid://cmusqkaw0ownb" path="res://Scripts/Player/CameraController/CameraStates/Reload/reload_in.gd" id="10_qfa8c"]
-[ext_resource type="Script" uid="uid://drp6y868ldt26" path="res://Scripts/Player/CameraController/CameraStates/Reload/reload_out.gd" id="11_y6rwu"]
+[ext_resource type="Script" uid="uid://y7afsxon6pw3" path="res://Scripts/Player/CameraController/CameraStates/Handling/handling.gd" id="9_x1jbq"]
+[ext_resource type="Script" uid="uid://cmusqkaw0ownb" path="res://Scripts/Player/CameraController/CameraStates/Handling/handling_in.gd" id="10_qfa8c"]
+[ext_resource type="Script" uid="uid://drp6y868ldt26" path="res://Scripts/Player/CameraController/CameraStates/Handling/handling_out.gd" id="11_y6rwu"]
 
 [sub_resource type="Curve" id="Curve_7w2as"]
 _limits = [-1.0, 1.0, 0.0, 1.0]
@@ -46,11 +46,11 @@ script = ExtResource("7_qflef")
 [node name="AimOut" type="Node" parent="StateMachine"]
 script = ExtResource("8_x1jbq")
 
-[node name="Reload" type="Node" parent="StateMachine"]
+[node name="Handling" type="Node" parent="StateMachine"]
 script = ExtResource("9_x1jbq")
 
-[node name="ReloadIn" type="Node" parent="StateMachine"]
+[node name="HandlingIn" type="Node" parent="StateMachine"]
 script = ExtResource("10_qfa8c")
 
-[node name="ReloadOut" type="Node" parent="StateMachine"]
+[node name="HandlingOut" type="Node" parent="StateMachine"]
 script = ExtResource("11_y6rwu")

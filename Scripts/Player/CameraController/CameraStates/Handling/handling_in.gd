@@ -5,7 +5,7 @@ extends CameraState
 ## Called by the state machine when receiving unhandled input events.
 func handle_input(_event: InputEvent) -> void:
 	if _event.is_action_pressed("reload"):
-		finished.emit("ReloadOut")
+		finished.emit("HandlingOut")
 
 
 ## Called by the state machine on the engine's main loop tick.
@@ -30,7 +30,7 @@ func update(delta: float) -> void:
 	_get_gun_target_transform(delta)
 	
 	if(cmk.reload_timer >= cmk.reload_entry_time):
-		finished.emit("Reload")
+		finished.emit("Handling")
 		return
 
 
@@ -79,9 +79,10 @@ func _get_camera_target_transform() -> Transform3D:
 
 
 func _get_gun_target_transform(delta) -> Transform3D:
+	# --- GUNMODEL--- #
 	# Create temp output transform
 	var out_tf : Transform3D	
-	# get target pos/rot
+	# get base gun target position
 	var player_interp := cmk.pmk.get_global_transform_interpolated()
 	var gun_target_pos : Vector3 = cmk.to_local(
 		player_interp.origin + # player origin
@@ -89,21 +90,36 @@ func _get_gun_target_transform(delta) -> Transform3D:
 		-cmk.gck.gun_model_holder_basepos +
 		cmk.bob_vec # camera viewbob # TODO kinda hate that we have to do this
 	)
+	# get base gun target rotation
+	var gun_target_rot : Vector3 = Vector3.ZERO
+	# add reload target rotation
+	gun_target_rot += cmk.gck.gun_reload_rotation
+	# add input rotation
+	gun_target_rot += Vector3(cmk.gun_input_rotation.x, cmk.gun_input_rotation.y, 0)
+	
+	# get gun start position
 	var gun_start_pos : Vector3 = cmk.to_local(
 		player_interp.origin + # player origin
 		(player_interp.basis * cmk.gck.holstered_pos) + # holstered position (relative to player
 		cmk.bob_vec # camera viewbob # TODO kinda hate that we have to do this
 	)
-	var gun_target_rot : Vector3 = cmk.gck.gun_reload_rotation - Vector3(cmk.rotation.x,0,0)
 	
 	# Determine unaimed TF
 	out_tf.basis = Basis.from_euler(gun_target_rot)
 	out_tf.origin = lerp(gun_start_pos, gun_target_pos, cmk.reload_timer/cmk.reload_entry_time)
 	
 	# snap to target tf
-	cmk.gck.rotation = Vector3.ZERO
 	cmk.gck.gun_model_holder.rotation = out_tf.basis.get_euler() # rotation, not basis -- preserve scale
 	cmk.gck.position = out_tf.origin
+	
+	# --- GUNCONTROLLER --- #
+	# get angle from camera to gun target position
+	var cam_to_gun_vec : Vector3 = (
+		gun_target_pos -
+		cmk.to_local(cmk.player_camera.global_position)
+	)
+	var cam_to_gun_angle = Basis.looking_at(cam_to_gun_vec, Vector3.UP, false).get_euler()
+	cmk.gck.rotation = cam_to_gun_angle
 	
 	return out_tf
 

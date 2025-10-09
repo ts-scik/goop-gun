@@ -22,7 +22,7 @@ func handle_input(event: InputEvent) -> void:
 	if event.is_action_pressed("reload"):
 		cmk.ads_timer = 0.0
 		cmk.aim_held = false
-		finished.emit("ReloadIn")
+		finished.emit("HandlingIn")
 	# do regular mouse input capture
 	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		# Handle mouse movement
