@@ -86,6 +86,7 @@ func _get_gun_target_transform(delta) -> Transform3D:
 	var gun_target_pos : Vector3 = cmk.to_local(
 		player_interp.origin + # player origin
 		(player_interp.basis * cmk.gck.gun_reload_position) + # holstered position (relative to player
+		-cmk.gck.gun_model_holder_basepos +
 		cmk.bob_vec # camera viewbob # TODO kinda hate that we have to do this
 	)
 	var gun_start_pos : Vector3 = cmk.to_local(
@@ -104,7 +105,7 @@ func _get_gun_target_transform(delta) -> Transform3D:
 	cmk.gck.gun_model_holder.rotation = out_tf.basis.get_euler() # rotation, not basis -- preserve scale
 	cmk.gck.position = out_tf.origin
 	
-	return out_tf
+	return out_tf 
 
 
 ## Called by the state machine on the engine's physics update tick.
@@ -121,6 +122,4 @@ func enter(previous_state_path: String, data := {}) -> void:
 ## Called by the state machine before changing the active state.
 ## Use this function to clean up the state.
 func exit() -> void:
-	# --- CLEANUP --- #
-	# Reset mouse input for next frame
-	cmk.mouse_input = Vector2.ZERO
+	pass

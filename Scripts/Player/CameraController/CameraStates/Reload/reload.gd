@@ -3,9 +3,16 @@ extends CameraState
 
 
 ## Called by the state machine when receiving unhandled input events.
-func handle_input(_event: InputEvent) -> void:
-	if _event.is_action_pressed("reload"):
+func handle_input(event: InputEvent) -> void:
+	if event.is_action_pressed("reload"):
 		finished.emit("ReloadOut")
+	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		# Handle mouse movement
+		if event is InputEventMouseMotion:
+			cmk.mouse_input.x += -event.screen_relative.x * cmk.mouse_sensitivity
+			cmk.mouse_input.y += -event.screen_relative.y * cmk.mouse_sensitivity
+			cmk.gun_input_rotation.y += cmk.mouse_input.x * cmk.camera_sensitivity
+			cmk.gun_input_rotation.x += cmk.mouse_input.y * cmk.camera_sensitivity
 
 
 ## Called by the state machine on the engine's main loop tick.
@@ -26,6 +33,10 @@ func update(delta: float) -> void:
 	# Update the gun's position + rotation - MUST BE AFTER MOUSE/CAMERA UPDATES!!
 	# ... at least it did at some point!!
 	_get_gun_target_transform(delta)
+	
+	# --- CLEANUP --- #
+	# Reset mouse input for next frame
+	cmk.mouse_input = Vector2.ZERO
 
 
 ## Returns desired FOV value at current frame
@@ -69,17 +80,20 @@ func _get_gun_target_transform(delta) -> Transform3D:
 	var out_tf : Transform3D	
 	# get target pos/rot
 	var player_interp := cmk.pmk.get_global_transform_interpolated()
-	var unaimed_target_pos : Vector3 = cmk.to_local(
+	var gun_target_pos : Vector3 = cmk.to_local(
 		player_interp.origin + # player origin
 		(player_interp.basis * cmk.gck.gun_reload_position) + # holstered position (relative to player
+		-cmk.gck.gun_model_holder_basepos +
 		cmk.bob_vec # camera viewbob # TODO kinda hate that we have to do this
 	)
-	var unaimed_target_rot : Vector3 = cmk.gck.gun_reload_rotation - Vector3(cmk.rotation.x,0,0)
+	var gun_target_rot : Vector3 = cmk.gck.gun_reload_rotation - Vector3(cmk.rotation.x,0,0)
+	
+	gun_target_rot += Vector3(cmk.gun_input_rotation.x, cmk.gun_input_rotation.y, 0)
 	
 	# Determine unaimed TF
 	out_tf = Transform3D(
-		Basis.from_euler(unaimed_target_rot),
-		unaimed_target_pos
+		Basis.from_euler(gun_target_rot),
+		gun_target_pos
 	)
 	
 	# snap to target tf
@@ -98,10 +112,10 @@ func physics_update(_delta: float) -> void:
 ## Called by the state machine upon changing the active state. The `data` parameter
 ## is a dictionary with arbitrary data the state can use to initialize itself.
 func enter(previous_state_path: String, data := {}) -> void:
-	pass
+	cmk.gun_input_rotation = Vector3.ZERO
 
 
 ## Called by the state machine before changing the active state.
 ## Use this function to clean up the state.
 func exit() -> void:
-	pass
+	cmk.gun_input_rotation = Vector3.ZERO

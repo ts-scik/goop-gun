@@ -86,6 +86,7 @@ func _get_gun_target_transform(delta) -> Transform3D:
 	var gun_target_pos : Vector3 = cmk.to_local(
 		player_interp.origin + # player origin
 		(player_interp.basis * cmk.gck.gun_reload_position) + # holstered position (relative to player
+		-cmk.gck.gun_model_holder_basepos +
 		cmk.bob_vec # camera viewbob # TODO kinda hate that we have to do this
 	)
 	var gun_start_pos : Vector3 = cmk.to_local(
@@ -115,9 +116,7 @@ func physics_update(_delta: float) -> void:
 ## Called by the state machine upon changing the active state. The `data` parameter
 ## is a dictionary with arbitrary data the state can use to initialize itself.
 func enter(previous_state_path: String, data := {}) -> void:
-	# --- CLEANUP --- #
-	# Reset mouse input for next frame
-	cmk.mouse_input = Vector2.ZERO
+	pass
 
 
 ## Called by the state machine before changing the active state.
