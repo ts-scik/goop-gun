@@ -1,6 +1,8 @@
 class_name MultiplayerUI
 extends CanvasLayer
 
+var NetworkManager : BaseNetworkManager
+
 
 ## Connect necessary signals
 func _ready():

@@ -20,7 +20,9 @@ func _check_state_transitions() -> void
 func handle_input(event: InputEvent) -> void:
 	# custom bit to handle reloading
 	if event.is_action_pressed("reload"):
-		finished.emit("Reload")
+		cmk.ads_timer = 0.0
+		cmk.aim_held = false
+		finished.emit("ReloadIn")
 	# do regular mouse input capture
 	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		# Handle mouse movement

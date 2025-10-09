@@ -38,6 +38,13 @@ var last_aimed_target_rot : Vector3 = Vector3.ZERO # stores last rotation when a
 @export_group("Holstering")
 @export var holstered_pos = Vector3(0, 1.0, -0.4) # configurable variable for where gun should go when holstered
 @export var holstered_rot = Vector3(deg_to_rad(-45.0), 0.0, 0.0) # configurable variable for gun's rotation when holstered
+@export_group("Reloading")
+@export var gun_reload_position := Vector3(	# target position where gun is held during reload
+	0.3, 1.4, -0.4
+)
+@export var gun_reload_rotation := Vector3(	# target rotation where gun is held during reload
+	deg_to_rad(0), deg_to_rad(0), deg_to_rad(0)
+)
 
 
 ## Find our owners

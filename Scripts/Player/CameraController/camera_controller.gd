@@ -29,6 +29,8 @@ var _camera_shake_angle := Vector2.ZERO	# Holder for camera shake
 @export_group("Aim FOV")
 @export var enable_aim_zoom : bool = true		# Whether camera FOV changes while aiming
 @export var aimed_fov_percent : float = 0.875	# % of fov when fully aimed in
+@export_group("Reload FOV")
+@export var reload_fov_percent : float = 0.6	# % of fov when fully in reload state
 @export_group("Viewbob")
 @export var enable_viewbob : bool = true	# Whether viewbob is enabled
 @export var viewbob_curve : Curve			# Configurable curve for viewbob
@@ -46,6 +48,9 @@ var is_aiming : bool = false	# Flag for ADS completed
 var aim_held : bool = false		# Flag for ADS input
 var aim_toggle : bool = false	# Whether or not we're using toggle-aim
 var recent_gamepad_aim : bool = false	# flag for if we've recently pulled LT
+@export_group("Reloading")
+@export var reload_entry_time : float = 0.5	# Time to enter reload state (in seconds)
+var reload_timer : float = 0.0	# Timer for reload lerp
 @export_group("Mouse Deadzone")
 @export var mouse_deadzone : Vector3 = Vector3(0.1, 0.65, 0.35) # Mouse deadzone (in screen %) (x, yTop, yBottom)
 
@@ -58,7 +63,8 @@ var recent_gamepad_aim : bool = false	# flag for if we've recently pulled LT
 
 # Mouse input variables
 var mouse_input : Vector2		# Stores mouse input (1gets reset each frame!)
-var input_rotation : Vector3 	# Stores mouse_input converted to rotation
+var input_rotation : Vector3 	# Stores mouse_input converted to rotation - for cam
+var gun_input_rotation : Vector3 # Stores mouse_input converted to rotation - for gun
 # Gun deadzone variables
 var mouse_position := Vector2.ZERO	# Mouse cursor's position onscreen
 var screen_size : Vector2	# Size of screen (in pixels)
