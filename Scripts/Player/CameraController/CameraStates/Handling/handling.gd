@@ -137,6 +137,9 @@ func physics_update(_delta: float) -> void:
 ## is a dictionary with arbitrary data the state can use to initialize itself.
 func enter(previous_state_path: String, data := {}) -> void:
 	cmk.gun_input_rotation = Vector3.ZERO
+	# TODO - temp debug thing
+	if(cmk.gck.gun_magazine != null):
+		cmk.gck.gun_magazine.curr_bullets = cmk.gck.gun_magazine.max_bullets
 	pass
 
 
