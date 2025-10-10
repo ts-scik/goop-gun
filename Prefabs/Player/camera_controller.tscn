@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://w5yidi6yqanc"]
+[gd_scene load_steps=16 format=3 uid="uid://w5yidi6yqanc"]
 
 [ext_resource type="Script" uid="uid://tp34olvhc8jf" path="res://Scripts/Player/CameraController/camera_controller.gd" id="1_hitlr"]
 [ext_resource type="PackedScene" uid="uid://c37slaodjgit6" path="res://Prefabs/Player/gun_controller.tscn" id="2_7w2as"]
@@ -20,9 +20,27 @@ point_count = 4
 metadata/_snap_enabled = true
 metadata/_snap_count = 20
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_y6rwu"]
+albedo_color = Color(0.9521565, 0.714234, 0.60193515, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_y6rwu"]
+material = SubResource("StandardMaterial3D_y6rwu")
+radius = 0.05
+height = 0.1
+
 [node name="CameraController" type="Node3D"]
 script = ExtResource("1_hitlr")
 viewbob_curve = SubResource("Curve_7w2as")
+
+[node name="Hands" type="Node3D" parent="."]
+
+[node name="LHand" type="MeshInstance3D" parent="Hands"]
+mesh = SubResource("SphereMesh_y6rwu")
+skeleton = NodePath("../..")
+
+[node name="RHand" type="MeshInstance3D" parent="Hands"]
+mesh = SubResource("SphereMesh_y6rwu")
+skeleton = NodePath("../..")
 
 [node name="GunController" parent="." instance=ExtResource("2_7w2as")]
 transform = Transform3D(0.8, 0, 0, 0, 0.56568545, 0.56568545, 0, -0.56568545, 0.56568545, 0, -0.5, -0.4)

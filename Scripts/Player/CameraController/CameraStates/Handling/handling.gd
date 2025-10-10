@@ -5,7 +5,7 @@ extends CameraState
 ## Called by the state machine when receiving unhandled input events.
 func handle_input(event: InputEvent) -> void:
 	if event.is_action_pressed("reload"):
-		finished.emit("HandlingOut")
+		cmk.want_handling = !cmk.want_handling
 	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		# Handle mouse movement
 		if event is InputEventMouseMotion:
@@ -13,7 +13,7 @@ func handle_input(event: InputEvent) -> void:
 			cmk.mouse_input.y += -event.screen_relative.y * cmk.mouse_sensitivity
 			cmk.gun_input_rotation.y = clampf(
 					cmk.gun_input_rotation.y + (cmk.mouse_input.x * cmk.camera_sensitivity),
-					deg_to_rad(-100),
+					deg_to_rad(-190),
 					deg_to_rad(170)
 				)
 			cmk.gun_input_rotation.x = clampf(
@@ -42,9 +42,15 @@ func update(delta: float) -> void:
 	# ... at least it did at some point!!
 	_get_gun_target_transform(delta)
 	
+	# --- PLAYER HANDS --- #
+	_cam_hand_update()
+	
 	# --- CLEANUP --- #
 	# Reset mouse input for next frame
 	cmk.mouse_input = Vector2.ZERO
+	
+	if(cmk.want_handling == false):
+		finished.emit("HandlingOut")
 
 
 ## Returns desired FOV value at current frame
@@ -131,9 +137,18 @@ func physics_update(_delta: float) -> void:
 ## is a dictionary with arbitrary data the state can use to initialize itself.
 func enter(previous_state_path: String, data := {}) -> void:
 	cmk.gun_input_rotation = Vector3.ZERO
+	pass
 
 
 ## Called by the state machine before changing the active state.
 ## Use this function to clean up the state.
 func exit() -> void:
 	cmk.gun_input_rotation = Vector3.ZERO
+	pass
+
+
+## Snap the player's right camera hand model to the gun's marked position
+## Move the player's left hand offscreen
+func _cam_hand_update() -> void:
+	cmk.l_hand.global_position = cmk.gck.r_hand_grip_marker.global_position
+	cmk.r_hand.position = Vector3.ZERO

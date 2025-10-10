@@ -20,7 +20,7 @@ var gck : GunController # Gun's container
 @export var max_pitch : float = 1.0	# Euler degrees
 @export var max_roll : float = 2.5	# Euler degrees
 @export_group("Gun Kick")
-@export var kick_amount = Vector2(0.025,0.05) # Cursor's x/y screen kick amount
+@export var kick_amount := Vector2(0.025,0.05) # Cursor's x/y screen kick amount
 @export_group("Camera Shake")
 @export var camera_shake_enabled = true	# Whether camera x/y shake is enabled
 @export var camera_roll_enabled = true	# Whether camera roll shake is enabled
@@ -51,6 +51,7 @@ var recent_gamepad_aim : bool = false	# flag for if we've recently pulled LT
 @export_group("Reloading")
 @export var reload_entry_time : float = 0.5	# Time to enter reload state (in seconds)
 var reload_timer : float = 0.0	# Timer for reload lerp
+var want_handling : bool = false # Whether we want to be handling the gun
 @export_group("Mouse Deadzone")
 @export var mouse_deadzone : Vector3 = Vector3(0.1, 0.65, 0.35) # Mouse deadzone (in screen %) (x, yTop, yBottom)
 
@@ -60,6 +61,9 @@ var reload_timer : float = 0.0	# Timer for reload lerp
 @export var camera_sensitivity : float = 0.5 	# Mouse camera sensitivity
 @export var aim_sensitivity : float = 0.1 		# Mouse aim sensitivity
 @export var gamepad_sense_scale : float = 15 	# Gamepad sensitivity multiplier
+
+@onready var l_hand : MeshInstance3D = get_node("Hands/LHand")
+@onready var r_hand : MeshInstance3D = get_node("Hands/RHand")
 
 # Mouse input variables
 var mouse_input : Vector2		# Stores mouse input (1gets reset each frame!)
@@ -154,7 +158,7 @@ func camera_gun_kick():
 	# TODO - make it so that this doesn't cause horizontal rotation
 	# TODO - minimize vertical camera rotation
 	# TODO - make this a lerp rather than an instantaneous snap
-	var kick_store = kick_amount
+	var kick_store : Vector2 = kick_amount
 	kick_store.x *= ((randi() & 2) - 1)
 	mouse_input += kick_store # TODO scale with screen size ?
 	

@@ -4,7 +4,7 @@ extends CameraState
 ## Called by the state machine when receiving unhandled input events.
 func handle_input(_event: InputEvent) -> void:
 	if _event.is_action_pressed("reload"):
-		finished.emit("HandlingIn")
+		cmk.want_handling = !cmk.want_handling
 
 
 ## Called by the state machine on the engine's main loop tick.
@@ -27,6 +27,12 @@ func update(delta: float) -> void:
 	# Update the gun's position + rotation - MUST BE AFTER MOUSE/CAMERA UPDATES!!
 	# ... at least it did at some point!!
 	_get_gun_target_transform(delta) # [ABSTRACT]
+	
+	# --- PLAYER HANDS --- #
+	_cam_hand_update()
+	
+	if(cmk.want_handling):
+		finished.emit("HandlingIn")
 	
 	if(cmk.reload_timer <= 0.0):
 		finished.emit("Unaimed")
@@ -139,3 +145,10 @@ func enter(previous_state_path: String, data := {}) -> void:
 ## Use this function to clean up the state.
 func exit() -> void:
 	pass
+
+
+## Snap the player's right camera hand model to the gun's marked position
+## Move the player's left hand offscreen
+func _cam_hand_update() -> void:
+	cmk.l_hand.global_position = cmk.gck.r_hand_grip_marker.global_position
+	cmk.r_hand.position = Vector3.ZERO

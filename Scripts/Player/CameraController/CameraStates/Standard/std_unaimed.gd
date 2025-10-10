@@ -33,3 +33,5 @@ func _check_state_transitions() -> void:
 	# If we're trying to aim, start doing it!
 	if cmk.aim_held:
 		finished.emit("AimIn")
+	if cmk.want_handling:
+		finished.emit("HandlingIn")

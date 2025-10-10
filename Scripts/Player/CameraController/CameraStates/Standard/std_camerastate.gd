@@ -20,9 +20,7 @@ func _check_state_transitions() -> void
 func handle_input(event: InputEvent) -> void:
 	# custom bit to handle reloading
 	if event.is_action_pressed("reload"):
-		cmk.ads_timer = 0.0
-		cmk.aim_held = false
-		finished.emit("HandlingIn")
+		cmk.want_handling = !cmk.want_handling
 	# do regular mouse input capture
 	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		# Handle mouse movement
@@ -93,6 +91,10 @@ func update(delta: float) -> void:
 	if(cmk.screen_size != Vector2(get_viewport().size)):
 		cmk._viewport_update()
 	
+	# Release aim hold if we're handling
+	if(cmk.want_handling == true):
+		cmk.aim_held = false
+	
 	# Handle mouse input
 	var cam_target_fov : float = _determine_zoom_fov() # [ABSTRACT]
 	var cam_target_tf : Transform3D = _get_camera_target_transform()
@@ -110,6 +112,9 @@ func update(delta: float) -> void:
 	# ... at least it did at some point!!
 	_get_gun_target_transform(delta) # [ABSTRACT]
 	_determine_gun_sway(delta)
+	
+	# --- PLAYER HANDS --- #
+	_cam_hand_update()
 	
 	# --- CLEANUP --- #
 	# Reset mouse input for next frame
@@ -222,3 +227,9 @@ func _determine_gun_sway(delta) -> Vector3:
 	cmk.last_cmk_rot = cmk_rot
 
 	return cmk.gck.camera_sway * cmk.gck.gun_sway_max
+
+
+## Snap player camera hand models to the gun's marked positions
+func _cam_hand_update() -> void:
+	cmk.r_hand.global_position = cmk.gck.l_hand_grip_marker.global_position
+	cmk.l_hand.global_position = cmk.gck.r_hand_grip_marker.global_position

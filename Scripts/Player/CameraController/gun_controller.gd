@@ -10,9 +10,12 @@ var pmk : PlayerController # Node that the camera will follow - grabbed in _read
 var gun_model_holder_basepos : Vector3
 
 @onready var gun_sound : AudioStreamPlayer3D = get_node("GunSound")
+@onready var click_sound : AudioStreamPlayer3D = get_node("ClickSound")
 @onready var gun_model_holder : Node3D = get_node("GunModelHolder")
 @onready var ray : RayCast3D = get_node("GunModelHolder/GunRaycast")
 @onready var gun_magazine : MagazineController = get_node("GunModelHolder/MagazineController")
+@onready var l_hand_grip_marker : Marker3D = get_node("GunModelHolder/GripMarkers/LHandMarker")
+@onready var r_hand_grip_marker : Marker3D = get_node("GunModelHolder/GripMarkers/RHandMarker")
 
 @export_category("Animating")
 @export_group("Sway")
@@ -110,6 +113,14 @@ func shoot() -> void:
 	start_gun_shoot_anim()
 
 
+## For when you try to shoot on an empty mag
+func shoot_fail() -> void:
+	# handle sound
+	click_sound.play()
+	# handle anim
+	start_gun_shoot_anim(0.05)
+
+
 ## Returns 0.0 -> 1.0 value for how long is left in our shooting animation
 ## Value of [1.0] means that we're not currently in a shooting animation
 func shoot_time_remaining() -> float:
@@ -119,7 +130,7 @@ func shoot_time_remaining() -> float:
 
 
 ## Starts gun shoot animation
-func start_gun_shoot_anim() -> void:
+func start_gun_shoot_anim(amount : float = 1.0) -> void:
 	# if shoot tween running, kill it
 	if _gun_shoot_tween:
 		_gun_shoot_tween.kill()
@@ -127,14 +138,14 @@ func start_gun_shoot_anim() -> void:
 	# start new shoot tween
 	_gun_shoot_tween = create_tween()
 	_gun_shoot_tween.tween_method(
-		_update_gun_shoot,
+		_update_gun_shoot.bind(amount),
 		0.0, 1.0,
 		gun_shoot_time
 	).set_ease(Tween.EASE_OUT)
 
 
 ## [Tween method] - Handles gun shoot animation
-func _update_gun_shoot(alpha : float) -> void:
+func _update_gun_shoot(alpha : float, amount : float = 1.0) -> void:
 	# wght is used for variables that peak at kick_peak_pct
 	# before peak - wght maps (0.0, kick_peak_pct) -> (0.0, 1.0)
 	# after peak  - wght maps (kick_peak_pct, 1.0) -> (1.0, 0.0)
@@ -145,13 +156,13 @@ func _update_gun_shoot(alpha : float) -> void:
 		wght = 1 - ((alpha - kick_peak_pct) / (1 - kick_peak_pct))
 	
 	# variables that peak at kick_peak_pct, then linearly taper
-	current_shoot_offset.z = wght * shoot_offset_max.z	# kick-back
-	current_shoot_offset.y = wght * shoot_offset_max.y	# kick-up
-	current_shoot_angle.x = lerpf(0, shoot_angle_max.x, wght)	# kick pitch
+	current_shoot_offset.z = wght * shoot_offset_max.z * amount	# kick-back
+	current_shoot_offset.y = wght * shoot_offset_max.y * amount	# kick-up
+	current_shoot_angle.x = lerpf(0, shoot_angle_max.x * amount, wght)	# kick pitch
 	# variables that follow a sin wave of frequency 2
-	var amt = (sin(alpha * TAU * 2))
-	current_shoot_angle.y = amt * shoot_angle_max.y * (1-alpha)	# kick yaw
-	current_shoot_angle.z = amt * shoot_angle_max.z * (1-alpha)	# kick roll
+	var wav = (sin(alpha * TAU * 2))
+	current_shoot_angle.y = wav * shoot_angle_max.y * amount  * (1-alpha)	# kick yaw
+	current_shoot_angle.z = wav * shoot_angle_max.z * amount  * (1-alpha)	# kick roll
 
 
 ## Starts end-of-footstep gun shake

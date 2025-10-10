@@ -1,10 +1,11 @@
-[gd_scene load_steps=11 format=4 uid="uid://c37slaodjgit6"]
+[gd_scene load_steps=12 format=4 uid="uid://c37slaodjgit6"]
 
 [ext_resource type="Script" uid="uid://clf1pp0ppnwps" path="res://Scripts/Player/CameraController/gun_controller.gd" id="1_vdk2e"]
 [ext_resource type="PackedScene" uid="uid://bt40rudw6xpgg" path="res://Prefabs/Player/magazine_controller.tscn" id="2_igb2n"]
 [ext_resource type="Texture2D" uid="uid://dq874bc21aslj" path="res://Models/kenney_blaster-kit_2.1/Textures/colormap.png" id="2_vdk2e"]
 [ext_resource type="Script" uid="uid://b8b2ltlkdgkp2" path="res://Scripts/Player/CameraController/gun_raycast.gd" id="3_uilo2"]
 [ext_resource type="AudioStream" uid="uid://ro6npthlf24i" path="res://Sounds/gunshots/gunshot_cg1.wav" id="4_8ii4o"]
+[ext_resource type="AudioStream" uid="uid://iwk0b8n1fdo7" path="res://Sounds/gunshots/outofammo.wav" id="6_uilo2"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_08u7w"]
 albedo_color = Color(1, 0, 0, 1)
@@ -64,6 +65,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.112, 0)
 
 [node name="GripMarkers" type="Node3D" parent="GunModelHolder"]
 
+[node name="LHandMarker" type="Marker3D" parent="GunModelHolder/GripMarkers"]
+transform = Transform3D(0.8660253, -0.49999997, 0, 0.49999997, 0.8660253, 0, 0, 0, 1, -0.031249998, -0.124999985, 0.09999999)
+
+[node name="RHandMarker" type="Marker3D" parent="GunModelHolder/GripMarkers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.10625, 0.074999996)
+
 [node name="MagazineController" parent="GunModelHolder" instance=ExtResource("2_igb2n")]
 
 [node name="GunModel" type="Node3D" parent="GunModelHolder"]
@@ -86,3 +93,6 @@ script = ExtResource("3_uilo2")
 
 [node name="GunSound" type="AudioStreamPlayer3D" parent="."]
 stream = ExtResource("4_8ii4o")
+
+[node name="ClickSound" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("6_uilo2")

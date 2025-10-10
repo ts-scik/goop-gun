@@ -20,7 +20,7 @@ func update(delta) -> void:
 				cmk.gck.shoot()
 			else:
 				# do an out-of-ammo animation + sound
-				# TODO
+				cmk.gck.shoot_fail()
 				print("out of ammo!!")
 			
 	super(delta)
