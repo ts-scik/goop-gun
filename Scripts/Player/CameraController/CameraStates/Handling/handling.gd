@@ -1,7 +1,6 @@
 ## State for camera+gun management when fully in the Handling state
 extends CameraState
 
-
 ## Called by the state machine when receiving unhandled input events.
 func handle_input(event: InputEvent) -> void:
 	if event.is_action_pressed("reload"):
@@ -21,6 +20,10 @@ func handle_input(event: InputEvent) -> void:
 					deg_to_rad(-40),
 					deg_to_rad(70)
 				)
+	if event.is_action_pressed("reload_interact1"):
+		var target := _get_grab_target()
+		if(target == "mag"):
+			finished.emit("Reloading")
 
 
 ## Called by the state machine on the engine's main loop tick.
@@ -88,7 +91,7 @@ func _get_camera_target_transform() -> Transform3D:
 
 
 ## Gets target transform for gun
-func _get_gun_target_transform(delta) -> Transform3D:
+func _get_gun_target_transform(_delta) -> Transform3D:
 	# --- GUNMODEL--- #
 	# Create temp output transform
 	var out_tf : Transform3D	
@@ -118,10 +121,9 @@ func _get_gun_target_transform(delta) -> Transform3D:
 	# --- GUNCONTROLLER --- #
 	# get angle from camera to gun target position
 	var cam_to_gun_vec : Vector3 = (
-		gun_target_pos
-		- cmk.to_local(cmk.player_camera.global_position)
-		- (cmk.gck.gun_handling_offset_position * 0.5)
-	)
+			gun_target_pos
+			- cmk.to_local(cmk.player_camera.global_position)
+			- (cmk.gck.gun_handling_offset_position * 0.5))
 	var cam_to_gun_angle = Basis.looking_at(cam_to_gun_vec, Vector3.UP, false).get_euler()
 	cmk.gck.rotation = cam_to_gun_angle
 	
@@ -136,7 +138,7 @@ func physics_update(_delta: float) -> void:
 ## Called by the state machine upon changing the active state. The `data` parameter
 ## is a dictionary with arbitrary data the state can use to initialize itself.
 func enter(previous_state_path: String, data := {}) -> void:
-	cmk.gun_input_rotation = Vector3.ZERO
+	#cmk.gun_input_rotation = Vector3.ZERO
 	# TODO - temp debug thing
 	if(cmk.gck.gun_magazine != null):
 		cmk.gck.gun_magazine.curr_bullets = cmk.gck.gun_magazine.max_bullets
@@ -146,12 +148,17 @@ func enter(previous_state_path: String, data := {}) -> void:
 ## Called by the state machine before changing the active state.
 ## Use this function to clean up the state.
 func exit() -> void:
-	cmk.gun_input_rotation = Vector3.ZERO
+	#cmk.gun_input_rotation = Vector3.ZERO
 	pass
 
 
 ## Snap the player's right camera hand model to the gun's marked position
 ## Move the player's left hand offscreen
 func _cam_hand_update() -> void:
-	cmk.l_hand.global_position = cmk.gck.r_hand_grip_marker.global_position
-	cmk.r_hand.position = Vector3.ZERO
+	cmk.r_hand.global_position = cmk.gck.r_hand_grip_marker.global_position
+	cmk.l_hand.position = Vector3.ZERO
+
+
+func _get_grab_target() -> String:
+	# TODO - currently always return magazine
+	return "mag"

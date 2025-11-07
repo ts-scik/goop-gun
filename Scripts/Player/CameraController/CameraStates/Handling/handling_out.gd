@@ -35,6 +35,7 @@ func update(delta: float) -> void:
 		finished.emit("HandlingIn")
 	
 	if(cmk.reload_timer <= 0.0):
+		cmk.gun_input_rotation = Vector3.ZERO
 		finished.emit("Unaimed")
 		return
 
@@ -83,7 +84,7 @@ func _get_camera_target_transform() -> Transform3D:
 	return out_tf
 
 
-func _get_gun_target_transform(delta) -> Transform3D:
+func _get_gun_target_transform(_delta) -> Transform3D:
 	# --- GUNMODEL--- #
 	# Create temp output transform
 	var out_tf : Transform3D	
@@ -150,5 +151,5 @@ func exit() -> void:
 ## Snap the player's right camera hand model to the gun's marked position
 ## Move the player's left hand offscreen
 func _cam_hand_update() -> void:
-	cmk.l_hand.global_position = cmk.gck.r_hand_grip_marker.global_position
-	cmk.r_hand.position = Vector3.ZERO
+	cmk.r_hand.global_position = cmk.gck.r_hand_grip_marker.global_position
+	cmk.l_hand.position = Vector3.ZERO

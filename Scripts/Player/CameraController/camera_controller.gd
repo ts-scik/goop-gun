@@ -14,70 +14,78 @@ var gck : GunController # Gun's container
 
 @export_category("Effects")
 @export_group("Run Tilt")
-@export var enable_tilt : bool = false	# Whether camera tilt angle is enabled
-@export var run_pitch : float = 0.1	# Euler degrees
-@export var run_roll : float = 0.25	# Euler degrees
-@export var max_pitch : float = 1.0	# Euler degrees
-@export var max_roll : float = 2.5	# Euler degrees
+@export var enable_tilt	:= false	## Whether camera tilt angle is enabled
+@export var run_pitch	:= 0.1		## Run pitch - Euler degrees
+@export var run_roll	:= 0.25		## Run roll - Euler degrees
+@export var max_pitch	:= 1.0		## Max pitch - Euler degrees
+@export var max_roll	:= 2.5		## Max roll - Euler degrees
+
 @export_group("Gun Kick")
-@export var kick_amount := Vector2(0.025,0.05) # Cursor's x/y screen kick amount
+@export var kick_amount := Vector2(0.025,0.05)	## Cursor's x/y screen kick amount
+
 @export_group("Camera Shake")
-@export var camera_shake_enabled = true	# Whether camera x/y shake is enabled
-@export var camera_roll_enabled = true	# Whether camera roll shake is enabled
-var _camera_shake_tween : Tween			# Tween for camera shake
-var _camera_shake_angle := Vector2.ZERO	# Holder for camera shake
+@export var cam_shake_enabled	:= true	## Whether camera x/y shake is enabled
+@export var cam_roll_enabled	:= true	## Whether camera roll shake is enabled
+var _camera_shake_tween: Tween			## Tween for camera shake
+var _camera_shake_angle	:= Vector2.ZERO	## Holder for camera shake
+
 @export_group("Aim FOV")
-@export var enable_aim_zoom : bool = true		# Whether camera FOV changes while aiming
-@export var aimed_fov_percent : float = 0.875	# % of fov when fully aimed in
+@export var enable_aim_zoom		:= true		## Whether camera FOV changes while aiming
+@export var aimed_fov_percent	:= 0.875	## % of fov when fully aimed in
+
 @export_group("Handling / Reloading FOV")
-@export var handling_fov_percent : float = 0.8	# % of fov when fully in reload state
-@export var reload_fov_percent : float = 0.6	# % of fov when fully in handling state
+@export var handling_fov_percent	:= 0.8	## % of fov when fully in reload state
+@export var reload_fov_percent		:= 0.6	## % of fov when fully in handling state
+
 @export_group("Viewbob")
-@export var enable_viewbob : bool = true	# Whether viewbob is enabled
-@export var viewbob_curve : Curve			# Configurable curve for viewbob
-@export var max_bob_height : float = 0.06	# Point where viewbob curve peaks
-var bob_vec : Vector3 = Vector3.ZERO		# Holder for viewbob offset vector
+@export var enable_viewbob	:= true	## Whether viewbob is enabled
+@export var viewbob_curve: Curve	## Configurable curve for viewbob
+@export var max_bob_height	:= 0.06	## Point where viewbob curve peaks
+var bob_vec	:= Vector3.ZERO			## Holder for viewbob offset vector
 
 @export_category("Interactions")
 @export_group("Shooting")
-var recent_gamepad_shoot : bool = false		# flag for if we've recently pulled RT
+var recent_gamepad_shoot	:= false	## Flag for if we've recently pulled RT
+
 @export_group("Aiming")
-@export var ads_time : float = 0.25	# ADS time (in seconds)
-var ads_timer : float = 0.0		# Timer for ADS lerp
-var is_aiming : bool = false	# Flag for ADS completed
-var aim_held : bool = false		# Flag for ADS input
-var aim_toggle : bool = false	# Whether or not we're using toggle-aim
-var recent_gamepad_aim : bool = false	# flag for if we've recently pulled LT
+@export var ads_time	:= 0.25		## ADS time (in seconds)
+var ads_timer			:= 0.0		## Timer for ADS lerp
+var is_aiming			:= false	## Flag for ADS completed
+var aim_held			:= false	## Flag for ADS input
+var aim_toggle			:= false	## Whether or not we're using toggle-aim
+var recent_gamepad_aim	:= false	## Flag for if we've recently pulled LT
+
 @export_group("Reloading")
-@export var reload_entry_time : float = 0.5	# Time to enter reload state (in seconds)
-var reload_timer : float = 0.0	# Timer for reload lerp
-var want_handling : bool = false # Whether we want to be handling the gun
+@export var reload_entry_time	:= 0.5	## Time to enter reload state (in seconds)
+var reload_timer	:= 0.0	## Timer for reload lerp
+var want_handling 	:= false ## Whether we want to be handling the gun
+
 @export_group("Mouse Deadzone")
-@export var mouse_deadzone : Vector3 = Vector3(0.1, 0.65, 0.35) # Mouse deadzone (in screen %) (x, yTop, yBottom)
+@export var mouse_deadzone := Vector3(0.1, 0.65, 0.35) ## Mouse deadzone (in screen %) (x, yTop, yBottom)
 
 @export_category("Player Configurables")
-@export var desired_fov : float = 75.0 		# Player default FOV (TODO - add player setting)
-@export var mouse_sensitivity : float = 0.005 	# Mouse overall sensitivitiy
-@export var camera_sensitivity : float = 0.5 	# Mouse camera sensitivity
-@export var aim_sensitivity : float = 0.1 		# Mouse aim sensitivity
-@export var gamepad_sense_scale : float = 15 	# Gamepad sensitivity multiplier
+@export var desired_fov	:= 75.0 			## Player default FOV (TODO - add player setting)
+@export var mouse_sensitivity	:= 0.005	## Mouse overall sensitivitiy
+@export var camera_sensitivity	:= 0.5 		## Mouse camera sensitivity
+@export var aim_sensitivity		:= 0.1 		## Mouse aim sensitivity
+@export var gamepad_sense_scale	:= 15.0 	## Gamepad sensitivity multiplier
 
 @onready var l_hand : MeshInstance3D = get_node("Hands/LHand")
 @onready var r_hand : MeshInstance3D = get_node("Hands/RHand")
 
 # Mouse input variables
-var mouse_input : Vector2		# Stores mouse input (1gets reset each frame!)
-var input_rotation : Vector3 	# Stores mouse_input converted to rotation - for cam
-var gun_input_rotation : Vector3 # Stores mouse_input converted to rotation - for gun
+var mouse_input: Vector2		## Stores mouse input (1gets reset each frame!)
+var input_rotation: Vector3		## Stores mouse_input converted to rotation - for cam
+var gun_input_rotation: Vector3	## Stores mouse_input converted to rotation - for gun
 # Gun deadzone variables
-var mouse_position := Vector2.ZERO	# Mouse cursor's position onscreen
-var screen_size : Vector2	# Size of screen (in pixels)
-var gun_deadzone : Vector3	# Gun's deadzone size (in pixels)
-var last_cmk_rot : Vector3	# Camera's rotation last frame
+var mouse_position := Vector2.ZERO	## Mouse cursor's position onscreen
+var screen_size: Vector2	## Size of screen (in pixels)
+var gun_deadzone: Vector3	## Gun's deadzone size (in pixels)
+var last_cmk_rot: Vector3	## Camera's rotation last frame
 # Debug stuff
-var guncanvas : GunCanvas 	# Node for mouse_position debug display
-var debug_dot :bool = false	# Flag for if we want to show the red_dot
-var debug_box :bool = false	# Flag for if we want to show the boundary_rect
+var guncanvas: GunCanvas 	## Node for mouse_position debug display
+var debug_dot	:= false	## Flag for if we want to show the red_dot
+var debug_box	:= false	## Flag for if we want to show the boundary_rect
 
 
 ## Get our camera
@@ -186,7 +194,7 @@ func _viewport_update():
 ## Starts a camera shake, with aggressiveness [amount] and duration [duration]
 func start_camera_shake(amount : float, duration : float) -> void:
 	# Early return if we've fully disabled camera shake
-	if(!camera_shake_enabled and !camera_roll_enabled):
+	if(!cam_shake_enabled and !cam_roll_enabled):
 		return
 	
 	if _camera_shake_tween:
@@ -204,7 +212,7 @@ func start_camera_shake(amount : float, duration : float) -> void:
 ## [Tween method] - Handles camera shake 
 func _update_camera_shake(alpha : float, _amount : float) -> void:
 	# Camera x/y shake
-	if(camera_shake_enabled):
+	if(cam_shake_enabled):
 		var shake_frequency : float = 2 # TODO export this? make it amount-dependent?
 		var amt = sin(alpha * shake_frequency * TAU) * (1 - alpha)
 	
@@ -215,7 +223,7 @@ func _update_camera_shake(alpha : float, _amount : float) -> void:
 		player_camera.h_offset = h_offset
 	
 	# Camera roll shake
-	if(camera_roll_enabled):
+	if(cam_roll_enabled):
 		var roll_frequency : float = 3 # TODO export this and below multipliers, make effected by amount
 		var roll_offset = -sin(alpha * roll_frequency * TAU) * (1 - alpha) * 0.002
 		var pitch_offset = sin(alpha * 2 * TAU) * (1 - alpha) * 0.002

@@ -1,32 +1,19 @@
-## Manages a player's gun animations/sounds/shooting
 class_name GunController
 extends Node3D
-
-# Parent nodes
-var cmk : CameraController # Node for camera that this gun inherits from
-var pmk : PlayerController # Node that the camera will follow - grabbed in _ready()
-
-# Holders for animation transforms
-var gun_model_holder_basepos : Vector3
-
-@onready var gun_sound : AudioStreamPlayer3D = get_node("GunSound")
-@onready var click_sound : AudioStreamPlayer3D = get_node("ClickSound")
-@onready var gun_model_holder : Node3D = get_node("GunModelHolder")
-@onready var ray : RayCast3D = get_node("GunModelHolder/GunRaycast")
-@onready var gun_magazine : MagazineController = get_node("GunModelHolder/MagazineController")
-@onready var l_hand_grip_marker : Marker3D = get_node("GunModelHolder/GripMarkers/LHandMarker")
-@onready var r_hand_grip_marker : Marker3D = get_node("GunModelHolder/GripMarkers/RHandMarker")
+## Manages a player's gun animations/sounds/shooting
 
 @export_category("Animating")
 @export_group("Sway")
 @export var gun_sway_max := Vector3(deg_to_rad(3.5), deg_to_rad(5), deg_to_rad(5))	# max angle of gun sway
 var camera_sway := Vector3.ZERO	# stores current camera sway vector
+
 @export_group("Shaking")
 @export var gun_shake_angle_max := Vector3(deg_to_rad(4),deg_to_rad(1),deg_to_rad(1)) # max angle of gun shake
 @export var footstep_gun_shake_time_pct : float = 0.8	# what % of foostep time gun should shake for
 @export var min_shake_angle_pct : float = 0.3	# minimum % of gun_shake_angle_max
 var shake_angle := Vector3.ZERO	# stores current camera shake angle
 var _gun_shake_tween : Tween
+
 @export_group("Shooting")
 @export var shoot_angle_max := Vector3(deg_to_rad(20), deg_to_rad(1.7), deg_to_rad(2))	# max angle offset when shooting
 @export var shoot_offset_max := Vector3(0, 0.04, 0.16)	# max position offset when shooting
@@ -36,18 +23,37 @@ var _gun_shake_tween : Tween
 var _gun_shoot_tween : Tween
 var current_shoot_angle := Vector3.ZERO
 var current_shoot_offset := Vector3.ZERO
+
 @export_group("Aiming")
 @export var gun_hold_distance : float = 0.7	# How far gun is held out from player
 var last_aimed_target_pos := Vector3.ZERO	# stores last position when aimed
 var last_aimed_target_rot := Vector3.ZERO	# stores last rotation when aimed
+
 @export_group("Holstering")
 @export var holstered_pos = Vector3(0, 1.0, -0.4) # configurable variable for where gun should go when holstered
 @export var holstered_rot = Vector3(deg_to_rad(-45.0), 0.0, 0.0) # configurable variable for gun's rotation when holstered
+
 @export_group("Handling")
 @export var gun_handling_origin_position := Vector3(0.0, 1.2, -0.4)	# position camera targets when handling
 @export var gun_handling_offset_position := Vector3(0.17, 0.038, 0)	# gun offset rel to handling_origin when handling
+
 @export_group("Reloading")
 @export var gun_reload_rotation := Vector3(deg_to_rad(0), deg_to_rad(0), deg_to_rad(0))	# target rotation in reloading state
+
+@onready var gun_sound : AudioStreamPlayer3D = get_node("GunSound")
+@onready var click_sound : AudioStreamPlayer3D = get_node("ClickSound")
+@onready var gun_model_holder : Node3D = get_node("GunModelHolder")
+@onready var ray : RayCast3D = get_node("GunModelHolder/GunRaycast")
+@onready var gun_magazine : MagazineController = get_node("GunModelHolder/MagazineController")
+@onready var l_hand_grip_marker : Marker3D = get_node("GunModelHolder/GripMarkers/LHandMarker")
+@onready var r_hand_grip_marker : Marker3D = get_node("GunModelHolder/GripMarkers/RHandMarker")
+
+# Parent nodes
+var cmk : CameraController # Node for camera that this gun inherits from
+var pmk : PlayerController # Node that the camera will follow - grabbed in _ready()
+
+# Holders for animation transforms
+var gun_model_holder_basepos : Vector3
 
 
 ## Find our owners
@@ -71,25 +77,17 @@ func _process(_delta) -> void:
 	
 	# apply gun model effects -- rotation
 	gun_model_holder.rotation = (
-		Vector3.ZERO +
-		sway_amount +
-		shake_angle +
-		current_shoot_angle
-	)
+			Vector3.ZERO + sway_amount + shake_angle + current_shoot_angle)
 	# apply gun model effects -- position
 	gun_model_holder.position = (
-		gun_model_holder_basepos +
-		current_shoot_offset
-	)
+			gun_model_holder_basepos + current_shoot_offset)
 
 
 ## Checks whether or not gun has ammo
 ## Returns [true] if yes, [false] if no
 func has_ammo() -> bool:
-	if (
-		gun_magazine == null						# no mag
-		or gun_magazine.has_ammo() == false			# empty mag
-	):
+	# no mag/empty mag
+	if (gun_magazine == null or gun_magazine.has_ammo() == false):
 		return false
 	else:
 		return true
@@ -179,9 +177,9 @@ func start_gun_shake(shake_len: float, shake_amt: float = 1.0, shake_freq: float
 	for idx in 3:
 		var rand_sign = scik_utils.rand_sign()
 		random_shake[idx] = randf_range(
-			gun_shake_angle_max[idx] * min_shake_angle_pct,
-			gun_shake_angle_max[idx]
-		) * rand_sign
+				gun_shake_angle_max[idx] * min_shake_angle_pct,
+				gun_shake_angle_max[idx]
+			) * rand_sign
 	
 	# start the new shake tween
 	_gun_shake_tween = create_tween()
@@ -195,5 +193,4 @@ func start_gun_shake(shake_len: float, shake_amt: float = 1.0, shake_freq: float
 ## [Tween method] - Handles end-of-footstep gun shake
 func _update_gun_shake(alpha: float, r_shake_angle: Vector3, shake_amt: float, shake_freq: float) -> void:
 	var c_amt = sin(alpha * shake_freq * TAU) * (1 - alpha) * shake_amt
-	
 	shake_angle = r_shake_angle * c_amt

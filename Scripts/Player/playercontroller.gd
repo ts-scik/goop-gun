@@ -5,47 +5,47 @@ extends CharacterBody3D
 # Movement constants
 @export_category("Movement Variables")
 @export_group("Jumping")
-@export var GRAVITY : float = 9.8	# gravity velocity
-@export var PM_JUMP_VELOCITY : float = 4.5	# jump velocity
+@export var GRAVITY: float			= 9.8	## Gravity velocity
+@export var PM_JUMP_VELOCITY: float	= 4.5	## Jump velocity
 @export_group("Movement")
-@export var PM_WALKSPEED : float = 2.5		# move velocity
-@export var PM_RUNSPEED : float = 5			# run velocity
-@export var PM_CROUCHSPEED : float = 1.5	# crouch velocity
-@export var PM_ACCELERATE : float = 8.0		# Acceleration factor on ground
-@export var PM_AIRACCELERATE : float = 1.0	# Acceleration factor in air
+@export var PM_WALKSPEED: float		= 2.5	## Move velocity
+@export var PM_RUNSPEED: float		= 5.0	## Run velocity
+@export var PM_CROUCHSPEED: float	= 1.5	## Crouch velocity
+@export var PM_ACCELERATE: float	= 8.0		## Acceleration factor on ground
+@export var PM_AIRACCELERATE: float	= 1.0	## Acceleration factor in air
 @export_group("Friction")
-@export var PM_FRICTION : float = 6.0	# Friction factor when on ground
-@export var PM_STOPSPEED : float = 0.75	# Minimum speed factor for friction calculation
+@export var PM_FRICTION: float		= 6.0	## Friction factor when on ground
+@export var PM_STOPSPEED: float		= 0.75	## Minimum speed factor for friction calculation
 # Variables for foosteps
-var footstep_timer : float = 0.0 # timer-holder for footsteps
+var footstep_timer: float = 0.0 ## Timer-holder for footsteps
 @export_group("Footsteps")
-@export var footstep_time_length : float = 0.75	# total time length of footstep
-@export var footstep_peak_pct : float = 0.65	# point where footstep cannot be reversed
+@export var footstep_time_length: float	= 0.75	## Total time length of footstep
+@export var footstep_peak_pct: float	= 0.65	## Point where footstep cannot be reversed
 
 # Child nodes
-@onready var camera_controller_anchor : Marker3D = $HeadPos
-@onready var camera_controller : CameraController = get_node("CameraController")
-@onready var gun_controller : GunController = get_node("CameraController/GunController")
-@onready var pause_menu : CanvasLayer = get_node("PauseMenu")
-@onready var HUD : CanvasLayer = get_node("HUD")
+@onready var camera_controller_anchor: Marker3D = $HeadPos
+@onready var camera_controller: CameraController = $CameraController
+@onready var gun_controller: GunController = $CameraController/GunController
+@onready var pause_menu: CanvasLayer = $PauseMenu
+@onready var HUD: CanvasLayer = $HUD
 
 # Local player variables
-var paused : bool = false	# flag for pause menu
-var health : int = 3		# HP
+var paused: bool = false	## Flag for pause menu
+var health: int = 3			## HP
 # Variables for movement
-var was_on_floor 	: bool = false	# Whether we were on floor at start of frame
-var fly_enabled 	: bool = false	# debug for fly movement
-var is_crouching 	: bool = false	# Flag for crouching
-var is_running 		: bool = false	# Flag for running
-var crouch_toggle 	: bool = false	# Whether we're using toggle-crouch
+var was_on_floor:	bool = false	## Whether we were on floor at start of frame
+var fly_enabled:	bool = false	## Flag for debug fly movement
+var is_crouching:	bool = false	## Flag for crouching
+var is_running:		bool = false	## Flag for running
+var crouch_toggle:	bool = false	## Whether we're using toggle-crouch
 
 # Variables for input buffering
-var input_buffer : InputBuffer
-enum {	# types of bufferable inputs
+var input_buffer: InputBuffer
+enum {	## Types of bufferable inputs
 	JUMP_INPUT = 0,
 	SHOOT_INPUT = 1,
 }
-const input_timers : Dictionary = {	# timers for bufferable inputs
+const input_timers: Dictionary = {	## Timers for bufferable inputs
 	JUMP_INPUT : 0.07,
 	SHOOT_INPUT : 0.08,
 }
@@ -94,6 +94,20 @@ func _physics_process(delta: float) -> void:
 	# TODO - should any of this be here? (No!)
 	# Set walking/on_ground flag
 	was_on_floor = is_on_floor()
+	
+	# Walking state
+	if was_on_floor:
+		pmove.PM_WalkMove(self, delta)
+		move_and_slide()
+	# Airborne state
+	else:
+		pmove.PM_AirMove(self, delta)
+		move_and_slide()
+		# If we just landed,
+		if is_on_floor():
+			play_footstep_sound()
+			gun_controller.start_gun_shake(0.6, 2.0, 4)
+			#print("landed!")
 	
 	# Foostep management
 	_handle_footsteps(delta)

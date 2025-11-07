@@ -1,13 +1,10 @@
-[gd_scene load_steps=12 format=3 uid="uid://dpkim8cla8dii"]
+[gd_scene load_steps=9 format=3 uid="uid://dpkim8cla8dii"]
 
 [ext_resource type="Script" uid="uid://bxc5wvblob2y7" path="res://Scripts/Player/playercontroller.gd" id="1_onrkg"]
 [ext_resource type="AudioStream" uid="uid://d08nk0hl5wac7" path="res://Sounds/footsteps/boots/0.ogg" id="2_08u7w"]
 [ext_resource type="PackedScene" uid="uid://w5yidi6yqanc" path="res://Prefabs/Player/camera_controller.tscn" id="3_you5p"]
-[ext_resource type="Script" uid="uid://cpo348dq5380m" path="res://Scripts/StateMachine/StateMachine.gd" id="6_ucnkw"]
 [ext_resource type="PackedScene" uid="uid://bdt3orm768b1" path="res://Prefabs/UI/pause_menu.tscn" id="7_4qbli"]
-[ext_resource type="Script" uid="uid://634xlp7ow7of" path="res://Scripts/Player/PlayerStates/walk.gd" id="7_m5xj4"]
 [ext_resource type="PackedScene" uid="uid://cpco4jqlt1swy" path="res://Prefabs/UI/player_hud.tscn" id="8_08u7w"]
-[ext_resource type="Script" uid="uid://bmhsnhioxhadk" path="res://Scripts/Player/PlayerStates/air.gd" id="8_a00l3"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_juxdh"]
 transparency = 4
@@ -45,14 +42,3 @@ visible = false
 
 [node name="HUD" parent="." instance=ExtResource("8_08u7w")]
 visible = false
-
-[node name="StateMachine" type="Node" parent="."]
-script = ExtResource("6_ucnkw")
-
-[node name="Walk" type="Node" parent="StateMachine"]
-script = ExtResource("7_m5xj4")
-
-[node name="Slide" type="Node" parent="StateMachine"]
-
-[node name="Air" type="Node" parent="StateMachine"]
-script = ExtResource("8_a00l3")
