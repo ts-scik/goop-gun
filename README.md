@@ -5,9 +5,9 @@ You can try a few different early release builds of this game.
 ***If you're playing alone, I recommed trying [v0.3](https://github.com/ts-scik/goop-gun/releases/tag/v0.3)!***
 ***If you have friends to play with, I recommend you try [v0.2](https://github.com/ts-scik/goop-gun/releases/tag/v0.2)!***
 
-![](https://github.com/ts-scik/goop-gun/blob/main/_gifs/barrel_shooting.gif)
-![](https://github.com/ts-scik/goop-gun/blob/main/_gifs/walk_shooting.gif)
-![](https://github.com/ts-scik/goop-gun/blob/main/_gifs/size_50_generation.gif)
+| Shooting barrels in [v0.3](https://github.com/ts-scik/goop-gun/releases/tag/v0.3) | Shooting walls in [v0.3](https://github.com/ts-scik/goop-gun/releases/tag/v0.3) | Level generation test in [v0.2](https://github.com/ts-scik/goop-gun/releases/tag/v0.2) |
+| --- | --- | --- |
+| ![](https://github.com/ts-scik/goop-gun/blob/main/_gifs/barrel_shooting.gif) | ![](https://github.com/ts-scik/goop-gun/blob/main/_gifs/walk_shooting.gif) | ![](https://github.com/ts-scik/goop-gun/blob/main/_gifs/size_50_generation.gif)
 
 The builds are:
 * [v0.3](https://github.com/ts-scik/goop-gun/releases/tag/v0.3) - the newest version, with:
