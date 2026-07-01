@@ -2,7 +2,8 @@
 
 You can try a few different early release builds of this game.
 
-***I recommend you try [v0.2](https://github.com/ts-scik/goop-gun/releases/tag/v0.2), and bring some friends!***
+***If you're playing alone, I recommed trying [v0.3](https://github.com/ts-scik/goop-gun/releases/tag/v0.3)!***
+***If you have friends to play with, I recommend you try [v0.2](https://github.com/ts-scik/goop-gun/releases/tag/v0.2)!***
 
 The builds are:
 * [v0.3](https://github.com/ts-scik/goop-gun/releases/tag/v0.3) - the newest version, with:
