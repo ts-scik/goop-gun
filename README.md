@@ -1,6 +1,7 @@
 ## *goop-gun* is an unfinished prototype for an online multiplayer survival-horror shooter, made in the Godot Engine.
 
 You can try a few different early release builds of this game.
+
 ***I recommend you try [v0.2](https://github.com/ts-scik/goop-gun/releases/tag/v0.2), and bring some friends!***
 
 The builds are:
